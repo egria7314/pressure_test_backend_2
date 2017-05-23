@@ -35,7 +35,7 @@ docker build -t pressure_test_backend:0.1 .
 
 ### Create container
 ```
-docker run -ti --name django -p 8000:8000 -v "$PWD"/pressure_test:/code/pressure_test pressure_test_backend:0.1 /bin/bash
+docker run -d -ti --name django -p 8000:8000 -v "$PWD"/pressure_test:/code/pressure_test pressure_test_backend:0.1 /bin/bash
 
 ```
 
