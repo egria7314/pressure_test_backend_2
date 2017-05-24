@@ -29,7 +29,7 @@ docker build -t pressure_test_backend:0.1 .
 
 ### Create container
 ```
-docker run -d -ti --name django -p 8000:8000 -v "$PWD"/pressure_test:/code/pressure_test pressure_test_backend:0.1 /bin/bash
+docker run -d -ti --name django -p 8000:8000 -v "$PWD":/code/pressure_test pressure_test_backend:0.1 /bin/bash
 
 ```
 
@@ -45,5 +45,21 @@ root@01739d768e32:/home/dqa/code# source env/bin/activate
 (env) root@01739d768e32:/home/dqa/code#
 ```
 
-### Happy coding
-* You can enjoy your coding from these steps
+### Run server
+```
+(env) root@01739d768e32:/home/dqa/code# cd pressure_test/pressure_test
+(env) root@01739d768e32:/home/dqa/code/pressure_test/pressure_test# python manage.py runserver 0.0.0.0:8000
+```
+
+### Develop your code
+
+* After develop or create files on your local host,
+* you can repeat steps from *build image* to *run server*
+
+### Delete old container
+
+* If your container name is already exist, you should remove old one. 
+```
+docker stop django
+docker rm django
+``` 
