@@ -29,7 +29,7 @@ docker build -t pressure_test_backend:0.1 .
 
 ### Create container and sharing folder
 ```
-docker run -d -ti --name django -p 8000:8000 -v "$PWD":/code/pressure_test pressure_test_backend:0.1 /bin/bash
+docker run -d -ti --name django -p 8000:8000 -v "$PWD":/home/dqa/code/pressure_test pressure_test_backend:0.1 /bin/bash
 
 ```
 
