@@ -43,7 +43,7 @@ sudo docker-compose run -d web
 ```
 sudo docker-compose up
 ```
-
+純屬參考
 ### Delete old container
 
 * If your container name is already exist, you should remove old one. 
