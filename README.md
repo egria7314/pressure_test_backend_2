@@ -1,4 +1,4 @@
-Install
+**Install**
 =============
 ### Docker
 ```
@@ -18,7 +18,7 @@ sudo pip install --upgrade pip
 sudo pip install docker-compose
 ```
 
-Prepare
+**Prepare**
 ============= 
 
 ### Clone git repository
@@ -31,7 +31,7 @@ git clone git@dqa03:danny.lai/pressure_test_backend.git
 git checkout develop
 ```
 
-Workflow Steps 
+**Workflow Steps**
 =============
 
 ### Build image and also create container
@@ -52,7 +52,7 @@ docker-compose stop
 docker-compose rm 
 ``` 
 
-Work inside container
+**Work inside container**
 =============
 
 ### Connect to container
