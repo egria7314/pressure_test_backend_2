@@ -36,20 +36,20 @@ git checkout develop
 
 ### Build image and also create container
 ```
-docker-compose run -d web
+sudo docker-compose run -d web
 ```
 
 ### Start service
 ```
-docker-compose up
+sudo docker-compose up
 ```
 
 ### Delete old container
 
 * If your container name is already exist, you should remove old one. 
 ```
-docker-compose stop 
-docker-compose rm 
+sudo docker-compose stop 
+sudo docker-compose rm 
 ``` 
 
 **Work inside container**
@@ -57,7 +57,7 @@ docker-compose rm
 
 ### Connect to container
 ```
-docker exec -ti "your-container-name" /bin/bash
+sudo docker exec -ti "your-container-name" /bin/bash
 ```
 * use __docker ps__ to see container's name
 * ex: pressuretestbackend_web_1
