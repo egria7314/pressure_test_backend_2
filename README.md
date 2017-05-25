@@ -1,42 +1,66 @@
-## Install
+**Install**
+=============
 ### Docker
-* sudo apt-get -y install apt-transport-https ca-certificates curl
-* curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-* sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-* sudo apt-key fingerprint 0EBFCD88
-* sudo apt-get update
-* sudo apt-get -y install docker-ce
-* sudo docker run hello-world
-* sudo apt-get install python-pip python-dev build-essential 
-* sudo pip install --upgrade pip
- 
-## Workflow Steps
+```
+sudo apt-get -y install apt-transport-https ca-certificates curl
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-key fingerprint 0EBFCD88
+sudo apt-get update
+sudo apt-get -y install docker-ce
+sudo docker run hello-world
+sudo apt-get install python-pip python-dev build-essential 
+sudo pip install --upgrade pip
+```
+
+### Docker-compose
+```
+sudo pip install docker-compose
+```
+
+**Prepare**
+============= 
 
 ### Clone git repository
 ```
 git clone git@dqa03:danny.lai/pressure_test_backend.git
 ```
 
-### Branch to develop
+### Branch to *develop*
 ```
 git checkout develop
 ```
 
-### Build image
+**Workflow Steps**
+=============
+
+### Build image and also create container
 ```
-docker build -t pressure_test_backend:0.1 .
+docker-compose run -d web
 ```
 
-### Create container
+### Start service
 ```
-docker run -d -ti --name django -p 8000:8000 -v "$PWD"/pressure_test:/code/pressure_test pressure_test_backend:0.1 /bin/bash
+docker-compose up
+```
 
-```
+### Delete old container
 
-### SSH to container
+* If your container name is already exist, you should remove old one. 
 ```
-docker exec -ti django /bin/bash
+docker-compose stop 
+docker-compose rm 
+``` 
+
+**Work inside container**
+=============
+
+### Connect to container
 ```
+docker exec -ti "your-container-name" /bin/bash
+```
+* use __docker ps__ to see container's name
+* ex: pressuretestbackend_web_1
 
 ### Activate virtual env
 ```
@@ -45,5 +69,9 @@ root@01739d768e32:/home/dqa/code# source env/bin/activate
 (env) root@01739d768e32:/home/dqa/code#
 ```
 
-### Happy coding
-* You can enjoy your coding from these steps
+### Change to project working directory
+```
+(env) root@01739d768e32:/home/dqa/code# cd ../data
+(env) root@01739d768e32:/home/dqa/data# cd pressure_test/
+(env) root@01739d768e32:/home/dqa/data/pressure_test# 
+```

@@ -1,0 +1,48 @@
+- hosts: all
+  sudo: yes
+  vars:
+    dockyard_home: /home/dqa/code
+  tasks:
+    - name: setup Python
+      shell: wget https://bootstrap.pypa.io/get-pip.py
+    
+    - name: install pip3
+      shell: python3 get-pip.py
+    
+    - name: pip install packages into global environment
+      pip:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - virtualenv
+
+    # - name: check if env exists
+    #   stat: "path={{ dockyard_home }}/env"
+    #   register: env
+        
+    # - name: remove env (virtualenv)
+    #   file: 
+    #     path: "{{ dockyard_home }}/env"
+    #     state: absent
+    #   when: env.stat.exists
+    
+    - name: pip install django with ver1.10 into env (virtualenv)
+      pip:
+        name: django
+        virtualenv: "{{ dockyard_home }}/env"
+        virtualenv_python: python3.4
+        version: 1.10.7
+        state: present
+
+    - name: pip install packages into env (virtualenv)
+      pip:
+        name: "{{ item }}"
+        virtualenv: "{{ dockyard_home }}/env"
+        virtualenv_python: python3.4
+        state: present
+      with_items:
+        - psycopg2
+        - djangorestframework
+        - markdown
+        - django-filter
+        - django-crispy-forms
