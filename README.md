@@ -37,7 +37,7 @@ docker-compose up
 ```
 docker exec -ti "your-container-name" /bin/bash
 ```
-* use *docker ps* to see container's name
+* use __docker ps__ to see container's name
 * ex: pressuretestbackend_web_1
 
 ### Activate virtual env
