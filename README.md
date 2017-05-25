@@ -9,6 +9,10 @@
 * sudo docker run hello-world
 * sudo apt-get install python-pip python-dev build-essential 
 * sudo pip install --upgrade pip
+
+### Docker-compose
+* sudo pip install docker-compose
+
  
 ## Workflow Steps
 
