@@ -1,0 +1,45 @@
+- hosts: apiservers
+  vars:
+    dockyard_home: /home/dqa/data
+    django_dir: /home/dqa/data/pressure_test
+    settings: pressure_test.settings
+    admin_user: admin
+    admin_email: admin@example.com
+    admin_pass: password123
+    virtualenv_dir: /home/dqa/code/env
+  tasks:
+    - name: Run makemigrations on the application
+      django_manage: command=makemigrations app_path={{ django_dir }} virtualenv={{ virtualenv_dir }}
+
+    - name: Run migrate on the application
+      django_manage: command=migrate app_path={{ django_dir }} virtualenv={{ virtualenv_dir }}
+
+    - name: super user existed?
+      shell: echo "from django.contrib.auth import get_user_model; User = get_user_model(); print(User.objects.filter(username='{{admin_user}}').count()>0)" | {{ virtualenv_dir }}/bin/python ./manage.py shell
+      args:
+        chdir: "{{django_dir}}"
+      environment:
+        DJANGO_SETTINGS_MODULE: "{{settings}}"
+      register: superuser_existed
+
+    - name: Create super user
+      django_manage: command="createsuperuser --noinput --username={{admin_user}} --email={{admin_email}}"
+                     app_path={{django_dir}}
+                     virtualenv={{virtualenv_dir}}
+                     settings={{settings}}
+      when: superuser_existed.stdout.find('False') != -1
+
+    - name: Change password tricks
+      file: "path={{ dockyard_home }}/changepassword.sh mode=0755"
+    
+    - name: ensure expect package are installed
+      sudo: yes
+      apt: name={{item}}
+      with_items:
+        - expect
+
+    - name: Change password
+      sudo: yes
+      command: "{{ dockyard_home }}/changepassword.sh"
+      args:
+        chdir: "{{ dockyard_home }}"

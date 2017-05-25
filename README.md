@@ -22,21 +22,23 @@ git clone git@dqa03:danny.lai/pressure_test_backend.git
 git checkout develop
 ```
 
-### Build image
+### Build image and also create container
 ```
-docker build -t pressure_test_backend:0.1 .
-```
-
-### Create container and sharing folder
-```
-docker run -d -ti --name django -p 8000:8000 -v "$PWD":/home/dqa/code/pressure_test pressure_test_backend:0.1 /bin/bash
-
+docker-compose run -d web
 ```
 
+### Start service
+```
+docker-compose up
+```
+
+## Add code to container
 ### SSH to container
 ```
-docker exec -ti django /bin/bash
+docker exec -ti "your-container-name" /bin/bash
 ```
+* use *docker ps* to see container's name
+* ex: pressuretestbackend_web_1
 
 ### Activate virtual env
 ```
@@ -45,21 +47,17 @@ root@01739d768e32:/home/dqa/code# source env/bin/activate
 (env) root@01739d768e32:/home/dqa/code#
 ```
 
-### Run server
+### Change to project working directory
 ```
-(env) root@01739d768e32:/home/dqa/code# cd pressure_test/pressure_test
-(env) root@01739d768e32:/home/dqa/code/pressure_test/pressure_test# python manage.py runserver 0.0.0.0:8000
+(env) root@01739d768e32:/home/dqa/code# cd ../data
+(env) root@01739d768e32:/home/dqa/data# cd pressure_test/
+(env) root@01739d768e32:/home/dqa/data/pressure_test# 
 ```
-
-### Develop your code
-
-* After develop or create files on your local host,
-* you can repeat steps from *build image* to *run server*
 
 ### Delete old container
 
 * If your container name is already exist, you should remove old one. 
 ```
-docker stop django
-docker rm django
+docker-compose stop 
+docker-compose rm 
 ``` 
