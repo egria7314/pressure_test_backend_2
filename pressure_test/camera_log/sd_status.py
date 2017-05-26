@@ -25,7 +25,7 @@ class SDstatus(object):
         data_dict["SD_used_percent"] = self.__get_sd_status()[1]
         #data_dict["SD_recording_filename"] = self.__get_recording_filename()
         print(json.dumps(data_dict, ensure_ascii=False))
-        return json.dumps(data_dict, ensure_ascii=False)
+        return data_dict
 
     def __get_sd_status(self):
         """Get SD status from camera by cgi"""

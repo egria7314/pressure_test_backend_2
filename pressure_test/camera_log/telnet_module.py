@@ -26,43 +26,17 @@ class URI(object):
 
         # request = urllib.Request(url)
         req = urllib.request.Request(url)
-
-
-
         auth_str = username + ":" + password
         byteString = auth_str.encode(encoding="utf-8")
         encodestr = base64.b64encode(byteString)
-        print("*********")
 
-        print(byteString)
-        print(encodestr)
-        # encodestr = encodestr.decode()
-        print(encodestr)
-        # encodestr = encodestr.decode().replace('\n', '')
-        # print(encodestr.decode().replace('\n', ''))
-
-
-        print("**1**")
-        # print(test)
-        print("******")
-
-
-
-        teststr =  "Basic " + encodestr.decode()
-        print("**2**")
-
-        req.add_header("Authorization", teststr)
-        print("**3**")
+        req.add_header("Authorization", "Basic %s" % encodestr.decode())
 
         try:
             # result = urllib.urlopen(request)
             result = urllib.request.urlopen(req)
-            print("**4**")
         except Exception as e:
             # pass
-            print("**5**")
             raise e
         else:
-            print("**6**")
-            print(type(result))
             return result
