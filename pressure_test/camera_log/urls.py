@@ -9,13 +9,7 @@ from camera_log import views
 
 urlpatterns = [
     url(r'^sd_status/$', views.get_sd_status),
+    url(r'^up_time/$', views.get_up_time),
 ]
-
-# urlpatterns = [
-#     url(r'^$', views.dashboard_view),
-#     url(r'^dashboard/$', views.dashboard_view),
-#     url(r'^login/$', views.loginpage_view),
-#     url(r'^parse_login_info/$', views.parse_login_info)
-# ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

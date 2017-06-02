@@ -31,13 +31,11 @@ class SDstatus(object):
         """Get SD status from camera by cgi"""
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrl.cgi?cmd=queryStatus&retType=javascript'
         url = URI.set(command, self.account, self.password)
-        print("7")
         data = url.read().decode()
         print(data)
 
 
         sd_status = re.search("cond='(.*)'",data).groups()[0]
-        print("9")
         sd_status_totalsize = re.search("totalsize='(.*)'",data).groups()[0]
         sd_status_usedspace = re.search("usedspace='(.*)'",data).groups()[0]
         sd_used_percent = (float(sd_status_usedspace)/float(sd_status_totalsize))*100

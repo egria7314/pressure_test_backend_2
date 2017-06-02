@@ -1,10 +1,8 @@
 __author__ = "steven.hsiao"
 import urllib
 import base64
-
+import telnetlib
 import urllib.request
-
-
 
 
 class URI(object):
@@ -40,3 +38,61 @@ class URI(object):
             raise e
         else:
             return result
+
+
+class TelnetModule(object):
+    """This function build connection between server and client machine."""
+
+    def __init__(self, ip, account, password):
+        """
+        TelnetModule initialize.
+
+        Args:
+          ip (str) : The string of ip that is camera ip.
+          username (str): The string of username that is camera account.
+          password (str): The string of password that is camera password.
+
+        """
+        self.ip = ip
+        self.account = account
+        self.password = password
+        #open camera telnet
+        URI.set('http://' + self.ip + '/cgi-bin/admin/mod_inetd.cgi?telnet=on', self.account, self.password)
+        self.tn = telnetlib.Telnet(self.ip, "", 5)
+        self.data = []
+
+    def login(self):
+        """Login machine."""
+
+        tn = self.tn
+        tn.read_until(b"login: ")
+        tn.write(self.account.encode(encoding="utf-8") + b"\n")
+        password_check = tn.read_until(b"Password: ", 5)
+        #confirm console display password input box
+        if b'Password' in password_check:
+            tn.write(self.password.encode(encoding="utf-8") + b"\n")
+            tn.read_until(b"~ #", 5)
+        else:
+            pass
+        return self
+
+    def send_command(self, commands):
+        """
+        Send commands.
+
+        Args:
+        commands : The string of commands that is url command.
+        """
+        tn = self.tn
+        tn.write(str(commands).encode(encoding="utf-8") + b"\n")
+        self.data.append(tn.read_until(b"~ #", 3000))
+        return self
+
+    def result(self):
+        """
+        Return the result.
+
+        Returns:
+            string. Server feedback.
+        """
+        return self.data
