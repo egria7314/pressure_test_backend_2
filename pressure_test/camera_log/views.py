@@ -14,8 +14,7 @@ from camera_log.sd_recording_file import Sdrecordingfile
 from camera_log.models import SdRecordingFile
 
 from camera_log.models import CameraLog
-import json
-
+from datetime import datetime
 
 CAMERA_IP = "172.19.16.119"
 CAMERA_USER = "root"
@@ -123,6 +122,8 @@ def get_sd_recording_file(request):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_camera_log(request):
+    time_now = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+
     # sd status
     my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
     sd_status_json = my_sd_status.get_result()
@@ -147,6 +148,7 @@ def get_camera_log(request):
 
 
     CameraLog.objects.create(
+        create_at=time_now,
         camera_ip=CAMERA_IP,
         sd_status=sd_status_json["SD_status"],
         sd_used_percent=sd_status_json["SD_used_percent"],
@@ -158,6 +160,15 @@ def get_camera_log(request):
         unlocked_file=sd_recording_file_json["unlocked_file"],
         all_file=sd_recording_file_json["all_file"],
     )
+
+    # test = CameraLog.objects.last()
+    # print("///////")
+    # print(test)
+    # print("+++++++")
+    # print(test.create_at)
+    # print("///////")
+
+
 
     return Response(camera_log_json)
 
