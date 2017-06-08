@@ -18,3 +18,17 @@ class SdRecordingFile(models.Model):
     locked_file = models.CharField(null=True, blank=True, max_length=100)
     unlocked_file = models.CharField(null=True, blank=True, max_length=100)
     all_file = models.CharField(null=True, blank=True, max_length=100)
+
+# whole
+class CameraLog(models.Model):
+    camera_ip = models.CharField(null=True, blank=True, max_length=100)
+    sd_used_percent = models.FloatField(null=True, blank=True)
+    sd_status = models.CharField(null=True, blank=True, max_length=100)
+    camera_uptime = models.CharField(null=True, blank=True, max_length=100)
+    camera_cpuloading_average = models.CharField(null=True, blank=True, max_length=100)
+    camera_cpuloading_idle =models.CharField(null=True, blank=True, max_length=100)
+    camera_epoch_time = models.CharField(null=True, blank=True, max_length=100)
+    locked_file = models.CharField(null=True, blank=True, max_length=100)
+    unlocked_file = models.CharField(null=True, blank=True, max_length=100)
+    all_file = models.CharField(null=True, blank=True, max_length=100)
+

@@ -3,6 +3,7 @@ from camera_log.models import SdStatus
 from camera_log.models import UpTime
 from camera_log.models import EpochTime
 from camera_log.models import SdRecordingFile
+from camera_log.models import CameraLog
 
 
 class SdStatusAdmin(admin.ModelAdmin):
@@ -21,10 +22,12 @@ class SdRecordingFileAdmin(admin.ModelAdmin):
     list_display = ('locked_file', 'unlocked_file', 'all_file')
     search_fields = ('locked_file', 'unlocked_file', 'all_file')
 
-    #
-    # locked_file = models.CharField(null=True, blank=True, max_length=100)
-    # unlocked_file = models.CharField(null=True, blank=True, max_length=100)
-    # all_file = models.CharField(null=True, blank=True, max_length=100)
+# whole
+class CameraLogAdmin(admin.ModelAdmin):
+    list_display = ('camera_ip', 'sd_used_percent', 'sd_status', 'camera_uptime', 'camera_cpuloading_average', 'camera_cpuloading_idle',
+                    'camera_epoch_time', 'locked_file', 'unlocked_file', 'all_file')
+    search_fields = ('camera_ip', 'sd_used_percent', 'sd_status', 'camera_uptime', 'camera_cpuloading_average', 'camera_cpuloading_idle',
+                    'camera_epoch_time', 'locked_file', 'unlocked_file', 'all_file')
 
 
 
@@ -32,6 +35,7 @@ admin.site.register(SdStatus, SdStatusAdmin)
 admin.site.register(UpTime, UpTimeAdmin)
 admin.site.register(EpochTime, EpochTimeAdmin)
 admin.site.register(SdRecordingFile, SdRecordingFileAdmin)
+admin.site.register(CameraLog, CameraLogAdmin)
 
 
 

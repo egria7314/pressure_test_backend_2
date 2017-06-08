@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^up_time/$', views.get_up_time),
     url(r'^epoch_time/$', views.get_epoch_time),
     url(r'^sd_recording_file/$', views.get_sd_recording_file),
+    url(r'^camera_log', views.get_camera_log)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

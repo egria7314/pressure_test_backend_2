@@ -13,6 +13,8 @@ from camera_log.models import EpochTime
 from camera_log.sd_recording_file import Sdrecordingfile
 from camera_log.models import SdRecordingFile
 
+from camera_log.models import CameraLog
+import json
 
 
 CAMERA_IP = "172.19.16.119"
@@ -108,7 +110,57 @@ def get_sd_recording_file(request):
     sd_recording_file = Sdrecordingfile(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
     sd_recording_file_json = sd_recording_file.get_fw_file_dict()
 
+    SdRecordingFile.objects.create(
+        locked_file=sd_recording_file_json["locked_file"],
+        unlocked_file=sd_recording_file_json["unlocked_file"],
+        all_file=sd_recording_file_json["all_file"]
+    )
+
     print(sd_recording_file_json)
 
     return Response(sd_recording_file_json)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_camera_log(request):
+    # sd status
+    my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    sd_status_json = my_sd_status.get_result()
+
+    # up time
+    my_up_time = Uptime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    my_up_time_json = my_up_time.get_result()
+
+    # epoch time
+    camera_epoch_time = Epochtime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    camera_epoch_time_json = camera_epoch_time.get_result()
+
+    # sd recording file
+    sd_recording_file = Sdrecordingfile(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    sd_recording_file_json = sd_recording_file.get_fw_file_dict()
+
+    camera_log_json = {}
+    camera_log_json.update(sd_status_json)
+    camera_log_json.update(my_up_time_json)
+    camera_log_json.update(camera_epoch_time_json)
+    camera_log_json.update(sd_recording_file_json)
+
+
+    CameraLog.objects.create(
+        camera_ip=CAMERA_IP,
+        sd_status=sd_status_json["SD_status"],
+        sd_used_percent=sd_status_json["SD_used_percent"],
+        camera_uptime=my_up_time_json["camera_uptime"],
+        camera_cpuloading_average=my_up_time_json["camera_cpuloading_average"],
+        camera_cpuloading_idle=my_up_time_json["camera_cpuloading_idle"],
+        camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
+        locked_file=sd_recording_file_json["locked_file"],
+        unlocked_file=sd_recording_file_json["unlocked_file"],
+        all_file=sd_recording_file_json["all_file"],
+    )
+
+    return Response(camera_log_json)
+
+
+
 
