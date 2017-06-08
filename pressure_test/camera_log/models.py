@@ -13,3 +13,8 @@ class UpTime(models.Model):
 
 class EpochTime(models.Model):
     camera_epoch_time = models.CharField(null=True, blank=True, max_length=100)
+
+class SdRecordingFile(models.Model):
+    locked_file = models.CharField(null=True, blank=True, max_length=100)
+    unlocked_file = models.CharField(null=True, blank=True, max_length=100)
+    all_file = models.CharField(null=True, blank=True, max_length=100)

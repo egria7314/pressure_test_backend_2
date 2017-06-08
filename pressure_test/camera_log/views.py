@@ -10,6 +10,9 @@ from camera_log.uptime import Uptime
 from camera_log.models import UpTime
 from camera_log.epoch_time import Epochtime
 from camera_log.models import EpochTime
+from camera_log.sd_recording_file import Sdrecordingfile
+from camera_log.models import SdRecordingFile
+
 
 
 CAMERA_IP = "172.19.16.119"
@@ -99,17 +102,13 @@ def get_epoch_time(requests):
 
     return Response(camera_epoch_time_json)
 
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_sd_recording_file(request):
+    sd_recording_file = Sdrecordingfile(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    sd_recording_file_json = sd_recording_file.get_fw_file_dict()
 
+    print(sd_recording_file_json)
 
-
-
-
-
-
-
-
-
-
-
-
+    return Response(sd_recording_file_json)
 
