@@ -156,17 +156,29 @@ def get_camera_log(request):
         camera_cpuloading_average=my_up_time_json["camera_cpuloading_average"],
         camera_cpuloading_idle=my_up_time_json["camera_cpuloading_idle"],
         camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
-        locked_file=sd_recording_file_json["locked_file"],
-        unlocked_file=sd_recording_file_json["unlocked_file"],
-        all_file=sd_recording_file_json["all_file"],
+        locked_file=','.join(sd_recording_file_json["locked_file"]),
+        unlocked_file=','.join(sd_recording_file_json["unlocked_file"]),
+        all_file=','.join(sd_recording_file_json["all_file"]),
     )
 
-    # test = CameraLog.objects.last()
-    # print("///////")
-    # print(test)
-    # print("+++++++")
-    # print(test.create_at)
-    # print("///////")
+    test = CameraLog.objects.last()     # last object
+    print("//////")
+    print(test)
+    print("++++++")
+    print(test.id)
+    print("++---+++")
+    print(test.create_at)
+    print("//////")
+
+    try:
+        former_obj = CameraLog.objects.get(id=test.id-1)    # former object
+        print(former_obj.create_at)
+        print(type(former_obj.unlocked_file))
+        print("hhhhhh")
+    except:
+        print("There isn't former object")
+        pass
+
 
 
 
