@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.models import DefaultSetting
+# from libs.nas_storage import NasStorage
 
 # Create your views here.
 
@@ -61,10 +62,19 @@ def return_default_setting(requests):
     else:
         return_json['log'] = False
     if querryset.cont_inner_serial_timstamp and querryset.cont_outer_serial_timstamp:
-        return_json['cont'] = True
+        return_json['continuity'] = True
     else:
-        return_json['cont'] = False
+        return_json['continuity'] = False
     return_json['broken'] = querryset.broken_image
     return_json['cgi'] = querryset.cgi
     return_json['delay'] = querryset.delay
     return Response(return_json)
+
+# @api_view(['GET'])
+# @permission_classes((AllowAny,))
+# def return_nas_location(requests):
+#     ip = requests.GET['ip']
+#     name = requests.GET['name']
+#     pw = requests.GET['pw']
+#     location = NasStorage(ip, name, pw).get_nas_location()
+#     return Response(location)
