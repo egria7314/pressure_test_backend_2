@@ -14,6 +14,7 @@ from camera_log.sd_recording_file import Sdrecordingfile
 from camera_log.models import SdRecordingFile
 
 from camera_log.models import CameraLog
+from camera_log.sd_cycle import SDcycle
 from datetime import datetime
 
 CAMERA_IP = "172.19.16.119"
@@ -147,6 +148,26 @@ def get_camera_log(request):
     camera_log_json.update(sd_recording_file_json)
 
 
+    # check sd cycle
+    former_obj = CameraLog.objects.last()
+    former_locked_file_list = former_obj.locked_file.split(',')
+    former_unlocked_file_list = former_obj.unlocked_file.split(',')
+
+    new_locked_file_list = sd_recording_file_json["locked_file"]
+    new_unlocked_file_list = sd_recording_file_json["unlocked_file"]
+
+    sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
+                              former_unlocked_file_list=former_unlocked_file_list,
+                              new_locked_file_list=new_locked_file_list,
+                              new_unlocked_file_list=new_unlocked_file_list)
+
+    sd_cycle_result = sd_cycle_obj.get_result("")
+    print("!!!")
+    print(sd_cycle_result)
+    print("!!!")
+
+
+
     CameraLog.objects.create(
         create_at=time_now,
         camera_ip=CAMERA_IP,
@@ -156,25 +177,68 @@ def get_camera_log(request):
         camera_cpuloading_average=my_up_time_json["camera_cpuloading_average"],
         camera_cpuloading_idle=my_up_time_json["camera_cpuloading_idle"],
         camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
-        locked_file=','.join(sd_recording_file_json["locked_file"]),
-        unlocked_file=','.join(sd_recording_file_json["unlocked_file"]),
+        locked_file=','.join(new_locked_file_list),
+        unlocked_file=','.join(new_unlocked_file_list),
+        # locked_file=','.join(sd_recording_file_json["locked_file"]),
+        # unlocked_file=','.join(sd_recording_file_json["unlocked_file"]),
         all_file=','.join(sd_recording_file_json["all_file"]),
+        sd_card_cycling=sd_cycle_result,
     )
 
-    test = CameraLog.objects.last()     # last object
-    print("//////")
-    print(test)
-    print("++++++")
-    print(test.id)
-    print("++---+++")
-    print(test.create_at)
-    print("//////")
+
 
     try:
-        former_obj = CameraLog.objects.get(id=test.id-1)    # former object
-        print(former_obj.create_at)
-        print(type(former_obj.unlocked_file))
-        print("hhhhhh")
+        new_obj = CameraLog.objects.last()     # last object
+        # print("/////")
+        # print(new_obj)
+        # print("++++++")
+        print(new_obj.id)
+        print("++-XD- -+++")
+        print(new_obj.create_at)
+        # print("//////")
+
+        former_obj = CameraLog.objects.get(id=new_obj.id-1)    # former object
+        # print("former create time")
+        # print(former_obj.create_at)
+        # print("former locked file:")
+        # print(former_obj.locked_file)
+        # print("former unlocked file:")
+        # print(former_obj.unlocked_file)
+        #
+        # print("new create time")
+        # print(new_obj.create_at)
+        # print("new locked file:")
+        # print(new_obj.locked_file)
+        # print("new unlocked file:")
+        # print(new_obj.unlocked_file)
+
+
+
+
+        # print("former create time ")
+        # print(former_obj.create_at)
+        # print("former locked file:")
+        # print(former_obj.locked_file.split(','))
+        # print("former unlocked file:")
+        # print(former_obj.unlocked_file.split(','))
+
+
+        # former_locked_file_list = former_obj.locked_file.split(',')
+        # former_unlocked_file_list = former_obj.unlocked_file.split(',')
+        # new_locked_file_list = former_obj.locked_file.split(',')
+        # new_unlocked_file_list = former_obj.unlocked_file.split(',')
+
+
+
+
+
+        # print(former_locked_file_list)
+        # print(former_unlocked_file_list)
+        # print(new_locked_file_list)
+        # print(new_unlocked_file_list)
+
+        # print(type(former_obj.unlocked_file))
+        print("hhhhh")
     except:
         print("There isn't former object")
         pass
