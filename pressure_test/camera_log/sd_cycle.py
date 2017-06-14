@@ -191,14 +191,3 @@ class SDcycle(object):
         else:
             return False, log
 
-
-# if __name__ == "__main__":
-#     # myNasStorage = SDstatus('172.19.16.126','root','1')
-#     # myNasStorage.get_result()
-#     import sys
-#     camera_ip = sys.argv[1]
-#     camera_name = sys.argv[2]
-#     camera_password = sys.argv[3]
-#
-#     myNasStorage = SDstatus(camera_ip,camera_name,camera_password)
-#     myNasStorage.get_result()
