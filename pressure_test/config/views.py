@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from config.serializers import ProjectSettingSerializer
+from rest_framework import generics
+from config.models import ProjectSetting
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.models import DefaultSetting
 from libs.nas_storage import NasStorage
 
-# Create your views here.
+
+class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProjectSetting.objects.all()
+    serializer_class = ProjectSettingSerializer
+
+class ProjectSettingList(generics.ListCreateAPIView):
+    queryset = ProjectSetting.objects.all()
+    serializer_class = ProjectSettingSerializer
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))

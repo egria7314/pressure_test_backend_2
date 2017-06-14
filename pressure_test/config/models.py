@@ -5,6 +5,7 @@ from django.db import models
 
 class ProjectSetting(models.Model):
     project_name = models.CharField(max_length=100)
+    prefix_name = models.CharField(max_length=100, blank=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     owner = models.CharField(max_length=100)
