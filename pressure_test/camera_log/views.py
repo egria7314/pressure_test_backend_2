@@ -111,9 +111,9 @@ def get_sd_recording_file(request):
     sd_recording_file_json = sd_recording_file.get_fw_file_dict()
 
     SdRecordingFile.objects.create(
-        locked_file=sd_recording_file_json["locked_file"],
-        unlocked_file=sd_recording_file_json["unlocked_file"],
-        all_file=sd_recording_file_json["all_file"]
+        sd_locked_file=sd_recording_file_json["locked_file"],
+        sd_unlocked_file=sd_recording_file_json["unlocked_file"],
+        sd_all_file=sd_recording_file_json["all_file"]
     )
 
     print(sd_recording_file_json)
@@ -148,8 +148,8 @@ def get_camera_log(request):
 
     # check SD cycle
     former_obj = CameraLog.objects.last()
-    new_locked_file_list = []
-    new_unlocked_file_list = []
+    new_sd_locked_file_list = []
+    new_sd_unlocked_file_list = []
     sd_cycle_result = ''
 
 
@@ -159,17 +159,17 @@ def get_camera_log(request):
         print("@@@@@")
 
 
-        former_locked_file_list = former_obj.locked_file.split(',')
-        former_unlocked_file_list = former_obj.unlocked_file.split(',')
+        former_locked_file_list = former_obj.sd_locked_file.split(',')
+        former_unlocked_file_list = former_obj.sd_unlocked_file.split(',')
 
 
-        new_locked_file_list = sd_recording_file_json["locked_file"]
-        new_unlocked_file_list = sd_recording_file_json["unlocked_file"]
+        new_sd_locked_file_list = sd_recording_file_json["locked_file"]
+        new_sd_unlocked_file_list = sd_recording_file_json["unlocked_file"]
 
         sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
                                   former_unlocked_file_list=former_unlocked_file_list,
-                                  new_locked_file_list=new_locked_file_list,
-                                  new_unlocked_file_list=new_unlocked_file_list)
+                                  new_locked_file_list=new_sd_locked_file_list,
+                                  new_unlocked_file_list=new_sd_unlocked_file_list)
 
         sd_cycle_result = sd_cycle_obj.get_result("")
         print("!!!")
@@ -195,9 +195,9 @@ def get_camera_log(request):
         camera_cpuloading_average=my_up_time_json["camera_cpuloading_average"],
         camera_cpuloading_idle=my_up_time_json["camera_cpuloading_idle"],
         camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
-        locked_file=','.join(new_locked_file_list),
-        unlocked_file=','.join(new_unlocked_file_list),
-        all_file=','.join(sd_recording_file_json["all_file"]),
+        sd_locked_file=','.join(new_sd_locked_file_list),
+        sd_unlocked_file=','.join(new_sd_unlocked_file_list),
+        sd_all_file=','.join(sd_recording_file_json["all_file"]),
         sd_card_cycling=sd_cycle_result,
     )
 

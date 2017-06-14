@@ -123,13 +123,15 @@ class SDcycle(object):
         # print(added_file_list)
 
         if len(added_file_list) != 0:
-            former_unlocked = self.former_unlocked_file_list
-            oldest_former_date = max(former_unlocked)
             newest_added_date = min(added_file_list)
-            surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
-            if surpass_hour:
-                result = comment + '\n'
-                exist = True
+            former_unlocked = self.former_unlocked_file_list
+            # if former list is empty then only compare new list
+            if len(former_unlocked) > 0:
+                oldest_former_date = max(former_unlocked)
+                surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
+                if surpass_hour:
+                    result = comment + '\n'
+                    exist = True
 
             # second: check if every added file is surpass one hour
             for added_file in added_file_list:
