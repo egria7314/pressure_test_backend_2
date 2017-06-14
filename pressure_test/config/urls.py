@@ -9,7 +9,8 @@ from config import views
 
 urlpatterns = [
     url(r'^init_default', views.init_default_setting),
-    url(r'^default/$', views.return_default_setting)
+    url(r'^default/$', views.return_default_setting),
+    url(r'^nas$', views.return_nas_location)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

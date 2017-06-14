@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.models import DefaultSetting
-# from libs.nas_storage import NasStorage
+from libs.nas_storage import NasStorage
 
 # Create your views here.
 
@@ -70,11 +70,11 @@ def return_default_setting(requests):
     return_json['delay'] = querryset.delay
     return Response(return_json)
 
-# @api_view(['GET'])
-# @permission_classes((AllowAny,))
-# def return_nas_location(requests):
-#     ip = requests.GET['ip']
-#     name = requests.GET['name']
-#     pw = requests.GET['pw']
-#     location = NasStorage(ip, name, pw).get_nas_location()
-#     return Response(location)
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def return_nas_location(requests):
+    ip = requests.GET['cameraip']
+    name = requests.GET['username']
+    pw = requests.GET['password']
+    return_json = NasStorage().get_nas_location(ip, name, pw)
+    return Response(return_json)
