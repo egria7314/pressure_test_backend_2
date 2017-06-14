@@ -1,8 +1,9 @@
 __author__ = "steven.hsiao"
-import urllib
+# import urllib
 import base64
-# import telnetlib
-# import urllib.request
+
+import telnetlib
+import urllib.request
 
 
 class URI(object):

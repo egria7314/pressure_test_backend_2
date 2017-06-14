@@ -26,3 +26,14 @@ class ProjectSetting(models.Model):
     log = models.BooleanField(default=False)
     cgi = models.TimeField()
     delay = models.TimeField()
+
+class DefaultSetting(models.Model):
+    default_type = models.CharField(max_length=100)
+    log_sd_card_status = models.BooleanField()
+    log_cyclic_recording = models.BooleanField()
+    log_nas_recording = models.BooleanField()
+    broken_image = models.BooleanField()
+    cont_inner_serial_timstamp = models.BooleanField()
+    cont_outer_serial_timstamp = models.BooleanField()
+    cgi = models.IntegerField()
+    delay = models.IntegerField()
