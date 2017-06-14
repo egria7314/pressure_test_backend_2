@@ -14,8 +14,8 @@ class ProjectSetting(models.Model):
     password = models.CharField(max_length=100)
 
     CHOICES = (
-        ('MED', 'Medium'),
-        ('HIGH', 'High')
+        ('medium', 'Medium'),
+        ('high', 'High')
     )
     type = models.CharField(max_length=100, choices=CHOICES, default='MED')
     path = models.CharField(max_length=100)
@@ -24,8 +24,8 @@ class ProjectSetting(models.Model):
     broken = models.BooleanField(default=False)
     continued = models.BooleanField(default=False)
     log = models.BooleanField(default=False)
-    cgi = models.TimeField()
-    delay = models.TimeField()
+    cgi = models.IntegerField()
+    delay = models.IntegerField()
 
 class DefaultSetting(models.Model):
     default_type = models.CharField(max_length=100)

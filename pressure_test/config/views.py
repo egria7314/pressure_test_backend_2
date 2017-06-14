@@ -18,6 +18,11 @@ class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
 
+    # def post(self, request, format=None):
+    #     print(request.data)
+
+        # return Response("tst")
+
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 
