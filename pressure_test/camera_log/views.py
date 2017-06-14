@@ -124,7 +124,6 @@ def get_sd_recording_file(request):
 @permission_classes((AllowAny,))
 def get_camera_log(request):
     time_now = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-
     # sd status
     my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
     sd_status_json = my_sd_status.get_result()
@@ -147,27 +146,46 @@ def get_camera_log(request):
     camera_log_json.update(camera_epoch_time_json)
     camera_log_json.update(sd_recording_file_json)
 
-
-    # check sd cycle
+    # check SD cycle
     former_obj = CameraLog.objects.last()
-    former_locked_file_list = former_obj.locked_file.split(',')
-    former_unlocked_file_list = former_obj.unlocked_file.split(',')
-
-    new_locked_file_list = sd_recording_file_json["locked_file"]
-    new_unlocked_file_list = sd_recording_file_json["unlocked_file"]
-
-    sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
-                              former_unlocked_file_list=former_unlocked_file_list,
-                              new_locked_file_list=new_locked_file_list,
-                              new_unlocked_file_list=new_unlocked_file_list)
-
-    sd_cycle_result = sd_cycle_obj.get_result("")
-    print("!!!")
-    print(sd_cycle_result)
-    print("!!!")
+    new_locked_file_list = []
+    new_unlocked_file_list = []
+    sd_cycle_result = ''
 
 
+    if former_obj:
+        print("!!!!!!")
+        print(former_obj)
+        print("@@@@@")
 
+
+        former_locked_file_list = former_obj.locked_file.split(',')
+        former_unlocked_file_list = former_obj.unlocked_file.split(',')
+
+
+        new_locked_file_list = sd_recording_file_json["locked_file"]
+        new_unlocked_file_list = sd_recording_file_json["unlocked_file"]
+
+        sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
+                                  former_unlocked_file_list=former_unlocked_file_list,
+                                  new_locked_file_list=new_locked_file_list,
+                                  new_unlocked_file_list=new_unlocked_file_list)
+
+        sd_cycle_result = sd_cycle_obj.get_result("")
+        print("!!!")
+        print(sd_cycle_result)
+        print("!!!")
+
+    # check NAS cycle
+
+
+
+
+    # check VAST cycle
+
+
+
+    # write db
     CameraLog.objects.create(
         create_at=time_now,
         camera_ip=CAMERA_IP,
@@ -179,75 +197,61 @@ def get_camera_log(request):
         camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
         locked_file=','.join(new_locked_file_list),
         unlocked_file=','.join(new_unlocked_file_list),
-        # locked_file=','.join(sd_recording_file_json["locked_file"]),
-        # unlocked_file=','.join(sd_recording_file_json["unlocked_file"]),
         all_file=','.join(sd_recording_file_json["all_file"]),
         sd_card_cycling=sd_cycle_result,
     )
 
-
-
-    try:
-        new_obj = CameraLog.objects.last()     # last object
-        # print("/////")
-        # print(new_obj)
-        # print("++++++")
-        print(new_obj.id)
-        print("++-XD- -+++")
-        print(new_obj.create_at)
-        # print("//////")
-
-        former_obj = CameraLog.objects.get(id=new_obj.id-1)    # former object
-        # print("former create time")
-        # print(former_obj.create_at)
-        # print("former locked file:")
-        # print(former_obj.locked_file)
-        # print("former unlocked file:")
-        # print(former_obj.unlocked_file)
-        #
-        # print("new create time")
-        # print(new_obj.create_at)
-        # print("new locked file:")
-        # print(new_obj.locked_file)
-        # print("new unlocked file:")
-        # print(new_obj.unlocked_file)
-
-
-
-
-        # print("former create time ")
-        # print(former_obj.create_at)
-        # print("former locked file:")
-        # print(former_obj.locked_file.split(','))
-        # print("former unlocked file:")
-        # print(former_obj.unlocked_file.split(','))
-
-
-        # former_locked_file_list = former_obj.locked_file.split(',')
-        # former_unlocked_file_list = former_obj.unlocked_file.split(',')
-        # new_locked_file_list = former_obj.locked_file.split(',')
-        # new_unlocked_file_list = former_obj.unlocked_file.split(',')
-
-
-
-
-
-        # print(former_locked_file_list)
-        # print(former_unlocked_file_list)
-        # print(new_locked_file_list)
-        # print(new_unlocked_file_list)
-
-        # print(type(former_obj.unlocked_file))
-        print("hhhhh")
-    except:
-        print("There isn't former object")
-        pass
-
-
-
-
+    #
+    #
+    # try:
+    #     new_obj = CameraLog.objects.last()     # last object
+    #     # print("/////")
+    #     # print(new_obj)
+    #     # print("++++++")
+    #     print(new_obj.id)
+    #     print("++-XD- -+++")
+    #     print(new_obj.create_at)
+    #     # print("//////")
+    #
+    #     former_obj = CameraLog.objects.get(id=new_obj.id-1)    # former object
+    #     # print("former create time")
+    #     # print(former_obj.create_at)
+    #     # print("former locked file:")
+    #     # print(former_obj.locked_file)
+    #     # print("former unlocked file:")
+    #     # print(former_obj.unlocked_file)
+    #     #
+    #     # print("new create time")
+    #     # print(new_obj.create_at)
+    #     # print("new locked file:")
+    #     # print(new_obj.locked_file)
+    #     # print("new unlocked file:")
+    #     # print(new_obj.unlocked_file)
+    #
+    #     # print("former create time ")
+    #     # print(former_obj.create_at)
+    #     # print("former locked file:")
+    #     # print(former_obj.locked_file.split(','))
+    #     # print("former unlocked file:")
+    #     # print(former_obj.unlocked_file.split(','))
+    #
+    #
+    #     # former_locked_file_list = former_obj.locked_file.split(',')
+    #     # former_unlocked_file_list = former_obj.unlocked_file.split(',')
+    #     # new_locked_file_list = former_obj.locked_file.split(',')
+    #     # new_unlocked_file_list = former_obj.unlocked_file.split(',')
+    #
+    #     # print(former_locked_file_list)
+    #     # print(former_unlocked_file_list)
+    #     # print(new_locked_file_list)
+    #     # print(new_unlocked_file_list)
+    #
+    #     # print(type(former_obj.unlocked_file))
+    #     print("hhhhh")
+    # except:
+    #     print("There isn't former object")
+    #     pass
+    #
     return Response(camera_log_json)
-
-
 
 
