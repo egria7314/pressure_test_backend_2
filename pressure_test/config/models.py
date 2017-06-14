@@ -24,8 +24,8 @@ class ProjectSetting(models.Model):
     broken = models.BooleanField(default=False)
     continued = models.BooleanField(default=False)
     log = models.BooleanField(default=False)
-    cgi = models.TimeField()
-    delay = models.TimeField()
+    cgi = models.IntegerField()
+    delay = models.IntegerField()
 
 class DefaultSetting(models.Model):
     default_type = models.CharField(max_length=100)
