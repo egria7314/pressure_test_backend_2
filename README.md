@@ -41,6 +41,7 @@ docker-compose run -d web
 
 ### Rebuild dockerfile 
 * If you change a Dockerfile or the contents of its build directory, run to rebuild it.
+
 ```
 docker-compose build
 ```
