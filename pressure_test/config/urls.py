@@ -1,0 +1,16 @@
+from django.conf.urls import url
+from rest_framework.urlpatterns import format_suffix_patterns
+from config.lib import verify_script
+from config import views
+
+# from website import views
+
+
+urlpatterns = [
+    url(r'^test_button/$', verify_script.test_button),
+    # url(r'^mount/$', verify_script.mount_status),
+    url(r'^pre_test/$', views.ProjectSettingList.as_view()),
+    url(r'^pre_test/(?P<pk>[0-9]+)/$', views.ProjectSettingDetail.as_view()),
+]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
