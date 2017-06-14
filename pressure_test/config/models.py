@@ -14,8 +14,8 @@ class ProjectSetting(models.Model):
     password = models.CharField(max_length=100)
 
     CHOICES = (
-        ('MED', 'Medium'),
-        ('HIGH', 'High')
+        ('medium', 'Medium'),
+        ('high', 'High')
     )
     type = models.CharField(max_length=100, choices=CHOICES, default='MED')
     path = models.CharField(max_length=100)
