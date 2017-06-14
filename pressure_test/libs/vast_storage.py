@@ -18,24 +18,16 @@ class VastStorage(object):
         self.vast_password = vast_password
         self.domain = domain
 
-    def get_video_vast(self, remote_username, remote_password, sudo_password, remote_path, time_start=0, time_end=0):
+    def get_video_vast(self, remote_username, remote_password, sudo_password, remote_path, time_start, time_end):
         """
         """
-        start_date_detail = datetime.datetime.fromtimestamp(time_start)
-        start_date_obj = datetime.date(int(start_date_detail.strftime('%Y')), int(start_date_detail.strftime('%m')), int(start_date_detail.strftime('%d')))
-        end_date_detail = datetime.datetime.fromtimestamp(time_start)
-        end_date_obj = datetime.date(int(end_date_detail.strftime('%Y')), int(end_date_detail.strftime('%m')), int(end_date_detail.strftime('%d')))
-
-        delta = end_date_obj - start_date_obj
+        delta = time_end - time_start
         date_list = []
         for i in range(delta.days + 1):
-            date_list.append((start_date_obj + datetime.timedelta(days=i)).strftime('%Y-%m-%d'))
+            date_list.append((time_start + datetime.timedelta(days=i)).strftime('%Y-%m-%d'))
         videos = {}
         for date in date_list:
             remote_path = re.sub('\d{4}-\d{2}-\d{2}', '{0}', remote_path).format(date)
-            if 'failed' in remote_path:
-                raise Exception('getting VAST location failed')
-
             local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_').replace('.', '_'))
             self.mount_folder(
                 remote_username=remote_username,
@@ -43,7 +35,9 @@ class VastStorage(object):
                 remote_path=remote_path,
                 sudo_password=sudo_password,
                 local_path=local_path)
-            video = self.dump_vast_files(remote_path, time_start, time_end)
+            timestamp_start = time.mktime(time_start.timetuple())
+            timestamp_end = time.mktime(time_end.timetuple())
+            video = self.dump_vast_files(remote_path, timestamp_start, timestamp_end)
             videos.update(video)
             # unmount
             self.unmount_folder(local_path, sudo_password)
@@ -133,26 +127,3 @@ class VastStorage(object):
 
         return True
 
-
-if __name__ == "__main__":
-    import sys
-    camera_ip = sys.argv[1]
-    camera_name = sys.argv[2]
-    camera_password = sys.argv[3]
-    sudo_password = sys.argv[4]
-    nas_username = sys.argv[5]
-    nas_password = sys.argv[6]
-    prefix = "medium_stress"
-    remote_path = '\\\\172.19.11.189\\Public\\autotest\\NAS\\debug'.replace('\\','/')
-
-
-    # myNasStorage = NasStorage(camera_ip,camera_name,camera_password, nas_username, nas_password)
-    # # myNasStorage.get_video()
-    # # nas_username = myNasStorage.get_nas_username()
-    # # nas_password = myNasStorage.get_nas_password()
-    # myNasStorage.get_video2(nas_username, nas_password, sudo_password)
-    # # myNasStorage = NasStorage('172.19.16.126', 'root', '1')
-    # # myNasStorage.get_video2("autotest", "autotest", "123")
-    # myNasStorage = VastStorage(nas_username, nas_password)
-    # print (myNasStorage.get_nas_location(camera_ip, camera_name, camera_password))
-    # print (myNasStorage.get_video2(nas_username, nas_password, sudo_password))

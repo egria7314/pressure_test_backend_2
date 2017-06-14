@@ -2,7 +2,6 @@ __author__ = 'carlos.hu'
 # -*- coding: utf-8 -*-
 import re
 import os
-import json
 import pexpect
 import platform
 import time
@@ -22,7 +21,7 @@ class NasStorage(object):
 
     def get_nas_location(self, camera_ip, camera_name, camera_password):
         """Get nas location from camera by cgi"""
-        nas_info = {}
+        nas_info = {"nasPath":'', 'info':[{'status': '', 'comment': '', 'action': ''}]}
         command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?server_i0_type&server_i1_type&server_i2_type&&server_i3_type&server_i4_type&server_i5_type'
         try:
             url = URI.set(command, camera_name, camera_password)
@@ -35,27 +34,21 @@ class NasStorage(object):
             nas_location =  url.read().decode('utf-8')
             nas_location = re.search('\'(.*)\'',nas_location).groups()[0]
             nas_location = "\\" .join(nas_location.split('\\\\'))
-            nas_info['nasPath'] = nas_location
-            nas_info['comment'] = ''
+            nas_info["nasPath"] = nas_location
+            nas_info['info'][0]['status'] = 'success'
+            nas_info['info'][0]['action'] = 'get_nas_location'
 
             return nas_info
         except:
-            nas_info['loaction'] = ''
-            nas_info['comment'] = 'NAS setting failed'
+            nas_info['info'][0]['status'] = 'fail'
+            nas_info['info'][0]['action'] = 'get_nas_location'
+            nas_info['info'][0]['comment'] = 'NAS setting failed'
             return nas_info
 
-    def get_video2(self, remote_username, remote_password, sudo_password, remote_path, prefix, time_start=0, time_end=0):
+
+    def get_video_nas(self, remote_username, remote_password, sudo_password, remote_path, prefix, time_start, time_end):
         """
         """
-
-        # get nas location
-        # remote_path = '\\\\172.19.11.191\\Oliver\\NAS\\medium_stress'.replace('\\','/')
-        # prefix = "medium_stress"
-        # remote_path = '\\\\172.19.11.189\\Public\\autotest\\NAS\\debug'.replace('\\','/')
-        # remote_path = self.get_nas_location().replace('\\','/')
-        if 'failed' in remote_path:
-            raise Exception('getting NAS location failed')
-
         local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_'))
 
         # walk through hierarchical
@@ -65,9 +58,9 @@ class NasStorage(object):
             remote_path=remote_path,
             sudo_password=sudo_password,
             local_path=local_path)
-
-        videos = self.dump_nas_files(remote_path, prefix, time_start, time_end)
-        print ('type(videos) = {0}'.format(type(videos)))
+        timestamp_start = time.mktime(time_start.timetuple())
+        timestamp_end = time.mktime(time_end.timetuple())
+        videos = self.dump_nas_files(remote_path, prefix, timestamp_start, timestamp_end)
         # unmount
         self.unmount_folder(local_path, sudo_password)
 
@@ -92,7 +85,6 @@ class NasStorage(object):
                 file_size = os.stat(file_path).st_size
                 possible_file = re.search(search_dir + '/(.*mp4)', file_path)
                 if possible_file and prefix in possible_file.groups()[0] and file_mod_time > timestamp_start and file_mod_time < timestamp_end:
-                    # file.append(os.path.join(search_dir_web, possible_file.groups()[0]))
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
@@ -160,25 +152,3 @@ class NasStorage(object):
         return True
 
 
-if __name__ == "__main__":
-    import sys
-    camera_ip = sys.argv[1]
-    camera_name = sys.argv[2]
-    camera_password = sys.argv[3]
-    sudo_password = sys.argv[4]
-    nas_username = sys.argv[5]
-    nas_password = sys.argv[6]
-    prefix = "medium_stress"
-    remote_path = '\\\\172.19.11.189\\Public\\autotest\\NAS\\debug'.replace('\\','/')
-
-
-    # myNasStorage = NasStorage(camera_ip,camera_name,camera_password, nas_username, nas_password)
-    # # myNasStorage.get_video()
-    # # nas_username = myNasStorage.get_nas_username()
-    # # nas_password = myNasStorage.get_nas_password()
-    # myNasStorage.get_video2(nas_username, nas_password, sudo_password)
-    # # myNasStorage = NasStorage('172.19.16.126', 'root', '1')
-    # # myNasStorage.get_video2("autotest", "autotest", "123")
-    myNasStorage = NasStorage(nas_username, nas_password)
-    print (myNasStorage.get_nas_location(camera_ip, camera_name, camera_password))
-    print (myNasStorage.get_video2(nas_username, nas_password, sudo_password))
