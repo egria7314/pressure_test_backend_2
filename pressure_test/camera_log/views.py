@@ -111,9 +111,9 @@ def get_sd_recording_file(request):
     sd_recording_file_json = sd_recording_file.get_fw_file_dict()
 
     SdRecordingFile.objects.create(
-        sd_locked_file=sd_recording_file_json["locked_file"],
-        sd_unlocked_file=sd_recording_file_json["unlocked_file"],
-        sd_all_file=sd_recording_file_json["all_file"]
+        sd_locked_file=sd_recording_file_json["sd_locked_file"],
+        sd_unlocked_file=sd_recording_file_json["sd_unlocked_file"],
+        sd_all_file=sd_recording_file_json["sd_all_file"]
     )
 
     print(sd_recording_file_json)
@@ -147,38 +147,68 @@ def get_camera_log(request):
     camera_log_json.update(sd_recording_file_json)
 
     # check SD cycle
-    former_obj = CameraLog.objects.last()
-    new_sd_locked_file_list = []
-    new_sd_unlocked_file_list = []
-    sd_cycle_result = ''
+    former_sd_obj = CameraLog.objects.last()
+
+    if former_sd_obj:
+        former_locked_file_list = former_sd_obj.sd_locked_file.split(',')
+        former_unlocked_file_list = former_sd_obj.sd_unlocked_file.split(',')
+
+        # former obj is empty string:
+        # if former obj is empty string:
+
+        # print("tt")
+        # print(len(set(former_locked_file_list)))
+        # print(former_locked_file_list))
+        # print("yy")
 
 
-    if former_obj:
-        print("!!!!!!")
-        print(former_obj)
-        print("@@@@@")
 
 
-        former_locked_file_list = former_obj.sd_locked_file.split(',')
-        former_unlocked_file_list = former_obj.sd_unlocked_file.split(',')
+        if len(set(former_locked_file_list)) == 1 and  list(set(former_locked_file_list)) == ['']:
+            former_locked_file_list = []
+            print("@@@@@@@@@@@@@@")
+
+        if len(set(former_unlocked_file_list)) == 1 and  list(set(former_unlocked_file_list)) == ['']:
+            former_unlocked_file_list = []
+            print("@@@@@@@@@@@@@@@")
 
 
-        new_sd_locked_file_list = sd_recording_file_json["locked_file"]
-        new_sd_unlocked_file_list = sd_recording_file_json["unlocked_file"]
 
-        sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
-                                  former_unlocked_file_list=former_unlocked_file_list,
-                                  new_locked_file_list=new_sd_locked_file_list,
-                                  new_unlocked_file_list=new_sd_unlocked_file_list)
 
-        sd_cycle_result = sd_cycle_obj.get_result("")
-        print("!!!")
-        print(sd_cycle_result)
-        print("!!!")
+    else:
+        former_locked_file_list = []
+        former_unlocked_file_list = []
+
+
+    new_sd_locked_file_list = sd_recording_file_json["sd_locked_file"]
+    new_sd_unlocked_file_list = sd_recording_file_json["sd_unlocked_file"]
+
+    print("---------------------")
+    print("former_locked_file_list")
+    print(former_locked_file_list)
+    print("former_unlocked_file_list")
+    print(former_unlocked_file_list)
+    print("new_sd_locked_file_list")
+    print(new_sd_locked_file_list)
+    print("new_sd_unlocked_file_list")
+    print(new_sd_unlocked_file_list)
+    print("--------------------")
+
+
+
+
+    sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
+                              former_unlocked_file_list=former_unlocked_file_list,
+                              new_locked_file_list=new_sd_locked_file_list,
+                              new_unlocked_file_list=new_sd_unlocked_file_list)
+
+    sd_cycle_result = sd_cycle_obj.get_result("")
+    print("sd_cycle_result:")
+    print(sd_cycle_result)
+
+
 
     # check NAS cycle
-
-
 
 
     # check VAST cycle
@@ -197,7 +227,7 @@ def get_camera_log(request):
         camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
         sd_locked_file=','.join(new_sd_locked_file_list),
         sd_unlocked_file=','.join(new_sd_unlocked_file_list),
-        sd_all_file=','.join(sd_recording_file_json["all_file"]),
+        sd_all_file=','.join(sd_recording_file_json["sd_all_file"]),
         sd_card_cycling=sd_cycle_result,
     )
 

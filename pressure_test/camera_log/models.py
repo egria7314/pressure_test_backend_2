@@ -31,11 +31,27 @@ class CameraLog(models.Model):
     camera_cpuloading_idle =models.CharField(null=True, blank=True, max_length=100)
     camera_epoch_time = models.CharField(null=True, blank=True, max_length=100)
 
+    # sd
     sd_locked_file = models.TextField(null=True, blank=True)
     sd_unlocked_file = models.TextField(null=True, blank=True)
     sd_all_file = models.TextField(null=True, blank=True)
 
-
     sd_card_cycling = models.CharField(null=True, blank=True, max_length=100)
+
+    # nas
+    nas_file = models.TextField(null=True, blank=True)
+    nas_cycling = models.CharField(null=True, blank=True, max_length=100)
+
+    # vast
+    vast_file = models.TextField(null=True, blank=True)
+    vast_cycling = models.CharField(null=True, blank=True, max_length=100)
+
+
+
+
+
+
+
+
 
 

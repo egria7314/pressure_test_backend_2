@@ -53,6 +53,11 @@ class SDcycle(object):
             adding, comment = self.__check_adding(PREFIX)
             if adding:
                 return comment
+
+
+            else:
+                result = "Nothing change!"
+                return result
         except:
             result = "Fail"
             return result
@@ -72,7 +77,7 @@ class SDcycle(object):
         loss_file_list = sorted(loss_file_list)
         loss_unlocked_num = len(loss_file_list)
 
-        print(loss_unlocked_num)
+        # print(loss_unlocked_num)
 
         if loss_unlocked_num == 0 and added_unlocked_num > 0:
             adding = True
