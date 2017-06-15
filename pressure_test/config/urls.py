@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^default/$', views.return_default_setting),
     url(r'^nas$', views.return_nas_location),
     url(r'^projects/(?P<pk>[0-9]+)/$', views.return_project_setting),
-    url(r'^projects/$', views.return_project_setting)
+    url(r'^projects/$', views.return_project_setting),
     url(r'^save_project_setting/$', views.ProjectSettingList.as_view()),
     url(r'^save_project_setting/(?P<pk>[0-9]+)/$', views.ProjectSettingDetail.as_view())
 ]
