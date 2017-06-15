@@ -9,7 +9,6 @@ from config import views
 
 urlpatterns = [
     url(r'^test_button/$', verify_script.test_button),
-    url(r'^projects/$', views.get_projects),
     url(r'^init_default', views.init_default_setting),
     url(r'^default/$', views.return_default_setting),
     url(r'^nas$', views.return_nas_location),
