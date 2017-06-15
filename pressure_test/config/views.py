@@ -8,24 +8,31 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.models import DefaultSetting
 from libs.nas_storage import NasStorage
+from rest_framework import status
+from rest_framework.decorators import api_view
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
 
+
 class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
 
-    # def post(self, request, format=None):
-    #     print(request.data)
+    def post(self, request, format=None):
+        serializer = ProjectSettingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
+            return Response(result, status=status.HTTP_201_CREATED)
+        result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":serializer.errors}
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-        # return Response("tst")
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-
 def init_default_setting(requests):
     default_json = [
         {
