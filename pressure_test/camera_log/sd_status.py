@@ -21,8 +21,8 @@ class SDstatus(object):
         """Get the dictionary consist of camera SD status and usedpercent"""
         data_dict = {}
         SD_status = self.__get_sd_status()
-        data_dict["SD_status"] = SD_status[0]
-        data_dict["SD_used_percent"] = self.__get_sd_status()[1]
+        data_dict["sdCardStatus"] = SD_status[0]
+        data_dict["sdCardUsed"] = self.__get_sd_status()[1]
         #data_dict["SD_recording_filename"] = self.__get_recording_filename()
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict

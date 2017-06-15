@@ -19,7 +19,6 @@ class SDcycle(object):
         self.new_all_file = new_locked_file_list + new_unlocked_file_list
 
 
-
     def get_result(self, PREFIX):
         result = ""
 
