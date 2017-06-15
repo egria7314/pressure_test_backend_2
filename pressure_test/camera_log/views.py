@@ -16,7 +16,9 @@ from camera_log.models import SdRecordingFile
 from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
 from datetime import datetime
-from datetime import date
+
+import time
+
 from libs.vast_storage import VastStorage
 
 
@@ -126,7 +128,13 @@ def get_sd_recording_file(request):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_camera_log(request):
+def set_camera_log(request):
+    final_camera_log_json = {}
+    final_camera_log_json["id"] = "1"    # temp
+    all_data_list = []
+
+    # while(True):
+
     time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
     # sd status
     my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
@@ -215,12 +223,19 @@ def get_camera_log(request):
         camera_uptime=my_up_time_json["uptime"],
         camera_cpuloading_average=my_up_time_json["loadAverage"],
         camera_cpuloading_idle=my_up_time_json["idle"],
-        # camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
+        camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
         sd_locked_file=','.join(new_sd_locked_file_list),
         sd_unlocked_file=','.join(new_sd_unlocked_file_list),
         sd_all_file=','.join(sd_recording_file_json["sd_all_file"]),
         sd_card_cycling=sd_cycle_result,
     )
+
+    all_data_list.append(camera_log_json)
+
+    # time.sleep(5)
+
+
+    final_camera_log_json["data"] = all_data_list
 
     #
     #
@@ -235,27 +250,6 @@ def get_camera_log(request):
     #     # print("//////")
     #
     #     former_obj = CameraLog.objects.get(id=new_obj.id-1)    # former object
-    #     # print("former create time")
-    #     # print(former_obj.create_at)
-    #     # print("former locked file:")
-    #     # print(former_obj.locked_file)
-    #     # print("former unlocked file:")
-    #     # print(former_obj.unlocked_file)
-    #     #
-    #     # print("new create time")
-    #     # print(new_obj.create_at)
-    #     # print("new locked file:")
-    #     # print(new_obj.locked_file)
-    #     # print("new unlocked file:")
-    #     # print(new_obj.unlocked_file)
-    #
-    #     # print("former create time ")
-    #     # print(former_obj.create_at)
-    #     # print("former locked file:")
-    #     # print(former_obj.locked_file.split(','))
-    #     # print("former unlocked file:")
-    #     # print(former_obj.unlocked_file.split(','))
-    #
     #
     #     # former_locked_file_list = former_obj.locked_file.split(',')
     #     # former_unlocked_file_list = former_obj.unlocked_file.split(',')
@@ -273,6 +267,32 @@ def get_camera_log(request):
     #     print("There isn't former object")
     #     pass
     #
-    return Response(camera_log_json)
+    return Response(final_camera_log_json)
 
 
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_all_camera_log(request):
+    final_camera_log_json = {}
+    final_camera_log_json["id"] = "1"
+    data_list = []
+
+    all_camera_logs = CameraLog.objects.all()
+    for log_obj in all_camera_logs:
+        log_data_dict = {}
+        log_data_dict["createAt"] = log_obj.create_at
+        log_data_dict["uptime"] = log_obj.camera_uptime
+        log_data_dict["idle"] = log_obj.camera_cpuloading_idle
+        log_data_dict["loadAverage"] = log_obj.camera_cpuloading_average
+        log_data_dict["sdCardStatus"] = log_obj.sd_status
+        log_data_dict["sdCardUsed"] = log_obj.sd_used_percent
+        log_data_dict["sdCardCycling"] = log_obj.sd_card_cycling
+        log_data_dict["storageCycling"] = ""
+
+        data_list.append(log_data_dict)
+
+        # print(log_obj.create_at)
+
+    final_camera_log_json["data"] = data_list
+
+    return Response(final_camera_log_json)
