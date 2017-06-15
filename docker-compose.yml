@@ -2,8 +2,20 @@ version: '2'
 services:
   db:
     image: postgres
+  redis:
+    image: "redis:alpine"
+  celery:
+    build: .
+    privileged: true
+    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info"
+    volumes:
+      - .:/home/dqa/data
+    links:
+      - db
+      - redis
   web:
     build: .
+    privileged: true
     entrypoint: /home/dqa/data/entrypoint.sh
     volumes:
       - .:/home/dqa/data
@@ -11,4 +23,5 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    privileged: True
+    links:
+      - redis

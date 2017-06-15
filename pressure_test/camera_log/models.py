@@ -15,9 +15,9 @@ class EpochTime(models.Model):
     camera_epoch_time = models.CharField(null=True, blank=True, max_length=100)
 
 class SdRecordingFile(models.Model):
-    locked_file = models.CharField(null=True, blank=True, max_length=100)
-    unlocked_file = models.CharField(null=True, blank=True, max_length=100)
-    all_file = models.CharField(null=True, blank=True, max_length=100)
+    sd_locked_file = models.TextField(null=True, blank=True)
+    sd_unlocked_file = models.TextField(null=True, blank=True)
+    sd_all_file = models.TextField(null=True, blank=True)
 
 # whole
 class CameraLog(models.Model):
@@ -29,8 +29,28 @@ class CameraLog(models.Model):
     camera_cpuloading_average = models.CharField(null=True, blank=True, max_length=100)
     camera_cpuloading_idle =models.CharField(null=True, blank=True, max_length=100)
     camera_epoch_time = models.CharField(null=True, blank=True, max_length=100)
-    locked_file = models.CharField(null=True, blank=True, max_length=100)
-    unlocked_file = models.CharField(null=True, blank=True, max_length=100)
-    all_file = models.CharField(null=True, blank=True, max_length=100)
+
+    # sd
+    sd_locked_file = models.TextField(null=True, blank=True)
+    sd_unlocked_file = models.TextField(null=True, blank=True)
+    sd_all_file = models.TextField(null=True, blank=True)
 
     sd_card_cycling = models.CharField(null=True, blank=True, max_length=100)
+
+    # nas
+    nas_file = models.TextField(null=True, blank=True)
+    nas_cycling = models.CharField(null=True, blank=True, max_length=100)
+
+    # vast
+    vast_file = models.TextField(null=True, blank=True)
+    vast_cycling = models.CharField(null=True, blank=True, max_length=100)
+
+
+
+
+
+
+
+
+
+

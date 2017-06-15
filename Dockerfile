@@ -7,4 +7,4 @@ COPY . data/
 WORKDIR /home/dqa/data
 RUN ansible-playbook setup_of_python_modules.yml -i hosts
 
-WORKDIR /home/dqa/
+WORKDIR /home/dqa/data/pressure_test
