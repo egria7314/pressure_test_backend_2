@@ -93,3 +93,29 @@ def return_nas_location(requests):
     pw = requests.GET['password']
     return_json = NasStorage().get_nas_location(ip, name, pw)
     return Response(return_json)
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def return_project_setting(requests, pk=None):
+    if pk:
+        querry_set = ProjectSetting.objects.filter(id = pk).values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+                                                     "path_username", "continued", "username", "type", "broken", "owner",
+                                                     "prefix_name", "cgi", "password", "path_password", "ip")
+        return_json = list(querry_set)[0]
+        return_json['projectName'] = return_json.pop('project_name')
+        return_json['cameraIp'] = return_json.pop('ip')
+        return_json['startTime'] = return_json.pop('start_time')
+        return_json['endTime'] = return_json.pop('end_time')
+
+    else:
+        querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+                                                     "path_username", "continued", "username", "type", "broken", "owner",
+                                                     "prefix_name", "cgi", "password", "path_password", "ip")
+        return_json = list(querry_set)
+        for item_json in return_json:
+            item_json['projectName'] = item_json.pop('project_name')
+            item_json['cameraIp'] = item_json.pop('ip')
+            item_json['startTime'] = item_json.pop('start_time')
+            item_json['endTime'] = item_json.pop('end_time')
+    return Response(return_json)

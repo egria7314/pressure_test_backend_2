@@ -15,7 +15,9 @@ urlpatterns = [
     url(r'^pre_test/(?P<pk>[0-9]+)/$', views.ProjectSettingDetail.as_view()),
     url(r'^init_default', views.init_default_setting),
     url(r'^default/$', views.return_default_setting),
-    url(r'^nas$', views.return_nas_location)
+    url(r'^nas$', views.return_nas_location),
+    url(r'^projects/(?P<pk>[0-9]+)/$', views.return_project_setting),
+    url(r'^projects/$', views.return_project_setting)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
