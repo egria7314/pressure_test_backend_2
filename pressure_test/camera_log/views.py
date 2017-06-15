@@ -20,6 +20,7 @@ from datetime import datetime
 import time
 
 from libs.vast_storage import VastStorage
+from libs.nas_storage import NasStorage
 
 
 
@@ -47,8 +48,8 @@ def get_sd_status(requests):
 
     SdStatus.objects.create(
         camera_ip=CAMERA_IP,
-        sd_status=sd_status_json["SD_status"],
-        sd_used_percent=sd_status_json["SD_used_percent"],
+        sd_status=sd_status_json["sdCardStatus"],
+        sd_used_percent=sd_status_json["sdCardUsed"],
     )
 
     # print(my_up_time)
@@ -91,9 +92,9 @@ def get_up_time(requests):
     my_up_time_json = my_up_time.get_result()
 
     UpTime.objects.create(
-        camera_uptime=my_up_time_json["camera_uptime"],
-        camera_cpuloading_average=my_up_time_json["camera_cpuloading_average"],
-        camera_cpuloading_idle=my_up_time_json["camera_cpuloading_idle"],
+        camera_uptime=my_up_time_json["uptime"],
+        camera_cpuloading_average=my_up_time_json["loadAverage"],
+        camera_cpuloading_idle=my_up_time_json["idle"],
     )
 
     return Response(my_up_time_json)
@@ -132,6 +133,11 @@ def set_camera_log(request):
     final_camera_log_json = {}
     final_camera_log_json["id"] = "1"    # temp
     all_data_list = []
+
+    PREFIX = ""   # temp
+
+
+
 
     # while(True):
 
@@ -184,7 +190,7 @@ def set_camera_log(request):
                               new_locked_file_list=new_sd_locked_file_list,
                               new_unlocked_file_list=new_sd_unlocked_file_list)
 
-    sd_cycle_result = sd_cycle_obj.get_result("")
+    sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
     print("sd_cycle_result:")
     print(sd_cycle_result)
     sd_cycle_json = {}
@@ -193,8 +199,24 @@ def set_camera_log(request):
     camera_log_json["createAt"] = time_now
 
 
+    ######################## To Do ################################
     # check NAS cycle
+    # print("!!")
+    # timestamp_nas_start = datetime(2000, 6, 3, 0, 0, 0)
+    # timestamp_nas_end = datetime.now()
+    # nas_sudo_password = 'fftbato'
+    # # datetime.now()
+    # print("!!!!")
+    # # print(end_datetime_object)
+    #
+    #
+    #
+    # test_vast_obj = NasStorage('autotest', 'autotest')
+    # print(test_vast_obj)
+    # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
+    # print(test_vast_obj.get_video_nas('autotest', 'autotest', nas_sudo_password, nas_path, PREFIX, timestamp_nas_start, timestamp_nas_end))
 
+    #
 
     # check VAST cycle
     # print("!!")
@@ -210,9 +232,8 @@ def set_camera_log(request):
     # path = '\\\\172.19.1.54\\recording\\2017-06-02\\33-IB8360-W'.replace('\\','/')
     # print(test_vast_obj.get_video_vast('eric', 'eric', '', path, timestamp_vast_start, timestamp_vast_end))
 
-    # (self, remote_username, remote_password, sudo_password, remote_path, time_start, time_end):
 
-
+    ######################## To Do ################################
 
     # write db
     CameraLog.objects.create(
@@ -229,6 +250,10 @@ def set_camera_log(request):
         sd_all_file=','.join(sd_recording_file_json["sd_all_file"]),
         sd_card_cycling=sd_cycle_result,
     )
+
+
+
+
 
     all_data_list.append(camera_log_json)
 

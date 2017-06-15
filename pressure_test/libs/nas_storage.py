@@ -109,9 +109,9 @@ class NasStorage(object):
         # create the new folder
         cmd = "sudo mkdir {mounted_at}".format(mounted_at=local_path)
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # mount
         cmd = "sudo mount -t cifs -o username={user},password={pwd} {remote_path} {local_path}".format(
@@ -119,9 +119,9 @@ class NasStorage(object):
             remote_path=remote_path, local_path=local_path)
 
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # wait mounting
         time.sleep(10)
@@ -134,18 +134,18 @@ class NasStorage(object):
         # umount
         cmd = "sudo umount {local_path}".format(local_path=local_path)
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # remove folder
         time.sleep(10)
         if not os.path.ismount(local_path):
             cmd = "sudo rm -rf {mounted_at}".format(mounted_at=local_path)
             p = pexpect.spawn(cmd)
-            p.expect(': ')
-            p.sendline(sudo_password)
-            p.expect( "\r\n" )
+            # p.expect(': ')
+            # p.sendline(sudo_password)
+            # p.expect( "\r\n" )
 
         if os.path.exists(local_path): return False
 
