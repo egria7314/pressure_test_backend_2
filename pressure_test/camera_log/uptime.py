@@ -22,9 +22,9 @@ class Uptime(object):
         data = tn.result()
         camera_uptime = self.__process_camera_uptime(data[0])
         camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
-        data_dict["camera_uptime"] = camera_uptime
-        data_dict["camera_cpuloading_idle"] = camera_cpuloading_idle
-        data_dict["camera_cpuloading_average"] = camera_load_average
+        data_dict["uptime"] = camera_uptime
+        data_dict["idle"] = camera_cpuloading_idle
+        data_dict["loadAverage"] = camera_load_average
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict
 

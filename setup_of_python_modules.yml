@@ -48,3 +48,6 @@
         - django-crispy-forms
         - pexpect
         - django-cors-headers
+        - Pillow
+        - celery
+        - redis

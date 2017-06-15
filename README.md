@@ -36,29 +36,35 @@ git checkout develop
 
 ### Build image and also create container
 ```
-sudo docker-compose run -d web
+docker-compose run -d web
+```
+
+### Rebuild dockerfile 
+* If you change a Dockerfile or the contents of its build directory, run to rebuild it.
+
+```
+docker-compose build
 ```
 
 ### Start service
 ```
-sudo docker-compose up
+docker-compose up
 ```
 
 ### Delete old container
 
 * If your container name is already exist, you should remove old one. 
 ```
-sudo docker-compose stop 
-sudo docker-compose rm 
+docker-compose stop 
+docker-compose rm 
 ``` 
 
-### 以下純屬參考
 **Work inside container**
 =============
 
 ### Connect to container
 ```
-sudo docker exec -ti "your-container-name" /bin/bash
+docker exec -ti "your-container-name" /bin/bash
 ```
 * use __docker ps__ to see container's name
 * ex: pressuretestbackend_web_1
