@@ -16,37 +16,31 @@ class NasVastCycle():
         self.former_file_list = former_file_list
         self.new_file_list = new_file_list
 
-    def get_result(self, former_file_list, new_file_list, PREFIX=""):
+    def get_result(self, PREFIX=""):
         result = ""
 
 
         try:
             # surpass time
             # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
-            exist_surpass, comment = self.__surpass_exist(former_file_list, new_file_list, PREFIX)
+            exist_surpass, comment = self.__surpass_exist(PREFIX)
             if exist_surpass:
                 result += comment + '\n'
                 return result
 
-            # # loss unlocked file (unlock of 1 is not subset of 2)
-            # if not set(former_file_list).issubset(new_file_list):
-            #     loss_unlocked_file_list = list(set(former_file_list) - set(new_file_list))
-            #     result += "Error! Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
-            #     return result
-
             # check cycle
-            cycle, comment = self.__check_cycle(former_file_list, new_file_list, PREFIX)
+            cycle, comment = self.__check_cycle(PREFIX)
             if cycle:
                 return comment
 
-            if not set(former_file_list).issubset(new_file_list) and not cycle:
-                loss_locked_file_list = list(set(former_file_list) - set(new_file_list))
+            # loss file
+            if not set(self.former_file_list).issubset(self.new_file_list) and not cycle:
+                loss_locked_file_list = list(set(self.former_file_list) - set(self.new_file_list))
                 result += "Error! Lose file:" + ','.join(loss_locked_file_list) + '\n'
                 return result
 
-
             # check adding
-            adding, comment = self.__check_adding(former_file_list, new_file_list, PREFIX)
+            adding, comment = self.__check_adding(PREFIX)
             if adding:
                 return comment
 
@@ -60,17 +54,15 @@ class NasVastCycle():
             return result
 
 
-    def __check_adding(self, former_file_list, new_file_list, PREFIX=""):
+    def __check_adding(self, PREFIX=""):
         adding = False
         comment = ""
 
-        added_file_list = list(set(new_file_list) - set(former_file_list))
+        added_file_list = list(set(self.new_file_list) - set(self.former_file_list))
         added_file_list = sorted(added_file_list)
         added_unlocked_num = len(added_file_list)
-        # print('TEST Added')
-        # print(added_file_list)
 
-        loss_file_list = list(set(former_file_list) - set(new_file_list))
+        loss_file_list = list(set(self.former_file_list) - set(self.new_file_list))
         loss_file_list = sorted(loss_file_list)
         loss_unlocked_num = len(loss_file_list)
 
@@ -83,21 +75,20 @@ class NasVastCycle():
         return adding, comment
 
 
-    def __check_cycle(self, former_file_list, new_file_list, PREFIX=""):
+    def __check_cycle(self, PREFIX=""):
         cycle_status = False
         comment = ""
 
-        loss_file_list = list(set(former_file_list) - set(new_file_list))
+        loss_file_list = list(set(self.former_file_list) - set(self.new_file_list))
         loss_file_list = sorted(loss_file_list)
         loss_unlocked_num = len(loss_file_list)
 
-        added_file_list = list(set(new_file_list) - set(former_file_list))
+        added_file_list = list(set(self.new_file_list) - set(self.former_file_list))
         added_file_list = sorted(added_file_list)
         added_unlocked_num = len(added_file_list)
 
         # indexes of loss file
-        loss_unlocked_indexes_list = [former_file_list.index(loss_file) for loss_file in loss_file_list ]
-
+        loss_unlocked_indexes_list = [sorted(self.former_file_list).index(loss_file) for loss_file in loss_file_list ]
 
         # if there is old file is deleted & new file is added
         if loss_unlocked_num > 0 and added_unlocked_num > 0:
@@ -112,19 +103,19 @@ class NasVastCycle():
         return cycle_status, comment
 
 
-    def __surpass_exist(self, former_file_list, new_file_list, PREFIX=""):
+    def __surpass_exist(self, PREFIX=""):
         exist = False
         result = ""
 
         # first: compare newest added file with former test last file
-        added_file_list = list(set(new_file_list) - set(former_file_list))
+        added_file_list = list(set(self.new_file_list) - set(self.former_file_list))
         added_file_list = sorted(added_file_list)
 
         if len(added_file_list) > 0:
             newest_added_date = min(added_file_list)
             # if former list is empty then only compare new list
-            if len(former_file_list) != 0:
-                oldest_former_date = max(former_file_list)
+            if len(self.former_file_list) != 0:
+                oldest_former_date = max(self.former_file_list)
                 surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
                 if surpass_hour:
                     result = comment + '\n'
