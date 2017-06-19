@@ -20,7 +20,7 @@ class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
-
+    
     def post(self, request, format=None):
         serializer = ProjectSettingSerializer(data=request.data)
         if serializer.is_valid():
@@ -29,6 +29,7 @@ class ProjectSettingList(generics.ListCreateAPIView):
             return Response(result, status=status.HTTP_201_CREATED)
         result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":serializer.errors}
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET'])

@@ -1,0 +1,96 @@
+from django.db import models
+import os
+from config.models import ProjectSetting
+
+
+# Create your models here.
+class CameraProfile(models.Model):
+    host = models.CharField(max_length=100)
+    user = models.CharField(max_length=100, null=True, blank=True, default='root')
+    password = models.CharField(max_length=100, null=True, blank=True)
+    project_profile = models.ForeignKey(ProjectSetting, on_delete=models.CASCADE, null=True, blank=True)
+
+    @property
+    def get_project_profile_id(self):
+        return self.project_profile.id
+
+    class Meta:
+        ordering = ('id',)
+
+
+class NasProfile(models.Model):
+    user = models.CharField(max_length=100, null=True, blank=True)
+    password = models.CharField(max_length=100, null=True, blank=True)
+    location = models.TextField()
+    workgroup = models.CharField(max_length=100, null=True, blank=True, default='vivotek')
+    project_profile = models.ForeignKey(ProjectSetting, on_delete=models.CASCADE, null=True, blank=True)
+    
+    @property
+    def get_project_profile_id(self):
+        return self.project_profile.id
+
+    class Meta:
+        ordering = ('id',)
+
+
+class ClipInfo(models.Model):
+    path = models.TextField()
+    size = models.CharField(max_length=100, null=True, blank=True)
+    privacy_masks = models.TextField()
+    camera_profile = models.ForeignKey(CameraProfile, related_name='camera_profile', on_delete=models.CASCADE, null=True, blank=True)
+    nas_profile = models.ForeignKey(NasProfile, related_name='nas_profile', on_delete=models.CASCADE, null=True, blank=True)
+    is_broken = models.NullBooleanField(null=True, blank=True)
+
+    @property
+    def result(self):
+        return "passed" if self.is_broken == False else "failed"
+
+    @property
+    def errorCode(self):
+        is_empty_frame = lambda: self.is_broken and len(list(self.broken_frames.values())) == 0
+        has_broken_frame = lambda: self.is_broken and len(list(self.broken_frames.values())) > 0
+        MSG_ERR_EMPTY_VIDEO_FRAME = 'empty frame'
+        MSG_ERR_BROKEN_VIDEO_FRAME = 'broken frame'
+        MSG_NONE = ''
+        get_empty_video_frame_err_msg = lambda: MSG_ERR_EMPTY_VIDEO_FRAME
+        get_broken_video_frame_err_msg = lambda: MSG_ERR_BROKEN_VIDEO_FRAME
+        get_none_msg = lambda: MSG_NONE
+
+        return (is_empty_frame() and get_empty_video_frame_err_msg()) or \
+            (has_broken_frame() and get_broken_video_frame_err_msg()) or \
+            (not has_broken_frame() and get_none_msg())
+
+
+    @property
+    def count(self):
+        """
+        broken_frames_count
+
+        """
+        return len(list(self.broken_frames.values()))
+    
+    @property
+    def link(self):
+        """
+        broken_frames_directory
+
+        """
+        # assume each directory is the same
+        if self.count > 0:
+            first_broken_frame = self.broken_frames.values()[0]
+            return os.path.dirname(first_broken_frame['frame_path'])
+        else:
+            return ""
+    
+    class Meta:
+        ordering = ('id',)
+
+
+class BrokenFrame(models.Model):
+    error_message = models.TextField(null=True, blank=True)
+    frame_path = models.TextField()
+    timestamp = models.DurationField(null=True, blank=True)
+    clip = models.ForeignKey(ClipInfo, related_name='broken_frames', on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        ordering = ('id',)
