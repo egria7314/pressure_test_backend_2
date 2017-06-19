@@ -50,6 +50,8 @@
         - django-cors-headers
         - Pillow
         - celery
+        - redis
+        - requests
         - flower
         - redis
         - djangorestframework-jsonapi

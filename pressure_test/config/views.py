@@ -10,6 +10,7 @@ from config.models import DefaultSetting
 from libs.nas_storage import NasStorage
 from rest_framework import status
 from rest_framework.decorators import api_view
+from libs.telnet_module import URI
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -23,12 +24,51 @@ class ProjectSettingList(generics.ListCreateAPIView):
     
     def post(self, request, format=None):
         serializer = ProjectSettingSerializer(data=request.data)
+        camera_ip = request.data['ip']
+        camera_user = request.data['username']
+        camera_password = request.data['password']
+        prefix_name = self.get_recording_prefix(camera_ip, camera_user, camera_password)
+        print('prefix_name:', prefix_name)
+        request.data['prefix_name'] = prefix_name
         if serializer.is_valid():
             serializer.save()
             result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
             return Response(result, status=status.HTTP_201_CREATED)
         result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":serializer.errors}
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_recording_type(self, camera_ip, camera_name, camera_password):
+        """Get nas location from camera by cgi"""
+        type_code = None
+        for index in range(2):
+            command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_dest'.format(index)
+            try:
+                url = URI.set(command, camera_name, camera_password)
+                url = url.read().decode('utf-8').split("\r\n")
+                result = url[0].replace('recording_i{0}_dest'.format(index), '').replace("'", "").replace("=", "")
+                if result != 'cf':
+                    type_code = index
+                    break
+            except:
+                type_code = 'get recording type error'
+            finally:
+                return type_code
+
+    def get_recording_prefix(self, camera_ip, camera_name, camera_password):
+        """Get nas location from camera by cgi"""
+        index = self.get_recording_type(camera_ip, camera_name, camera_password)
+        command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_prefix'.format(index)
+
+        prefix = None
+        try:
+            url = URI.set(command, camera_name, camera_password)
+            url = url.read().decode('utf-8').split("\r\n")
+            result = url[0].replace('recording_i{0}_prefix'.format(index), '').replace("'", "").replace("=", "")
+            prefix = result
+        except:
+            prefix = 'get recording prefix error'
+        finally:
+            return prefix
 
 
 
