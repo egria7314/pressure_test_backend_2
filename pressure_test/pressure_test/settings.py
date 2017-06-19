@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'camera_log',
     'config',
     'corsheaders',
-    'recording_continous'
+    'recording_continous',
     'broken_tests',
 ]
 
