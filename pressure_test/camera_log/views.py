@@ -19,7 +19,7 @@ from camera_log.sd_cycle import SDcycle
 from datetime import datetime
 import re
 import time
-import schedule
+# import schedule
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
