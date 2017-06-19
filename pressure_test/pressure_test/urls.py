@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^', include('camera_log.urls')),
     url(r'^', include('config.urls')),
     url(r'^', include('recording_continous.urls')),
+    url(r'^', include('broken_tests.urls')),
 ]

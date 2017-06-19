@@ -66,13 +66,14 @@ class VastStorage(object):
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
-        last_file_path = sorted_file[-1][0]
-        last_file_size_prev = os.stat(last_file_path).st_size
-        time.sleep(3)
-        last_file_size_curr = os.stat(last_file_path).st_size
-        if last_file_size_curr != last_file_size_prev:
-            remove_file_path = file_path_map[last_file_path]
-            del file_web[remove_file_path]
+        if len(sorted_file) != 0:
+            last_file_path = sorted_file[-1][0]
+            last_file_size_prev = os.stat(last_file_path).st_size
+            time.sleep(3)
+            last_file_size_curr = os.stat(last_file_path).st_size
+            if last_file_size_curr != last_file_size_prev:
+                remove_file_path = file_path_map[last_file_path]
+                del file_web[remove_file_path]
         return file_web
 
     def mount_folder(self, remote_username, remote_password, remote_path, sudo_password, local_path):
@@ -85,9 +86,9 @@ class VastStorage(object):
         # create the new folder
         cmd = "sudo mkdir {mounted_at}".format(mounted_at=local_path)
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # mount
         cmd = "sudo mount -t cifs -o username={user},password={pwd} {remote_path} {local_path}".format(
@@ -95,9 +96,9 @@ class VastStorage(object):
             remote_path=remote_path, local_path=local_path)
 
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # wait mounting
         time.sleep(10)
@@ -110,18 +111,18 @@ class VastStorage(object):
         # umount
         cmd = "sudo umount {local_path}".format(local_path=local_path)
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # remove folder
         time.sleep(10)
         if not os.path.ismount(local_path):
             cmd = "sudo rm -rf {mounted_at}".format(mounted_at=local_path)
             p = pexpect.spawn(cmd)
-            p.expect(': ')
-            p.sendline(sudo_password)
-            p.expect( "\r\n" )
+            # p.expect(': ')
+            # p.sendline(sudo_password)
+            # p.expect( "\r\n" )
 
         if os.path.exists(local_path): return False
 

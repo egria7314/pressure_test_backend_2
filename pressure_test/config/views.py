@@ -8,24 +8,32 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.models import DefaultSetting
 from libs.nas_storage import NasStorage
+from rest_framework import status
+from rest_framework.decorators import api_view
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
 
+
 class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
+    
+    def post(self, request, format=None):
+        serializer = ProjectSettingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
+            return Response(result, status=status.HTTP_201_CREATED)
+        result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":serializer.errors}
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-    # def post(self, request, format=None):
-    #     print(request.data)
 
-        # return Response("tst")
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-
 def init_default_setting(requests):
     default_json = [
         {
@@ -92,4 +100,30 @@ def return_nas_location(requests):
     name = requests.GET['username']
     pw = requests.GET['password']
     return_json = NasStorage().get_nas_location(ip, name, pw)
+    return Response(return_json)
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def return_project_setting(requests, pk=None):
+    if pk:
+        querry_set = ProjectSetting.objects.filter(id = pk).values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+                                                     "path_username", "continued", "username", "type", "broken", "owner",
+                                                     "prefix_name", "cgi", "password", "path_password", "ip")
+        return_json = list(querry_set)[0]
+        return_json['projectName'] = return_json.pop('project_name')
+        return_json['cameraIp'] = return_json.pop('ip')
+        return_json['startTime'] = return_json.pop('start_time')
+        return_json['endTime'] = return_json.pop('end_time')
+
+    else:
+        querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+                                                     "path_username", "continued", "username", "type", "broken", "owner",
+                                                     "prefix_name", "cgi", "password", "path_password", "ip")
+        return_json = list(querry_set)
+        for item_json in return_json:
+            item_json['projectName'] = item_json.pop('project_name')
+            item_json['cameraIp'] = item_json.pop('ip')
+            item_json['startTime'] = item_json.pop('start_time')
+            item_json['endTime'] = item_json.pop('end_time')
     return Response(return_json)
