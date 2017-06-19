@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -16,10 +17,13 @@ from camera_log.models import SdRecordingFile
 from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
 from datetime import datetime
-
+import re
 import time
+# import schedule
 
 from libs.vast_storage import VastStorage
+from libs.nas_storage import NasStorage
+from camera_log.nas_vast_storage_cycle import NasVastCycle
 
 
 
@@ -47,8 +51,8 @@ def get_sd_status(requests):
 
     SdStatus.objects.create(
         camera_ip=CAMERA_IP,
-        sd_status=sd_status_json["SD_status"],
-        sd_used_percent=sd_status_json["SD_used_percent"],
+        sd_status=sd_status_json["sdCardStatus"],
+        sd_used_percent=sd_status_json["sdCardUsed"],
     )
 
     # print(my_up_time)
@@ -91,9 +95,9 @@ def get_up_time(requests):
     my_up_time_json = my_up_time.get_result()
 
     UpTime.objects.create(
-        camera_uptime=my_up_time_json["camera_uptime"],
-        camera_cpuloading_average=my_up_time_json["camera_cpuloading_average"],
-        camera_cpuloading_idle=my_up_time_json["camera_cpuloading_idle"],
+        camera_uptime=my_up_time_json["uptime"],
+        camera_cpuloading_average=my_up_time_json["loadAverage"],
+        camera_cpuloading_idle=my_up_time_json["idle"],
     )
 
     return Response(my_up_time_json)
@@ -133,7 +137,8 @@ def set_camera_log(request):
     final_camera_log_json["id"] = "1"    # temp
     all_data_list = []
 
-    # while(True):
+    PREFIX = ""   # temp
+
 
     time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
     # sd status
@@ -159,32 +164,31 @@ def set_camera_log(request):
     # camera_log_json.update(sd_recording_file_json)
 
     # check SD cycle
-    former_sd_obj = CameraLog.objects.last()
+    former_cam_obj = CameraLog.objects.last()
 
-    if former_sd_obj:
-        former_locked_file_list = former_sd_obj.sd_locked_file.split(',')
-        former_unlocked_file_list = former_sd_obj.sd_unlocked_file.split(',')
+    if former_cam_obj:
+        former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
+        former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
+        former_nas_file_list = former_cam_obj.nas_file.split(',')
 
-        if len(set(former_locked_file_list)) == 1 and  list(set(former_locked_file_list)) == ['']:
-            former_locked_file_list = []
-
-        if len(set(former_unlocked_file_list)) == 1 and  list(set(former_unlocked_file_list)) == ['']:
-            former_unlocked_file_list = []
-
+        former_sd_locked_file_list = check_list(former_sd_locked_file_list)
+        former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
+        former_nas_file_list = check_list(former_nas_file_list)
     else:
-        former_locked_file_list = []
-        former_unlocked_file_list = []
+        former_sd_locked_file_list = []
+        former_sd_unlocked_file_list = []
+        former_nas_file_list=[]
 
 
     new_sd_locked_file_list = sd_recording_file_json["sd_locked_file"]
     new_sd_unlocked_file_list = sd_recording_file_json["sd_unlocked_file"]
 
-    sd_cycle_obj = SDcycle(former_locked_file_list=former_locked_file_list,
-                              former_unlocked_file_list=former_unlocked_file_list,
+    sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
+                              former_unlocked_file_list=former_sd_unlocked_file_list,
                               new_locked_file_list=new_sd_locked_file_list,
                               new_unlocked_file_list=new_sd_unlocked_file_list)
 
-    sd_cycle_result = sd_cycle_obj.get_result("")
+    sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
     print("sd_cycle_result:")
     print(sd_cycle_result)
     sd_cycle_json = {}
@@ -193,26 +197,58 @@ def set_camera_log(request):
     camera_log_json["createAt"] = time_now
 
 
+    ######################## To Do ################################
     # check NAS cycle
+    new_nas_file_list = []
+    nas_cycle_result=""
+    try:
+        timestamp_nas_start = datetime(2000, 6, 3, 0, 0, 0)
+        timestamp_nas_end = datetime.now()
+        nas_sudo_password = 'fftbato'
+        test_vast_obj = NasStorage('autotest', 'autotest')
+        print(test_vast_obj)
+        nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
 
+        nas_files_dict = test_vast_obj.get_video_nas('autotest', 'autotest', nas_sudo_password, nas_path,
+                                                     PREFIX, timestamp_nas_start, timestamp_nas_end)
 
+        nas_files_list = list(nas_files_dict.keys())
+        new_nas_file_list = []
+        for nas_file in nas_files_list:
+            end_index = nas_file.find(nas_path) + len(nas_path) + 1
+            new_nas_file_list.append(nas_file[end_index:])
+
+        nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
+                                   new_file_list=new_nas_file_list)
+        nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
+    except:
+        print("NAS get files Fail! or Timeout")
+
+    ######################## To Do ################################
     # check VAST cycle
-    # print("!!")
-    # timestamp_vast_start = datetime(2017, 6, 3, 0, 0, 0)
-    # timestamp_vast_end = datetime(2017, 6, 5, 11, 59, 59)
-    # # datetime.now()
-    # print("!!!!")
-    # # print(end_datetime_object)
+    # try:
+    #     print("!!")
+    #     timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
+    #     timestamp_vast_end = datetime(2017, 6, 3, 11, 59, 59)
+    #     # datetime.now()
+    #     print("!!!!")
+    #     # print(end_datetime_object)
     #
     #
-    # test_vast_obj = VastStorage('eric', 'eric')
-    # print(test_vast_obj)
-    # path = '\\\\172.19.1.54\\recording\\2017-06-02\\33-IB8360-W'.replace('\\','/')
-    # print(test_vast_obj.get_video_vast('eric', 'eric', '', path, timestamp_vast_start, timestamp_vast_end))
+    #     test_vast_obj = VastStorage('eric', 'eric')
+    #     path = '\\\\172.19.1.54\\recording\\2017-06-02\\33-IB8360-W'.replace('\\','/')
+    #     vast_files_dict = test_vast_obj.get_video_vast('eric', 'eric', '', path, timestamp_vast_start, timestamp_vast_end)
+    #     print(vast_files_dict)
+    #
+    #     vast_files_list = list(vast_files_dict.keys())
+    #     print("VAST!!!!")
+    #     print(vast_files_list)
+    # except:
+    #     print("VAST get files Fail! or Timeout")
 
-    # (self, remote_username, remote_password, sudo_password, remote_path, time_start, time_end):
 
 
+    ######################## To Do ################################
 
     # write db
     CameraLog.objects.create(
@@ -228,13 +264,12 @@ def set_camera_log(request):
         sd_unlocked_file=','.join(new_sd_unlocked_file_list),
         sd_all_file=','.join(sd_recording_file_json["sd_all_file"]),
         sd_card_cycling=sd_cycle_result,
+
+        nas_file=','.join(new_nas_file_list),
+        nas_cycling=nas_cycle_result
     )
 
     all_data_list.append(camera_log_json)
-
-    # time.sleep(5)
-
-
     final_camera_log_json["data"] = all_data_list
 
     #
@@ -267,7 +302,16 @@ def set_camera_log(request):
     #     print("There isn't former object")
     #     pass
     #
+
     return Response(final_camera_log_json)
+
+def check_list(file_list):
+    empty_list = file_list
+    if len(set(file_list)) == 1 and  list(set(file_list)) == ['']:
+            empty_list = []
+
+    return empty_list
+
 
 
 @api_view(['GET'])
@@ -287,7 +331,7 @@ def get_all_camera_log(request):
         log_data_dict["sdCardStatus"] = log_obj.sd_status
         log_data_dict["sdCardUsed"] = log_obj.sd_used_percent
         log_data_dict["sdCardCycling"] = log_obj.sd_card_cycling
-        log_data_dict["storageCycling"] = ""
+        log_data_dict["storageCycling"] = "Adding"
 
         data_list.append(log_data_dict)
 
@@ -296,3 +340,7 @@ def get_all_camera_log(request):
     final_camera_log_json["data"] = data_list
 
     return Response(final_camera_log_json)
+
+
+
+

@@ -21,7 +21,7 @@ class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
-
+    
     def post(self, request, format=None):
         serializer = ProjectSettingSerializer(data=request.data)
         camera_ip = request.data['ip']
@@ -69,6 +69,7 @@ class ProjectSettingList(generics.ListCreateAPIView):
             prefix = 'get recording prefix error'
         finally:
             return prefix
+
 
 
 @api_view(['GET'])

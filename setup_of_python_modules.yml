@@ -52,3 +52,6 @@
         - celery
         - redis
         - requests
+        - flower
+        - redis
+        - djangorestframework-jsonapi

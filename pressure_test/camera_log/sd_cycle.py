@@ -99,7 +99,7 @@ class SDcycle(object):
         added_unlocked_num = len(added_file_list)
 
         # indexes of loss file
-        loss_unlocked_indexes_list = [self.former_unlocked_file_list.index(loss_file) for loss_file in loss_file_list ]
+        loss_unlocked_indexes_list = [sorted(self.former_unlocked_file_list).index(loss_file) for loss_file in loss_file_list ]
 
         # indexes of added file
         # added_unlocked_indexes_list = [self.new_unlocked_file_list.index(added_file) for added_file in added_file_list]
