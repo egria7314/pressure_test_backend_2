@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'camera_log',
     'config',
-    'corsheaders'
+    'corsheaders',
+    'broken_tests',
 ]
 
 MIDDLEWARE = [
