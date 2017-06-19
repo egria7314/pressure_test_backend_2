@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'camera_log',
     'config',
-    'corsheaders'
+    'corsheaders',
+    'recording_continous'
 ]
 
 MIDDLEWARE = [
@@ -61,6 +62,11 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ORIGIN_WHITELIST = (
+    'localhost:8000',
+)
+
 
 ROOT_URLCONF = 'pressure_test.urls'
 
