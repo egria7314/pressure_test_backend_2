@@ -62,7 +62,7 @@ class NasStorage(object):
         timestamp_end = time.mktime(time_end.timetuple())
         videos = self.dump_nas_files(remote_path, prefix, timestamp_start, timestamp_end)
         # unmount
-        self.unmount_folder(local_path, sudo_password)
+        # self.unmount_folder(local_path, sudo_password)
 
         return videos
 
@@ -70,6 +70,10 @@ class NasStorage(object):
         """
         by mount command
         """
+        print("search_dir_web: ", search_dir_web )
+        print("prefix: ", prefix)
+        print("timestamp_start: ", timestamp_start)
+        print("timestamp_end: ", timestamp_end)
         # file = []
         file_web = {}
         file_local = {}
@@ -89,13 +93,15 @@ class NasStorage(object):
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
-        last_file_path = sorted_file[-1][0]
-        last_file_size_prev = os.stat(last_file_path).st_size
-        time.sleep(3)
-        last_file_size_curr = os.stat(last_file_path).st_size
-        if last_file_size_curr != last_file_size_prev:
-            remove_file_path = file_path_map[last_file_path]
-            del file_web[remove_file_path]
+        print("sorted_file= ", sorted_file)
+        if len(sorted_file) > 0:
+            last_file_path = sorted_file[-1][0]
+            last_file_size_prev = os.stat(last_file_path).st_size
+            time.sleep(3)
+            last_file_size_curr = os.stat(last_file_path).st_size
+            if last_file_size_curr != last_file_size_prev:
+                remove_file_path = file_path_map[last_file_path]
+                del file_web[remove_file_path]
 
         return file_web
 
@@ -109,9 +115,9 @@ class NasStorage(object):
         # create the new folder
         cmd = "sudo mkdir {mounted_at}".format(mounted_at=local_path)
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # mount
         cmd = "sudo mount -t cifs -o username={user},password={pwd} {remote_path} {local_path}".format(
@@ -119,9 +125,9 @@ class NasStorage(object):
             remote_path=remote_path, local_path=local_path)
 
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # wait mounting
         time.sleep(10)
@@ -134,18 +140,18 @@ class NasStorage(object):
         # umount
         cmd = "sudo umount {local_path}".format(local_path=local_path)
         p = pexpect.spawn(cmd)
-        p.expect(': ')
-        p.sendline(sudo_password)
-        p.expect( "\r\n" )
+        # p.expect(': ')
+        # p.sendline(sudo_password)
+        # p.expect( "\r\n" )
 
         # remove folder
         time.sleep(10)
         if not os.path.ismount(local_path):
             cmd = "sudo rm -rf {mounted_at}".format(mounted_at=local_path)
             p = pexpect.spawn(cmd)
-            p.expect(': ')
-            p.sendline(sudo_password)
-            p.expect( "\r\n" )
+            # p.expect(': ')
+            # p.sendline(sudo_password)
+            # p.expect( "\r\n" )
 
         if os.path.exists(local_path): return False
 
