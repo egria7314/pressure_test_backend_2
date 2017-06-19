@@ -19,15 +19,15 @@ class EpochTimeAdmin(admin.ModelAdmin):
     search_fields = ('camera_epoch_time',)
 
 class SdRecordingFileAdmin(admin.ModelAdmin):
-    list_display = ('locked_file', 'unlocked_file', 'all_file')
-    search_fields = ('locked_file', 'unlocked_file', 'all_file')
+    list_display = ('sd_locked_file', 'sd_unlocked_file', 'sd_all_file')
+    search_fields = ('sd_locked_file', 'sd_unlocked_file', 'sd_all_file')
 
 # whole
 class CameraLogAdmin(admin.ModelAdmin):
     list_display = ('create_at', 'camera_ip', 'sd_used_percent', 'sd_status', 'camera_uptime', 'camera_cpuloading_average',
-                    'camera_cpuloading_idle', 'camera_epoch_time', 'locked_file', 'unlocked_file', 'all_file', 'sd_card_cycling')
+                    'camera_cpuloading_idle', 'camera_epoch_time', 'sd_locked_file', 'sd_unlocked_file', 'sd_all_file', 'sd_card_cycling')
     search_fields = ('create_at', 'camera_ip', 'sd_used_percent', 'sd_status', 'camera_uptime', 'camera_cpuloading_average',
-                     'camera_cpuloading_idle', 'camera_epoch_time', 'locked_file', 'unlocked_file', 'all_file', 'sd_card_cycling')
+                     'camera_cpuloading_idle', 'camera_epoch_time', 'sd_locked_file', 'sd_unlocked_file', 'sd_all_file', 'sd_card_cycling')
 
 
 admin.site.register(SdStatus, SdStatusAdmin)

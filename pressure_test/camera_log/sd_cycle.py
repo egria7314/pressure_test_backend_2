@@ -19,41 +19,48 @@ class SDcycle(object):
         self.new_all_file = new_locked_file_list + new_unlocked_file_list
 
 
-
     def get_result(self, PREFIX):
         result = ""
 
-        # loss locked file
-        if not set(self.former_locked_file_list).issubset(self.new_all_file):
-            loss_locked_file_list = list(set(self.former_locked_file_list) - set(self.new_all_file))
-            result += "Error! Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
+        try:
+            # loss locked file
+            if not set(self.former_locked_file_list).issubset(self.new_all_file):
+                loss_locked_file_list = list(set(self.former_locked_file_list) - set(self.new_all_file))
+                result += "Error! Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
+                return result
+
+            # surpass time
+            # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
+            exist_surpass, comment = self.__surpass_exist(PREFIX)
+            if exist_surpass:
+                result += comment + '\n'
+                return result
+
+            # loss unlocked file (unlock of 1 is not subset of 2)
+            if not set(self.former_unlocked_file_list).issubset(self.new_unlocked_file_list):
+                loss_unlocked_file_list = list(set(self.former_unlocked_file_list) - set(self.new_unlocked_file_list))
+                result += "Error! Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
+                return result
+
+            # check cycle
+            cycle, comment = self.__check_cycle(PREFIX)
+            if cycle:
+                return comment
+
+
+            # check adding
+            adding, comment = self.__check_adding(PREFIX)
+            if adding:
+                return comment
+
+
+            else:
+                result = "Nothing change!"
+                return result
+        except:
+            result = "Fail"
             return result
 
-        # surpass time
-        # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
-        exist_surpass, comment = self.__surpass_exist(PREFIX)
-        if exist_surpass:
-            result += comment + '\n'
-            return result
-
-        # loss unlocked file (unlock of 1 is not subset of 2)
-        if not set(self.former_unlocked_file_list).issubset(self.new_unlocked_file_list):
-            loss_unlocked_file_list = list(set(self.former_unlocked_file_list) - set(self.new_unlocked_file_list))
-            result += "Error! Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
-            return result
-
-        # check cycle
-        cycle, comment = self.__check_cycle(PREFIX)
-        if cycle:
-            return comment
-
-
-        # check adding
-        adding, comment = self.__check_adding(PREFIX)
-        if adding:
-            return comment
-
-        return result
 
     def __check_adding(self, PREFIX):
         adding = False
@@ -69,7 +76,7 @@ class SDcycle(object):
         loss_file_list = sorted(loss_file_list)
         loss_unlocked_num = len(loss_file_list)
 
-        print(loss_unlocked_num)
+        # print(loss_unlocked_num)
 
         if loss_unlocked_num == 0 and added_unlocked_num > 0:
             adding = True
@@ -92,7 +99,7 @@ class SDcycle(object):
         added_unlocked_num = len(added_file_list)
 
         # indexes of loss file
-        loss_unlocked_indexes_list = [self.former_unlocked_file_list.index(loss_file) for loss_file in loss_file_list ]
+        loss_unlocked_indexes_list = [sorted(self.former_unlocked_file_list).index(loss_file) for loss_file in loss_file_list ]
 
         # indexes of added file
         # added_unlocked_indexes_list = [self.new_unlocked_file_list.index(added_file) for added_file in added_file_list]
@@ -123,13 +130,15 @@ class SDcycle(object):
         # print(added_file_list)
 
         if len(added_file_list) != 0:
-            former_unlocked = self.former_unlocked_file_list
-            oldest_former_date = max(former_unlocked)
             newest_added_date = min(added_file_list)
-            surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
-            if surpass_hour:
-                result = comment + '\n'
-                exist = True
+            former_unlocked = self.former_unlocked_file_list
+            # if former list is empty then only compare new list
+            if len(former_unlocked) > 0:
+                oldest_former_date = max(former_unlocked)
+                surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
+                if surpass_hour:
+                    result = comment + '\n'
+                    exist = True
 
             # second: check if every added file is surpass one hour
             for added_file in added_file_list:

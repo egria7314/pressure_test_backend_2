@@ -149,9 +149,9 @@ class Sdrecordingfile(object):
                 unlocked_file.append(file_name)
 
 
-        file_dict["all_file"] = [x.decode() for x in ftp_all_filename]
-        file_dict["locked_file"] = [x.decode() for x in locked_file]
-        file_dict["unlocked_file"] = [x.decode() for x in unlocked_file]
+        file_dict["sd_all_file"] = [x.decode() for x in ftp_all_filename]
+        file_dict["sd_locked_file"] = [x.decode() for x in locked_file]
+        file_dict["sd_unlocked_file"] = [x.decode() for x in unlocked_file]
 
         print(json.dumps(file_dict, ensure_ascii=False))
         return file_dict
@@ -189,9 +189,9 @@ class Sdrecordingfile(object):
             if file_name not in locked_file:
                 unlocked_file.append(file_name)
 
-        file_dict["all_file"] = [x.decode() for x in ftp_all_filename]
-        file_dict["locked_file"] = [x.decode() for x in locked_file]
-        file_dict["unlocked_file"] = [x.decode() for x in unlocked_file]
+        file_dict["sd_all_file"] = [x.decode() for x in ftp_all_filename]
+        file_dict["sd_locked_file"] = [x.decode() for x in locked_file]
+        file_dict["sd_unlocked_file"] = [x.decode() for x in unlocked_file]
 
         print(json.dumps(file_dict, ensure_ascii=False))
         return file_dict

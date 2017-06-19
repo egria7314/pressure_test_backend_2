@@ -66,13 +66,14 @@ class VastStorage(object):
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
-        last_file_path = sorted_file[-1][0]
-        last_file_size_prev = os.stat(last_file_path).st_size
-        time.sleep(3)
-        last_file_size_curr = os.stat(last_file_path).st_size
-        if last_file_size_curr != last_file_size_prev:
-            remove_file_path = file_path_map[last_file_path]
-            del file_web[remove_file_path]
+        if len(sorted_file) != 0:
+            last_file_path = sorted_file[-1][0]
+            last_file_size_prev = os.stat(last_file_path).st_size
+            time.sleep(3)
+            last_file_size_curr = os.stat(last_file_path).st_size
+            if last_file_size_curr != last_file_size_prev:
+                remove_file_path = file_path_map[last_file_path]
+                del file_web[remove_file_path]
         return file_web
 
     def mount_folder(self, remote_username, remote_password, remote_path, sudo_password, local_path):
