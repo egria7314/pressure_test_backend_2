@@ -123,7 +123,7 @@ class Sdrecordingfile(object):
 
 
     def get_old_fw_file_dict(self):
-        print("TESTold")
+        # print("TESTold")
 
         file_dict={}
         unlocked_file =[]
@@ -153,7 +153,7 @@ class Sdrecordingfile(object):
         file_dict["sd_locked_file"] = [x.decode() for x in locked_file]
         file_dict["sd_unlocked_file"] = [x.decode() for x in unlocked_file]
 
-        print(json.dumps(file_dict, ensure_ascii=False))
+        # print(json.dumps(file_dict, ensure_ascii=False))
         return file_dict
 
 
@@ -193,7 +193,7 @@ class Sdrecordingfile(object):
         file_dict["sd_locked_file"] = [x.decode() for x in locked_file]
         file_dict["sd_unlocked_file"] = [x.decode() for x in unlocked_file]
 
-        print(json.dumps(file_dict, ensure_ascii=False))
+        # print(json.dumps(file_dict, ensure_ascii=False))
         return file_dict
 
     def __get_locked_filename(self, ui_all_filename,continuous_filename_time):

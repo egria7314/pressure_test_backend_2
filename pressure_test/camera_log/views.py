@@ -24,16 +24,35 @@ import time
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
 from camera_log.nas_vast_storage_cycle import NasVastCycle
+from camera_log.libs.cgi import CGI
 
 
-
-CAMERA_IP = "172.19.16.119"
+CAMERA_IP = "172.19.16.119"  # support SD
+# CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
 CAMERA_PWD = "12345678z"
 
 
-# Create your views here.
+# check sd support
+def support_sd(username, password, ip, cgi_command):
+    support = True
+    # sd_support_cgi_result = CGI().get_cgi("root", "12345678z", "172.19.16.119", "capability_supportsd")    # sd support
+    sd_support_cgi_result = CGI().get_cgi(username, password, ip, cgi_command)    # sd not support
 
+    # print("**sdCGI**")
+    # print(sd_support_cgi_result)
+    # print("**sdCGI**")
+
+    m = re.match(r"(.*)=\'(.*)\'", sd_support_cgi_result)
+    print(m.group(2))
+
+    if m.group(2) == "0":
+        support = False
+
+    return support
+
+
+# Create your views here.
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_sd_status(requests):
@@ -46,7 +65,6 @@ def get_sd_status(requests):
 
     # my_up_time = Uptime(camera_ip, camera_user, camera_pwd)
     # my_up_time_json = my_up_time.get_result()
-
 
 
     SdStatus.objects.create(
@@ -126,87 +144,115 @@ def get_sd_recording_file(request):
         sd_all_file=sd_recording_file_json["sd_all_file"]
     )
 
-    print(sd_recording_file_json)
+    # print(sd_recording_file_json)
 
     return Response(sd_recording_file_json)
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def set_camera_log(request):
+    camera_log_json = {}
+    time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+    camera_log_json["createAt"] = time_now
     final_camera_log_json = {}
     final_camera_log_json["id"] = "1"    # temp
     all_data_list = []
-
     PREFIX = ""   # temp
-
-
-    time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
-    # sd status
-    my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
-    sd_status_json = my_sd_status.get_result()
 
     # up time
     my_up_time = Uptime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
     my_up_time_json = my_up_time.get_result()
+    camera_log_json.update(my_up_time_json)
 
     # epoch time
     camera_epoch_time = Epochtime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
     camera_epoch_time_json = camera_epoch_time.get_result()
-
-    # sd recording file
-    sd_recording_file = Sdrecordingfile(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
-    sd_recording_file_json = sd_recording_file.get_fw_file_dict()
-
-    camera_log_json = {}
-    camera_log_json.update(sd_status_json)
-    camera_log_json.update(my_up_time_json)
     camera_log_json.update(camera_epoch_time_json)
-    # camera_log_json.update(sd_recording_file_json)
 
-    # check SD cycle
-    former_cam_obj = CameraLog.objects.last()
+    # sd related
+    # first check sd support
+    sd_support = support_sd(CAMERA_USER, CAMERA_PWD, CAMERA_IP, "capability_supportsd")
+    sd_status_json = {}
 
-    if former_cam_obj:
-        former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
-        former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
-        former_nas_file_list = former_cam_obj.nas_file.split(',')
+    if sd_support:
 
-        former_sd_locked_file_list = check_list(former_sd_locked_file_list)
-        former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
-        former_nas_file_list = check_list(former_nas_file_list)
+
+        # sd status
+        my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+        sd_status_json = my_sd_status.get_result()
+        camera_log_json.update(sd_status_json)
+
+        # sd recording file
+        sd_recording_file = Sdrecordingfile(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+        sd_recording_file_json = sd_recording_file.get_fw_file_dict()
+        new_sd_locked_file_list = sd_recording_file_json["sd_locked_file"]
+        new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+        new_sd_unlocked_file_list = sd_recording_file_json["sd_unlocked_file"]
+        new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
+        new_sd_all_file_str = ','.join(sd_recording_file_json["sd_all_file"])
+
+
+        # camera_log_json.update(sd_recording_file_json)
+
+        # check SD cycle
+        former_cam_obj = CameraLog.objects.last()
+
+        if former_cam_obj:
+            former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
+            former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
+            former_sd_locked_file_list = check_list(former_sd_locked_file_list)
+            former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
+        else:
+            former_sd_locked_file_list = []
+            former_sd_unlocked_file_list = []
+
+        sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
+                                  former_unlocked_file_list=former_sd_unlocked_file_list,
+                                  new_locked_file_list=new_sd_locked_file_list,
+                                  new_unlocked_file_list=new_sd_unlocked_file_list)
+
+        sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
+        print("sd_cycle_result:")
+        print(sd_cycle_result)
+        sd_cycle_json = {}
+        sd_cycle_json["sdCardCycling"] = sd_cycle_result
+        camera_log_json.update(sd_cycle_json)
     else:
-        former_sd_locked_file_list = []
-        former_sd_unlocked_file_list = []
-        former_nas_file_list=[]
+
+        print("******TEST0*******")
+
+        comment = "Not Support"
+        print("******TEST1*******")
+        sd_status_json["sdCardStatus"] = comment
+        sd_status_json["sdCardUsed"] = comment
+        new_sd_locked_file_str = comment
+        new_sd_unlocked_file_str = comment
+        new_sd_all_file_str = comment
+        sd_cycle_result = comment
 
 
-    new_sd_locked_file_list = sd_recording_file_json["sd_locked_file"]
-    new_sd_unlocked_file_list = sd_recording_file_json["sd_unlocked_file"]
-
-    sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
-                              former_unlocked_file_list=former_sd_unlocked_file_list,
-                              new_locked_file_list=new_sd_locked_file_list,
-                              new_unlocked_file_list=new_sd_unlocked_file_list)
-
-    sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
-    print("sd_cycle_result:")
-    print(sd_cycle_result)
-    sd_cycle_json = {}
-    sd_cycle_json["sdCardCycling"] = sd_cycle_result
-    camera_log_json.update(sd_cycle_json)
-    camera_log_json["createAt"] = time_now
+    print("******TEST10****")
 
 
     ######################## To Do ################################
     # check NAS cycle
     new_nas_file_list = []
     nas_cycle_result=""
+
+    former_cam_obj = CameraLog.objects.last()
+
+    if former_cam_obj:
+        former_nas_file_list = former_cam_obj.nas_file.split(',')
+        former_nas_file_list = check_list(former_nas_file_list)
+    else:
+        former_nas_file_list=[]
+
     try:
         timestamp_nas_start = datetime(2000, 6, 3, 0, 0, 0)
         timestamp_nas_end = datetime.now()
         nas_sudo_password = 'fftbato'
         test_vast_obj = NasStorage('autotest', 'autotest')
-        print(test_vast_obj)
+        # print(test_vast_obj)
         nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
 
         nas_files_dict = test_vast_obj.get_video_nas('autotest', 'autotest', nas_sudo_password, nas_path,
@@ -260,9 +306,9 @@ def set_camera_log(request):
         camera_cpuloading_average=my_up_time_json["loadAverage"],
         camera_cpuloading_idle=my_up_time_json["idle"],
         camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
-        sd_locked_file=','.join(new_sd_locked_file_list),
-        sd_unlocked_file=','.join(new_sd_unlocked_file_list),
-        sd_all_file=','.join(sd_recording_file_json["sd_all_file"]),
+        sd_locked_file=new_sd_locked_file_str,
+        sd_unlocked_file=new_sd_unlocked_file_str,
+        sd_all_file=new_sd_all_file_str,
         sd_card_cycling=sd_cycle_result,
 
         nas_file=','.join(new_nas_file_list),
