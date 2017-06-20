@@ -17,7 +17,7 @@ class ProjectSetting(models.Model):
         ('medium', 'Medium'),
         ('high', 'High')
     )
-    type = models.CharField(max_length=100, choices=CHOICES, default='MED')
+    type = models.CharField(max_length=100, choices=CHOICES, default='medium')
     path = models.CharField(max_length=100)
     path_username = models.CharField(max_length=100)
     path_password = models.CharField(max_length=100)

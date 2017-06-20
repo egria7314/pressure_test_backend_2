@@ -28,14 +28,13 @@ class ProjectSettingList(generics.ListCreateAPIView):
         camera_user = request.data['username']
         camera_password = request.data['password']
         prefix_name = self.get_recording_prefix(camera_ip, camera_user, camera_password)
-        print('prefix_name:', prefix_name)
         request.data['prefix_name'] = prefix_name
         if serializer.is_valid():
             serializer.save()
             result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
             return Response(result, status=status.HTTP_201_CREATED)
-        result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":serializer.errors}
-        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}
+        return Response(result)
 
     def get_recording_type(self, camera_ip, camera_name, camera_password):
         """Get nas location from camera by cgi"""
