@@ -35,15 +35,15 @@ class CameraLog(models.Model):
     sd_unlocked_file = models.TextField(null=True, blank=True)
     sd_all_file = models.TextField(null=True, blank=True)
 
-    sd_card_cycling = models.CharField(null=True, blank=True, max_length=100)
+    sd_card_cycling = models.TextField(null=True, blank=True)
 
     # nas
     nas_file = models.TextField(null=True, blank=True)
-    nas_cycling = models.CharField(null=True, blank=True, max_length=100)
+    nas_cycling = models.TextField(null=True, blank=True)
 
     # vast
     vast_file = models.TextField(null=True, blank=True)
-    vast_cycling = models.CharField(null=True, blank=True, max_length=100)
+    vast_cycling = models.TextField(null=True, blank=True)
 
 
 
