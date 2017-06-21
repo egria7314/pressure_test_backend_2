@@ -57,6 +57,78 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password):
     return results
 
 
+def module_detect_periodic_videos(project_pk):
+    # get project object
+    project = ProjectSetting.objects.get(id=project_pk)
+    if not project.broken:
+        return Response({'message': "Not project setting for broken"})
+
+    start_time = localtime(project.start_time)
+    end_time = localtime(project.end_time)
+    # start_time = datetime.datetime.strptime("2017-06-20 19:00:00", "%Y-%m-%d %H:%M:%S")
+    # end_time = datetime.datetime.strptime("2017-06-21 09:30:00", "%Y-%m-%d %H:%M:%S")
+    print("start_time: ", start_time)
+    print("end_time: ", end_time)
+    interval_time = datetime.timedelta(hours=1)
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+    # index 0 is because project vs nas is 1:1 now
+    nas = project.nasprofile_set.values()[0]
+    
+    # add consumer for celery
+    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer broken_test_camera{}".format(camera['id'])
+    p = pexpect.spawn(cmd)
+    print(cmd)
+    time.sleep(3)
+    # add scheduler every hour
+    periodic_check_points = []
+    periodic_time = start_time
+    while periodic_time < end_time:
+        periodic_check_points.append(periodic_time)
+        periodic_time += interval_time
+    periodic_check_points.append(end_time)
+
+    print("periodic points: ", periodic_check_points)
+    m = Monitor()
+    for periodic_time in periodic_check_points:
+        m.add_periodic_jobs(
+            time.mktime(periodic_time.timetuple()),
+            arrange_periodic_task,
+            (camera['id'], nas['id'], start_time, end_time) 
+         )
+    m.start()
+    monitor.camera_id_2_monitor[str(camera['id'])] = m
+    print("monitor: ", monitor.camera_id_2_monitor)
+    ret = {'message': "Insert camera into schedule successfully", 'camera_id': camera['id']}
+    return ret
+
+def module_stop_detect_periodic_videos(project_pk):
+    # get project object
+    project = ProjectSetting.objects.get(id=project_pk)
+
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(camera['id'])]
+        m.stop()
+
+    # cancel consumer of celery
+    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
+    p = pexpect.spawn(cmd)
+    print( cmd )
+    time.sleep(3)
+
+    # clear tasks from a specific queue by id
+    cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
+    p = pexpect.spawn(cmd)
+    print( cmd )
+    time.sleep(3)
+    ret = {'message': "Cancel camera from schedule successfully", 'camera_id': camera['id']}
+    return ret
+
+
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
 def pretest_broken_image(request):
@@ -103,77 +175,15 @@ def running_status(request, project_pk):
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
 def detect_periodic_videos(request, project_pk):
-    # get project object
-    project = ProjectSetting.objects.get(id=project_pk)
-    if not project.broken:
-        return Response({'message': "Not project setting for broken"})
-
-    start_time = localtime(project.start_time)
-    end_time = localtime(project.end_time)
-    # start_time = datetime.datetime.strptime("2017-06-20 19:00:00", "%Y-%m-%d %H:%M:%S")
-    # end_time = datetime.datetime.strptime("2017-06-21 09:30:00", "%Y-%m-%d %H:%M:%S")
-    print("start_time: ", start_time)
-    print("end_time: ", end_time)
-    interval_time = datetime.timedelta(hours=1)
-    # search camera with project
-    # index 0 is because project vs camera is 1:1 now
-    camera = project.cameraprofile_set.values()[0]
-    # index 0 is because project vs nas is 1:1 now
-    nas = project.nasprofile_set.values()[0]
-    
-    # add consumer for celery
-    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
-    print(cmd)
-    time.sleep(3)
-    # add scheduler every hour
-    periodic_check_points = []
-    periodic_time = start_time
-    while periodic_time < end_time:
-        periodic_check_points.append(periodic_time)
-        periodic_time += interval_time
-    periodic_check_points.append(end_time)
-
-    print("periodic points: ", periodic_check_points)
-    m = Monitor()
-    for periodic_time in periodic_check_points:
-        m.add_periodic_jobs(
-            time.mktime(periodic_time.timetuple()),
-            arrange_periodic_task,
-            (camera['id'], nas['id'], start_time, end_time) 
-         )
-    m.start()
-    monitor.camera_id_2_monitor[str(camera['id'])] = m
-    print("monitor: ", monitor.camera_id_2_monitor)
-    return Response({'message': "Insert camera into schedule successfully", 'camera_id': camera['id']})
+    ret = module_detect_periodic_videos(project_pk)
+    return Response(ret)
 
     
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
 def stop_detect_periodic_videos(request, project_pk):
-    # get project object
-    project = ProjectSetting.objects.get(id=project_pk)
-
-    # search camera with project
-    # index 0 is because project vs camera is 1:1 now
-    camera = project.cameraprofile_set.values()[0]
-    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
-        m = monitor.camera_id_2_monitor[str(camera['id'])]
-        m.stop()
-
-    # cancel consumer of celery
-    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
-    print( cmd )
-    time.sleep(3)
-
-    # clear tasks from a specific queue by id
-    cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
-    p = pexpect.spawn(cmd)
-    print( cmd )
-    time.sleep(3)
-
-    return Response({'message': "Cancel camera from schedule successfully", 'camera_id': camera['id']})
+    ret = module_stop_detect_periodic_videos(project_pk)
+    return Response(ret)
 
 
 def detect_broken_image(pk):
