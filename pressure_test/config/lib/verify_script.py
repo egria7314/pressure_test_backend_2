@@ -5,7 +5,6 @@ from broken_tests.views import module_pretest_broken_image
 import subprocess
 import time
 import os
-import requests
 
 
 @api_view(['GET'])
@@ -24,18 +23,19 @@ def test_button(request):
     path_password = request.GET["path_password"]
     broken = request.GET["broken"]
     test_broken_result = None
-    if broken == 'true':
-        test_broken_result = module_pretest_broken_image(camera_host=ip, camera_user=username, camera_password=password)
-    ping_result = ping_camera(ip)
-    mount_result = mount_status(path, path_username, path_password)
-    field_dict = {"project_name":project_name, "start_time":start_time, "end_time":end_time, "owner":owner, "cgi":cgi, "delay":delay}
+    field_dict = {"project_name":project_name, "start_time":start_time, "end_time":end_time, "owner":owner, "cgi":cgi, "delay":delay,
+                  "ip":ip, "username":username, "password":password, "path":path, "path_username":path_username, "path_password":path_password,
+                  }
     error_string, input_field = [], "Pass"
     for key, value in field_dict.items():
         if value == "":
             error_string.append(key)
     if error_string:
         input_field = "{0} field may not be blank".format(', '.join(error_string))
-
+    ping_result = ping_camera(ip)
+    mount_result = mount_status(path, path_username, path_password)
+    if broken == 'true':
+        test_broken_result = module_pretest_broken_image(camera_host=ip, camera_user=username, camera_password=password)
     if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == [] and test_broken_result['result'] == "passed":
         test_result = {
             "testCheck": True, "info": {
@@ -48,21 +48,19 @@ def test_button(request):
                 "action": "pretest", "status": "failed", "comment": "{0}, {1}, Broken test: {2}, Field check: {3}".format(ping_result, mount_result, test_broken_result, input_field)
             }
         }
-
     return Response(test_result)
 
 def ping_camera(ip):
-    # print('ip:', ip)
     ping_result = ''
     for i in range(3):
         ping_result = __ping_test(ip=ip)
-        # print('print result: ', ping_result)
         if ping_result == 'Camera connection successful':
             break
         time.sleep(10)
 
     if ping_result != 'Camera connection successful':
-        raise Exception('Can not ping camera')
+        ping_result = 'Can not ping camera'
+        # raise Exception('Can not ping camera')
 
     return ping_result
 
@@ -70,12 +68,11 @@ def __ping_test(ip):
     try:
         ping = subprocess.Popen(["ping", "-c", "3", ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, error = ping.communicate()
-        # print('out:', out)
         if out:
             if 'ttl' in str(out):
                 return 'Camera connection successful'
             else:
-                return 'Connection failed'
+                return 'Camera Connection failed'
         else:
             return 'No ping'
     except subprocess.CalledProcessError:
@@ -89,16 +86,19 @@ def mount_status(destination, username, password):
     check_status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
     out, error = check_status.communicate()
     mount_result = ''
-    if out:
-        if destination not in str(out):
-            subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(destination, source, username, password), shell=True)
-            status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
-            out, error = status.communicate()
-            if out:
-                if destination in str(out):
-                    mount_result = 'Mount storage successful'
-                else:
-                    mount_result = 'Mount storage failed'
-        else:
-            mount_result = "Mount storage already exist"
+    if destination:
+        if out:
+            if destination not in str(out):
+                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(destination, source, username, password), shell=True)
+                status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
+                out, error = status.communicate()
+                if out:
+                    if destination in str(out):
+                        mount_result = 'Mount storage successful'
+                    else:
+                        mount_result = 'Mount storage failed'
+            else:
+                mount_result = "Mount storage already exist"
+    else:
+        mount_result = 'Mount storage failed'
     return mount_result

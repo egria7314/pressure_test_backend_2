@@ -26,6 +26,9 @@ class ProjectSetting(models.Model):
     log = models.BooleanField(default=False)
     cgi = models.IntegerField()
     delay = models.IntegerField()
+    log_status = models.CharField(max_length=100, blank=True)
+    broken_status = models.CharField(max_length=100, blank=True)
+    continuity_status = models.CharField(max_length=100, blank=True)
 
 class DefaultSetting(models.Model):
     default_type = models.CharField(max_length=100)

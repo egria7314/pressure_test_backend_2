@@ -26,29 +26,33 @@ import shutil
 # Create your views here.
 def module_pretest_broken_image(camera_host, camera_user, camera_password):
     # detect broken
-    anly = ContentAnalysis()
-    #   1. get snapshot to local folder
-    roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
-    stream_id = roi.get_recording_source()
-    pretest_dir = time.time()
-    anly(camera_host, camera_user, camera_password).save_snapshot_to_dir(
-        '/home/dqa/data/pretests/{}'.format(pretest_dir),
-        stream_id
-    )
-    #   2. get privacy mask
-    roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
-    names_to_corners = roi.return_mask()
-    #   3. check broken
-    privacy_mask_list = list(map(anly.trans_from_points_to_box, names_to_corners.values()))
-    # privacy_mask_list = [ 
-    #     anly.trans_from_points_to_box(names_to_corners['mask_up']),
-    #     anly.trans_from_points_to_box(names_to_corners['mask_down']),
-    #     anly.trans_from_points_to_box(names_to_corners['mask_left']),
-    #     anly.trans_from_points_to_box(names_to_corners['mask_right']) ]
+    try:
+        anly = ContentAnalysis()
+        #   1. get snapshot to local folder
+        roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
+        stream_id = roi.get_recording_source()
+        pretest_dir = time.time()
+        anly(camera_host, camera_user, camera_password).save_snapshot_to_dir(
+            '/home/dqa/data/pretests/{}'.format(pretest_dir),
+            stream_id
+        )
+        #   2. get privacy mask
+        roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
+        names_to_corners = roi.return_mask()
+        #   3. check broken
+        privacy_mask_list = list(map(anly.trans_from_points_to_box, names_to_corners.values()))
+        # privacy_mask_list = [
+        #     anly.trans_from_points_to_box(names_to_corners['mask_up']),
+        #     anly.trans_from_points_to_box(names_to_corners['mask_down']),
+        #     anly.trans_from_points_to_box(names_to_corners['mask_left']),
+        #     anly.trans_from_points_to_box(names_to_corners['mask_right']) ]
 
-    frames = glob.glob(os.path.join('/home/dqa/data/pretests/{}'.format(pretest_dir), '*.jpg'))
-    params = (privacy_mask_list, frames[0])
-    results = anly.check_single_image_as_usual(params)
+        frames = glob.glob(os.path.join('/home/dqa/data/pretests/{}'.format(pretest_dir), '*.jpg'))
+        params = (privacy_mask_list, frames[0])
+        results = anly.check_single_image_as_usual(params)
+    except Exception as e:
+        results = e
+
     return results
 
 
