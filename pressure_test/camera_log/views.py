@@ -205,14 +205,13 @@ def set_camera_log(projectid):
     camera_ip = task_camera_obj.ip
     camera_user = task_camera_obj.username
     camera_password = task_camera_obj.password
-
     storage_path = task_camera_obj.path
     storage_user = task_camera_obj.path_username
     storage_password = task_camera_obj.path_password
 
 
     final_camera_log_json = {}
-    final_camera_log_json["id"] = "1"    # temp
+    final_camera_log_json["id"] = projectid    # temp
     all_data_list = []
     PREFIX = task_camera_obj.prefix_name   # temp
 
