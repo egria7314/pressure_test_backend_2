@@ -63,7 +63,7 @@ class NasStorage(object):
         videos = self.dump_nas_files(remote_path, prefix, timestamp_start, timestamp_end)
         # unmount
 
-        self.unmount_folder(local_path, sudo_password)
+        # self.unmount_folder(local_path, sudo_password)
 
         return videos
 
