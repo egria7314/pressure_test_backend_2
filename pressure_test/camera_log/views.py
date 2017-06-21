@@ -134,7 +134,7 @@ def get_sd_recording_file(request):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_camera_by_id(request):
-    run_camera_schedule(15)
+    run_camera_schedule(107)
 
     return Response("OK")
 
@@ -142,7 +142,7 @@ def test_camera_by_id(request):
 
 def run_camera_schedule(project_id):
     result = {}
-    schedule.every().hour.do(set_camera_log, project_id)
+    schedule.every().minute.do(set_camera_log, project_id)
 
     while True:
         try:

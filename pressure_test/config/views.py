@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
+from camera_log.views import run_camera_schedule
 import re, collections
 import _threading_local
 import time
@@ -39,7 +40,8 @@ class ProjectSettingList(generics.ListCreateAPIView):
             a = serializer.save()
             project_id = a.id
             # print(project_id)
-            analyze_videos(project_id=project_id)
+            # analyze_videos(project_id=project_id)
+            run_camera_schedule(project_id=project_id)
             result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
             return Response(result, status=status.HTTP_201_CREATED)
         result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}
