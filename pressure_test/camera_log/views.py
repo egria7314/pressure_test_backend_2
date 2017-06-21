@@ -19,12 +19,13 @@ from camera_log.sd_cycle import SDcycle
 from datetime import datetime
 import re
 import time
-# import schedule
+import schedule
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
 from camera_log.nas_vast_storage_cycle import NasVastCycle
 from camera_log.libs.cgi import CGI
+from config.models import ProjectSetting
 
 
 CAMERA_IP = "172.19.16.119"  # support SD
@@ -33,15 +34,19 @@ CAMERA_USER = "root"
 CAMERA_PWD = "12345678z"
 
 
+# def job():
+#     print("I'm working...")
+#     # req = urllib.request.Request('http://172.19.16.133:8000/camera_log/')
+#     # http = urllib3.PoolManager()
+#     # http.request('GET', 'http://172.19.16.133:8000/camera_log/')
+
+
 # check sd support
 def support_sd(username, password, ip, cgi_command):
     support = True
     # sd_support_cgi_result = CGI().get_cgi("root", "12345678z", "172.19.16.119", "capability_supportsd")    # sd support
     sd_support_cgi_result = CGI().get_cgi(username, password, ip, cgi_command)    # sd not support
 
-    # print("**sdCGI**")
-    # print(sd_support_cgi_result)
-    # print("**sdCGI**")
 
     m = re.match(r"(.*)=\'(.*)\'", sd_support_cgi_result)
     print(m.group(2))
@@ -148,42 +153,92 @@ def get_sd_recording_file(request):
 
     return Response(sd_recording_file_json)
 
+
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def set_camera_log(request):
+def run_camera_schedule(request):
+    result = {}
+    schedule.every().minute.do(set_camera_log, 13)
+
+    while True:
+        try:
+            result["status"] = "OK"
+            schedule.run_pending()
+            # print(schedule.jobs)
+            # time.sleep(1)
+
+        except BaseException as e:
+            result["status"] = "Schedule Unknown Fail"
+            print(e)
+
+    return Response(result)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_schedule_status(request):
+    jobs_status = {}
+    # print(schedule.jobs)
+    jobs_status["job_status"] = str(schedule.jobs)
+
+    return Response(jobs_status)
+
+
+# @api_view(['GET'])
+# @permission_classes((AllowAny,))
+# def set_camera_log(request):
+def set_camera_log(projectid):
+    print("*****************************")
+    print("Set camera log is working....")
+    print(schedule.jobs)
+
+    ############
     camera_log_json = {}
     time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
     camera_log_json["createAt"] = time_now
+
+    # get camera info by id ()
+    task_camera_obj = ProjectSetting.objects.get(id=projectid)         # id now is temp, will get POST from Leo
+    print("*****")
+    print(task_camera_obj.prefix_name)
+    print("****")
+
+    camera_ip = task_camera_obj.ip
+    camera_user = task_camera_obj.username
+    camera_password = task_camera_obj.password
+
+    storage_path = task_camera_obj.path
+    storage_user = task_camera_obj.path_username
+    storage_password = task_camera_obj.path_password
+
+
     final_camera_log_json = {}
     final_camera_log_json["id"] = "1"    # temp
     all_data_list = []
-    PREFIX = ""   # temp
+    PREFIX = task_camera_obj.prefix_name   # temp
 
     # up time
-    my_up_time = Uptime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    my_up_time = Uptime(camera_ip, camera_user, camera_password)
     my_up_time_json = my_up_time.get_result()
     camera_log_json.update(my_up_time_json)
 
     # epoch time
-    camera_epoch_time = Epochtime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+    camera_epoch_time = Epochtime(camera_ip, camera_user, camera_password)
     camera_epoch_time_json = camera_epoch_time.get_result()
     camera_log_json.update(camera_epoch_time_json)
 
     # sd related
     # first check sd support
-    sd_support = support_sd(CAMERA_USER, CAMERA_PWD, CAMERA_IP, "capability_supportsd")
+    sd_support = support_sd(camera_user, camera_password, camera_ip, "capability_supportsd")
     sd_status_json = {}
 
     if sd_support:
-
-
         # sd status
-        my_sd_status = SDstatus(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+        my_sd_status = SDstatus(camera_ip, camera_user, camera_password)
         sd_status_json = my_sd_status.get_result()
         camera_log_json.update(sd_status_json)
 
         # sd recording file
-        sd_recording_file = Sdrecordingfile(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
+        sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
         sd_recording_file_json = sd_recording_file.get_fw_file_dict()
         new_sd_locked_file_list = sd_recording_file_json["sd_locked_file"]
         new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
@@ -218,11 +273,7 @@ def set_camera_log(request):
         sd_cycle_json["sdCardCycling"] = sd_cycle_result
         camera_log_json.update(sd_cycle_json)
     else:
-
-        print("******TEST0*******")
-
         comment = "Not Support"
-        print("******TEST1*******")
         sd_status_json["sdCardStatus"] = comment
         sd_status_json["sdCardUsed"] = comment
         new_sd_locked_file_str = comment
@@ -231,70 +282,76 @@ def set_camera_log(request):
         sd_cycle_result = comment
 
 
-    print("******TEST10****")
+    medium_or_high = task_camera_obj.type
+    if medium_or_high.lower() == "high":
 
 
-    ######################## To Do ################################
-    # check NAS cycle
-    new_nas_file_list = []
-    nas_cycle_result=""
-
-    former_cam_obj = CameraLog.objects.last()
-
-    if former_cam_obj:
-        former_nas_file_list = former_cam_obj.nas_file.split(',')
-        former_nas_file_list = check_list(former_nas_file_list)
-    else:
-        former_nas_file_list=[]
-
-    try:
-        timestamp_nas_start = datetime(2000, 6, 3, 0, 0, 0)
-        timestamp_nas_end = datetime.now()
-        nas_sudo_password = 'fftbato'
-        test_vast_obj = NasStorage('autotest', 'autotest')
-        # print(test_vast_obj)
-        nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
-
-        nas_files_dict = test_vast_obj.get_video_nas('autotest', 'autotest', nas_sudo_password, nas_path,
-                                                     PREFIX, timestamp_nas_start, timestamp_nas_end)
-
-        nas_files_list = list(nas_files_dict.keys())
+        ######################## To Do ################################
+        # check NAS cycle
         new_nas_file_list = []
-        for nas_file in nas_files_list:
-            end_index = nas_file.find(nas_path) + len(nas_path) + 1
-            new_nas_file_list.append(nas_file[end_index:])
+        nas_cycle_result=""
 
-        nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
-                                   new_file_list=new_nas_file_list)
-        nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
-    except:
-        print("NAS get files Fail! or Timeout")
+        former_cam_obj = CameraLog.objects.last()
 
-    ######################## To Do ################################
-    # check VAST cycle
-    # try:
-    #     print("!!")
-    #     timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
-    #     timestamp_vast_end = datetime(2017, 6, 3, 11, 59, 59)
-    #     # datetime.now()
-    #     print("!!!!")
-    #     # print(end_datetime_object)
+        if former_cam_obj:
+            former_nas_file_list = former_cam_obj.nas_file.split(',')
+            former_nas_file_list = check_list(former_nas_file_list)
+        else:
+            former_nas_file_list=[]
+
+        try:
+            timestamp_nas_start = datetime(2000, 6, 3, 0, 0, 0)
+            timestamp_nas_end = datetime.now()
+            nas_sudo_password = 'fftbato'
+
+            test_vast_obj = NasStorage(storage_user, storage_password)
+            # print(test_vast_obj)
+            # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
+            nas_path = storage_path.replace('\\','/')
+
+            nas_files_dict = test_vast_obj.get_video_nas(storage_user, storage_password, nas_sudo_password, nas_path,
+                                                         PREFIX, timestamp_nas_start, timestamp_nas_end)
+
+            nas_files_list = list(nas_files_dict.keys())
+            new_nas_file_list = []
+            for nas_file in nas_files_list:
+                end_index = nas_file.find(nas_path) + len(nas_path) + 1
+                new_nas_file_list.append(nas_file[end_index:])
+
+            nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
+                                       new_file_list=new_nas_file_list)
+            nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
+        except:
+            print("NAS get files Fail! or Timeout")
+
+
+    # medium (by VAST)
+    else:
+        pass
+
+    # ####################### To Do ################################
+    # #check VAST cycle
+    #     try:
+    #         print("!!")
+    #         timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
+    #         timestamp_vast_end = datetime.now()
+    #         # datetime.now()
+    #         print("!!!!")
+    #         # print(end_datetime_object)
     #
     #
-    #     test_vast_obj = VastStorage('eric', 'eric')
-    #     path = '\\\\172.19.1.54\\recording\\2017-06-02\\33-IB8360-W'.replace('\\','/')
-    #     vast_files_dict = test_vast_obj.get_video_vast('eric', 'eric', '', path, timestamp_vast_start, timestamp_vast_end)
-    #     print(vast_files_dict)
+    #         test_vast_obj = VastStorage('eric', 'eric')
+    #         path = '\\\\172.19.1.54\\recording\\2017-06-02\\33-IB8360-W'.replace('\\','/')
+    #         vast_files_dict = test_vast_obj.get_video_vast('eric', 'eric', '', path, timestamp_vast_start, timestamp_vast_end)
+    #         print(vast_files_dict)
     #
-    #     vast_files_list = list(vast_files_dict.keys())
-    #     print("VAST!!!!")
-    #     print(vast_files_list)
-    # except:
-    #     print("VAST get files Fail! or Timeout")
+    #         vast_files_list = list(vast_files_dict.keys())
+    #         print("VAST!!!!")
+    #         print(vast_files_list)
+    #     except:
+    #         print("VAST get files Fail! or Timeout")
 
-
-
-    ######################## To Do ################################
+    ####################### To Do ################################
 
     # write db
     CameraLog.objects.create(
@@ -318,38 +375,9 @@ def set_camera_log(request):
     all_data_list.append(camera_log_json)
     final_camera_log_json["data"] = all_data_list
 
-    #
-    #
-    # try:
-    #     new_obj = CameraLog.objects.last()     # last object
-    #     # print("/////")
-    #     # print(new_obj)
-    #     # print("++++++")
-    #     print(new_obj.id)
-    #     print("++-XD- -+++")
-    #     print(new_obj.create_at)
-    #     # print("//////")
-    #
-    #     former_obj = CameraLog.objects.get(id=new_obj.id-1)    # former object
-    #
-    #     # former_locked_file_list = former_obj.locked_file.split(',')
-    #     # former_unlocked_file_list = former_obj.unlocked_file.split(',')
-    #     # new_locked_file_list = former_obj.locked_file.split(',')
-    #     # new_unlocked_file_list = former_obj.unlocked_file.split(',')
-    #
-    #     # print(former_locked_file_list)
-    #     # print(former_unlocked_file_list)
-    #     # print(new_locked_file_list)
-    #     # print(new_unlocked_file_list)
-    #
-    #     # print(type(former_obj.unlocked_file))
-    #     print("hhhhh")
-    # except:
-    #     print("There isn't former object")
-    #     pass
-    #
 
-    return Response(final_camera_log_json)
+    return final_camera_log_json
+    # return Response(final_camera_log_json)
 
 def check_list(file_list):
     empty_list = file_list
@@ -357,7 +385,6 @@ def check_list(file_list):
             empty_list = []
 
     return empty_list
-
 
 
 @api_view(['GET'])

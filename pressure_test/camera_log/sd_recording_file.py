@@ -163,7 +163,7 @@ class Sdrecordingfile(object):
         Key2 : locked_file;
         Key3 : unlocked_file;
         """
-        print("TESTnew")
+
         file_dict={}
         ftp_all_filename = self.get_ftp_all_filename()
         ui_all_filename =self.get_ui_all_filename()
