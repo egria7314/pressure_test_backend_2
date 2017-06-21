@@ -27,7 +27,7 @@ def arrange_periodic_task(camera_id, nas_id, start_time, end_time):
         nas = NasProfile.objects.get(id=nas_id)
         print( "got nas: ", nas.id )
         roi = RoiModule(camera.host, camera.user, camera.password, 'NAS')
-        clip, created = ClipInfo.objects.get_or_create(path=file_path)
+        clip, created = ClipInfo.objects.get_or_create(full_path=file_path)
         if created or clip.is_broken == None:
             clip.privacy_masks = str(roi.return_mask())
             clip.camera_profile = camera
