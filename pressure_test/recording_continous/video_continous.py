@@ -36,7 +36,7 @@ class VideoContinous(object):
             result_dictionary = {"between_result": "failed", "seconds": "Decode error"}
 
         else:
-            if float(time_list_now[0]) - float(time_list_before[-1]) < 1 and float(time_list_before[0]) < float(time_list_now[0]):
+            if float(time_list_now[0]) - float(time_list_before[-1]) < 1 and float(time_list_before[0]) <= float(time_list_now[0]):
                 analyze_result ='pass'
                 delay_second = '-'
             else:
