@@ -26,7 +26,7 @@ import pexpect
 #************************************
 #*****Create your function here.*****
 #************************************
-def ana_videos(request, project_id):
+def ana_videos(project_id):
     query = ProjectSetting.objects.get(project_name=project_id)
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
