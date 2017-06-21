@@ -24,7 +24,8 @@ class ClipInfoSerializer(serializers.ModelSerializer):
     count = serializers.ReadOnlyField()
     link = serializers.ReadOnlyField()
     errorCode = serializers.ReadOnlyField()
+    path = serializers.ReadOnlyField()
 
     class Meta:
         model = ClipInfo
-        fields = ('id', 'path', 'size', 'privacy_masks', 'is_broken', 'result', 'errorCode', 'count', 'link', 'broken_frames')
+        fields = ('id', 'path', 'full_path', 'size', 'privacy_masks', 'is_broken', 'result', 'errorCode', 'count', 'link', 'broken_frames')

@@ -4,8 +4,8 @@ from recording_continous.models import RecordingFile
 from recording_continous.models import Config
 
 class RecordingContinutyAdmin(admin.ModelAdmin):
-    list_display = ('project_id', 'creat_at', 'video_path', 'size','in_result','error_code',"start_time" , "end_time", 'link','count', 'between_result', 'seconds')
-    search_fields = ('project_id', 'creat_at', 'video_path', 'size','in_result','error_code',"start_time" , "end_time", 'link','count', 'between_result', 'seconds')
+    list_display = ('project_id', 'creat_at', 'video_path', 'video_path_before', 'size','in_result','error_code',"start_time" , "end_time", 'link','count', 'between_result', 'seconds')
+    search_fields = ('project_id', 'creat_at', 'video_path', 'video_path_before','size','in_result','error_code',"start_time" , "end_time", 'link','count', 'between_result', 'seconds')
 
 
 class RecordingFileAdmin(admin.ModelAdmin):

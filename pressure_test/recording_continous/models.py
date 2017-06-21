@@ -5,6 +5,7 @@ class RecordingContinuty(models.Model):
     project_id = models.CharField(default='-',null=True, blank=True, max_length=100)
     creat_at = models.CharField(null=True, blank=True, max_length=100)
     video_path = models.CharField(null=True, blank=True, max_length=100)
+    video_path_before = models.CharField(null=True, blank=True, max_length=100)
     size = models.CharField(null=True, blank=True, max_length=100)
     in_result = models.CharField(null=True, blank=True, max_length=100)
     error_code = models.CharField(null=True, blank=True, max_length=100)
