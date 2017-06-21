@@ -9,7 +9,8 @@ urlpatterns = [
 	url(r'^pressure-tests/projects/(?P<project_pk>[0-9]+)/clips/(?P<clip_pk>[0-9]+)/$', views.ClipInfoDetail.as_view()),
     url(r'^pressure-tests/projects/(?P<project_pk>[0-9]+)/detectbroken/$', views.detect_periodic_videos),
 	url(r'^pressure-tests/projects/(?P<project_pk>[0-9]+)/stopbroken/$', views.stop_detect_periodic_videos),
-	url(r'^pressure-tests/pretestbroken/$', views.pretest_broken_image),
+	url(r'^pressure-tests/projects/(?P<project_pk>[0-9]+)/statusbroken/$', views.running_status),
+    url(r'^pressure-tests/pretestbroken/$', views.pretest_broken_image),
 
     # [TODO] next features, with compatibility
 	# url(r'^pressure-tests/brokenframes/$', views.BrokenFrameList.as_view()),
