@@ -17,7 +17,7 @@ def arrange_periodic_task(camera_id, nas_id, start_time, end_time):
     camera = CameraProfile.objects.get(id=camera_id)
     nas = NasProfile.objects.get(id=nas_id)
     nas_helper = NasStorage(nas.user, nas.password)
-    remote_batch_clips = nas_helper.get_video_nas(nas.user, nas.password, '', nas.location, 'medium_stress', start_time, end_time)
+    remote_batch_clips = nas_helper.get_video_nas(nas.user, nas.password, '', nas.location, camera.project_profile.prefix_name, start_time, end_time)
     # unhandled_clips = ["//172.19.11.191/eric/alphago/20170615/20/medium_stress04.mp4", "//172.19.11.191/eric/alphago/20170615/20/medium_stress05.mp4", "//172.19.11.191/eric/alphago/20170615/20/medium_stress06.mp4"]
     print( "got unhandle files: ", remote_batch_clips )
     
