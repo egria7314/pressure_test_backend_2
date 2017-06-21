@@ -18,7 +18,7 @@ from recording_continous.video_continous import VideoContinous
 
 def arrange_periodic_task(project_id, start_time, end_time):
     ns = NasStorage()
-    obj = ProjectSetting.objects.get(project_name=project_id)
+    obj = ProjectSetting.objects.get(id=project_id)
     remote_path = obj.path
     remote_username = obj.path_username
     remote_password = obj.path_password

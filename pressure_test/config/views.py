@@ -12,7 +12,10 @@ from libs.nas_storage import NasStorage
 from rest_framework import status
 from rest_framework.decorators import api_view
 from libs.telnet_module import URI
+from recording_continous.views import analyze_videos
 import re, collections
+import _threading_local
+import time
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -32,7 +35,10 @@ class ProjectSettingList(generics.ListCreateAPIView):
         prefix_name = self.get_recording_prefix(camera_ip, camera_user, camera_password)
         request.data['prefix_name'] = prefix_name
         if serializer.is_valid():
-            serializer.save()
+            a = serializer.save()
+            project_id = a.id
+            # print(project_id)
+            analyze_videos(project_id=project_id)
             result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
             return Response(result, status=status.HTTP_201_CREATED)
         result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}

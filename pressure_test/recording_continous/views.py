@@ -27,7 +27,7 @@ import pexpect
 #*****Create your function here.*****
 #************************************
 def analyze_videos(project_id):
-    query = ProjectSetting.objects.get(project_name=project_id)
+    query = ProjectSetting.objects.get(id=project_id)
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
     print ('******************')
