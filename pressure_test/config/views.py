@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from config.serializers import ProjectSettingSerializer
 from rest_framework import generics
 from config.models import ProjectSetting
+from recording_continous.models import RecordingFile
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,6 +12,7 @@ from libs.nas_storage import NasStorage
 from rest_framework import status
 from rest_framework.decorators import api_view
 from libs.telnet_module import URI
+import re, collections
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -69,7 +71,6 @@ class ProjectSettingList(generics.ListCreateAPIView):
             prefix = 'get recording prefix error'
         finally:
             return prefix
-
 
 
 @api_view(['GET'])
@@ -142,7 +143,6 @@ def return_nas_location(requests):
     return_json = NasStorage().get_nas_location(ip, name, pw)
     return Response(return_json)
 
-
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def return_project_setting(requests, pk=None):
@@ -167,3 +167,32 @@ def return_project_setting(requests, pk=None):
             item_json['startTime'] = item_json.pop('start_time')
             item_json['endTime'] = item_json.pop('end_time')
     return Response(return_json)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def return_daily_summary(requests, pk):
+    querry_set = RecordingFile.objects.filter(project_id = pk).values("project_id", "path")
+    file_list = list(querry_set)
+    transform_list =  transform_dict(file_list, pk)
+    return_dict = {"id": str(pk), "data": transform_list}
+    return Response(return_dict)
+
+def transform_dict(file_list, p_id):
+    querry_set = ProjectSetting.objects.filter(id = p_id).values("type")
+    test_type = list(querry_set)[0]["type"]
+    date_list = []
+    transform_list = []
+    for dict_item in file_list:
+        if test_type != "medium":
+            create_at = re.search('\d{8}', dict_item['path']).group(0)
+        else:
+            create_at = re.search('\d{4}\-\d{2}\-\d{2}', dict_item['path']).group(0)
+        date_list.append(create_at)
+    cnt = collections.Counter()
+    for date in date_list:
+        cnt[date] += 1
+    date_count_dict = dict(cnt)
+    for date, count in date_count_dict.items():
+        transform_list.append({'createAt': date.replace('-', ''), 'count': count})
+    return transform_list
+

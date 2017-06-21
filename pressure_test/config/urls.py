@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^projects/(?P<pk>[0-9]+)/$', views.return_project_setting),
     url(r'^projects/$', views.return_project_setting),
     url(r'^save_project_setting/$', views.ProjectSettingList.as_view()),
-    url(r'^save_project_setting/(?P<pk>[0-9]+)/$', views.ProjectSettingDetail.as_view())
+    url(r'^daily-summary/(?P<pk>[0-9]+)/$', views.return_daily_summary)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
