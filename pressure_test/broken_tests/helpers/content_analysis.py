@@ -210,7 +210,7 @@ class ContentAnalysis(object):
         # print("PRIVACY_MASK: ", privacy_masks)
         # print("IMAGE_PATH: ", imgPath)
         if len(privacy_masks) > 0:
-            ret = {'result': 'passed', 'frame_path': imgPath, 'error_boxes': ""}
+            ret = {'result': 'passed', 'frame_path': imgPath, 'error_boxes': None}
         else:
             ret = {'result': 'failed', 'frame_path': imgPath, 'error_boxes': "Without any box"}
         
@@ -221,8 +221,12 @@ class ContentAnalysis(object):
             # print mask, normal_frame
             if not normal_frame:
                  ret['result'] = 'failed'
-                 ret['error_boxes'] = ",".join([ret['error_boxes'], str(mask)] ) 
+                 ret['error_boxes'] = ",".join(list(filter(None, [ ret['error_boxes'], str(mask) ]) ))
         
+        # delete normal frame
+        if ret['result'] == 'passed':
+            os.remove(imgPath)
+
         return ret
 
 
@@ -350,18 +354,19 @@ class ContentAnalysis(object):
         # add broken frame info        
         broken_frames_list = [] if status == 'passed' else self.filter_broken_frames_to_list(video_summary)
 
-        # print( "broken_frames_list: ", broken_frames_list )
+        print( "broken_frames_list: ", broken_frames_list )
         return { 'result': status, 'failed_frames': broken_frames_list }
     
 
     def filter_broken_frames_to_list(self, all_frames):
         """
         """
+        print("debug all frames: ", all_frames)
         formated_broken_frames_list = []
         broken_frames = list(filter(lambda f: f['result'] == 'failed', all_frames))
-        
+        print("debug broken frame: ", broken_frames)
         for each_frame in broken_frames:
-            
+            print("each_frame in broken frames: ", each_frame)
             broken_frame_info = {
                     'path': each_frame['frame_path'],
                     'error_message': each_frame['error_boxes']
@@ -369,6 +374,7 @@ class ContentAnalysis(object):
 
             formated_broken_frames_list.append(broken_frame_info)
         
+        print("formated_broken_frames_list: ", formated_broken_frames_list)
         return formated_broken_frames_list
 
 

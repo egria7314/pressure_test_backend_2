@@ -21,6 +21,9 @@ import pexpect
 import glob
 import json
 import shutil
+import re
+from django.core.cache import cache
+from django.conf import settings 
 
 
 # Create your views here.
@@ -72,6 +75,32 @@ def pretest_broken_image(request):
     return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
     
 
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny, ))
+def running_status(request, project_pk):
+    INVALID_PROJ_ID = 'invalid project id'
+    INVALID_MONITOR_ID = 'invalid monitor id'
+    FINISHED = 'finished'
+    # get project object
+    project = ProjectSetting.objects.filter(id=project_pk).first()
+    status = INVALID_PROJ_ID
+    queue_size = 0
+    next_schedule = []
+    if project:
+        camera = project.cameraprofile_set.values()[0]
+        if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+            m = monitor.camera_id_2_monitor[str(camera['id'])]
+            if m:
+                status, queue_size, next_schedule = m.get_schedule_status()
+                # print('scheduleObj: ', schedule_obj)
+            else:
+                status = FINISHED
+        else:
+            status = INVALID_MONITOR_ID
+        
+        
+    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
@@ -83,8 +112,8 @@ def detect_periodic_videos(request, project_pk):
 
     # start_time = project.start_time
     # end_time = project.end_time
-    start_time = datetime.datetime.strptime("2017-06-16 19:00:00", "%Y-%m-%d %H:%M:%S")
-    end_time = datetime.datetime.strptime("2017-06-19 09:00:00", "%Y-%m-%d %H:%M:%S")
+    start_time = datetime.datetime.strptime("2017-06-20 19:00:00", "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.datetime.strptime("2017-06-21 09:30:00", "%Y-%m-%d %H:%M:%S")
     interval_time = datetime.timedelta(hours=1)
     # search camera with project
     # index 0 is because project vs camera is 1:1 now
@@ -167,7 +196,7 @@ def detect_broken_image(pk):
         local_path)
     print("local path= ", local_path)
     print("is_mounted= ", is_mounted)
-    clippath = os.path.join(local_path, clip.path.lower()[len(nas.location)+1:])
+    clippath = os.path.join(local_path, clip.full_path.lower()[len(nas.location)+1:])
     # framefolder = os.path.join(os.path.dirname(clippath), 'broken', os.path.splitext(os.path.basename(clippath))[0])
     framefolder = os.path.join(os.path.dirname(clippath), 'broken', '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
     print("clippath= ", clippath)
@@ -209,12 +238,13 @@ def detect_broken_image(pk):
     #         },
     #     ] }
     for failed_frame in video_status['failed_frames']:
+        print("each failed frame: ", failed_frame)
         m = re.search(r"mul(?P<timestamp>[0-9]+).jpg", failed_frame['path'])
         BrokenFrame.objects.create(
             error_message=failed_frame['error_message'],
             frame_path=failed_frame['path'],
             clip=clip,
-            timestamp=datetime.timedelta(m.group('timestamp')) if m else None
+            timestamp=datetime.timedelta(seconds=round(int(m.group('timestamp'))/2, 1)) if m else None # FPS=2
         )
 
     print( "video_status: ", video_status )

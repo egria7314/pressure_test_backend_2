@@ -34,7 +34,7 @@ class NasProfile(models.Model):
 
 
 class ClipInfo(models.Model):
-    path = models.TextField()
+    full_path = models.TextField()
     size = models.CharField(max_length=100, null=True, blank=True)
     privacy_masks = models.TextField()
     camera_profile = models.ForeignKey(CameraProfile, related_name='camera_profile', on_delete=models.CASCADE, null=True, blank=True)
@@ -42,8 +42,17 @@ class ClipInfo(models.Model):
     is_broken = models.NullBooleanField(null=True, blank=True)
 
     @property
+    def path(self):
+        return self.full_path.replace(self.nas_profile.location, '')
+
+    @property
     def result(self):
-        return "passed" if self.is_broken == False else "failed"
+        if self.is_broken == None:
+            return "processing"
+        elif self.is_broken == False:
+            return "passed"
+        else:
+            return "failed"
 
     @property
     def errorCode(self):

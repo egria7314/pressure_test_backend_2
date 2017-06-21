@@ -39,8 +39,8 @@ class VastStorage(object):
             timestamp_end = time.mktime(time_end.timetuple())
             video = self.dump_vast_files(remote_path, timestamp_start, timestamp_end)
             videos.update(video)
-            # unmount
-            self.unmount_folder(local_path, sudo_password)
+            # # unmount
+            # self.unmount_folder(local_path, sudo_password)
 
         return videos
 
