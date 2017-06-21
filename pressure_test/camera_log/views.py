@@ -283,7 +283,7 @@ def set_camera_log(projectid):
 
     medium_or_high = task_camera_obj.type
     if medium_or_high.lower() == "high":
-        ######################## To Do ################################
+        ######################## NAS ################################
         # check NAS cycle
         new_nas_file_list = []
         nas_cycle_result=""
@@ -324,7 +324,7 @@ def set_camera_log(projectid):
 
     # medium (by VAST)
     else:
-    # ####################### To Do ################################
+    # ####################### VAST ################################
     # #check VAST cycle
         try:
             timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
