@@ -33,6 +33,7 @@ class ProjectSettingList(generics.ListCreateAPIView):
         camera_user = request.data['username']
         camera_password = request.data['password']
         prefix_name = self.get_recording_prefix(camera_ip, camera_user, camera_password)
+        print('prefix_name:', prefix_name)
         request.data['prefix_name'] = prefix_name
         if serializer.is_valid():
             a = serializer.save()
@@ -56,10 +57,12 @@ class ProjectSettingList(generics.ListCreateAPIView):
                 if result != 'cf':
                     type_code = index
                     break
+                else:
+                    continue
             except:
                 type_code = 'get recording type error'
-            finally:
-                return type_code
+
+        return type_code
 
     def get_recording_prefix(self, camera_ip, camera_name, camera_password):
         """Get nas location from camera by cgi"""

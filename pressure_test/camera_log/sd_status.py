@@ -22,7 +22,7 @@ class SDstatus(object):
         data_dict = {}
         SD_status = self.__get_sd_status()
         data_dict["sdCardStatus"] = SD_status[0]
-        data_dict["sdCardUsed"] = self.__get_sd_status()[1]
+        data_dict["sdCardUsed"] = str(self.__get_sd_status()[1])
         #data_dict["SD_recording_filename"] = self.__get_recording_filename()
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict
