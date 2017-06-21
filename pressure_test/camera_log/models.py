@@ -21,6 +21,8 @@ class SdRecordingFile(models.Model):
 
 # whole
 class CameraLog(models.Model):
+    project_id = models.CharField(null=True, blank=True, max_length=100)
+
     create_at = models.CharField(null=True, blank=True, max_length=100)
     camera_ip = models.CharField(null=True, blank=True, max_length=100)
     sd_used_percent = models.CharField(null=True, blank=True, max_length=100)
