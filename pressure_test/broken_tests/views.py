@@ -10,6 +10,7 @@ from broken_tests.serializers import ClipInfoSerializer, CameraProfileSerializer
 from rest_framework import generics
 from broken_tests.helpers.content_analysis import ContentAnalysis
 from broken_tests.helpers.roi_module import RoiModule
+from broken_tests.helpers.brokenframe_helper import BrokenFrameHelper
 import time
 import os
 import datetime
@@ -22,6 +23,7 @@ import glob
 import json
 import shutil
 import re
+from django.utils.timezone import localtime
 from django.core.cache import cache
 from django.conf import settings 
 
@@ -57,6 +59,78 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password):
         results = e
 
     return results
+
+
+def module_detect_periodic_videos(project_pk):
+    # get project object
+    project = ProjectSetting.objects.get(id=project_pk)
+    if not project.broken:
+        return Response({'message': "Not project setting for broken"})
+
+    start_time = localtime(project.start_time)
+    end_time = localtime(project.end_time)
+    # start_time = datetime.datetime.strptime("2017-06-20 19:00:00", "%Y-%m-%d %H:%M:%S")
+    # end_time = datetime.datetime.strptime("2017-06-21 09:30:00", "%Y-%m-%d %H:%M:%S")
+    print("start_time: ", start_time)
+    print("end_time: ", end_time)
+    interval_time = datetime.timedelta(hours=1)
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+    # index 0 is because project vs nas is 1:1 now
+    nas = project.nasprofile_set.values()[0]
+    
+    # add consumer for celery
+    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer broken_test_camera{}".format(camera['id'])
+    p = pexpect.spawn(cmd)
+    print(cmd)
+    time.sleep(3)
+    # add scheduler every hour
+    periodic_check_points = []
+    periodic_time = start_time
+    while periodic_time < end_time:
+        periodic_check_points.append(periodic_time)
+        periodic_time += interval_time
+    periodic_check_points.append(end_time)
+
+    print("periodic points: ", periodic_check_points)
+    m = Monitor()
+    for periodic_time in periodic_check_points:
+        m.add_periodic_jobs(
+            time.mktime(periodic_time.timetuple()),
+            arrange_periodic_task,
+            (camera['id'], nas['id'], start_time, end_time) 
+         )
+    m.start()
+    monitor.camera_id_2_monitor[str(camera['id'])] = m
+    print("monitor: ", monitor.camera_id_2_monitor)
+    ret = {'message': "Insert camera into schedule successfully", 'camera_id': camera['id']}
+    return ret
+
+def module_stop_detect_periodic_videos(project_pk):
+    # get project object
+    project = ProjectSetting.objects.get(id=project_pk)
+
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(camera['id'])]
+        m.stop()
+
+    # cancel consumer of celery
+    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
+    p = pexpect.spawn(cmd)
+    print( cmd )
+    time.sleep(3)
+
+    # clear tasks from a specific queue by id
+    cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
+    p = pexpect.spawn(cmd)
+    print( cmd )
+    time.sleep(3)
+    ret = {'message': "Cancel camera from schedule successfully", 'camera_id': camera['id']}
+    return ret
 
 
 @api_view(['GET'])
@@ -105,75 +179,15 @@ def running_status(request, project_pk):
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
 def detect_periodic_videos(request, project_pk):
-    # get project object
-    project = ProjectSetting.objects.get(id=project_pk)
-    if not project.broken:
-        return Response({'message': "Not project setting for broken"})
-
-    # start_time = project.start_time
-    # end_time = project.end_time
-    start_time = datetime.datetime.strptime("2017-06-20 19:00:00", "%Y-%m-%d %H:%M:%S")
-    end_time = datetime.datetime.strptime("2017-06-21 09:30:00", "%Y-%m-%d %H:%M:%S")
-    interval_time = datetime.timedelta(hours=1)
-    # search camera with project
-    # index 0 is because project vs camera is 1:1 now
-    camera = project.cameraprofile_set.values()[0]
-    # index 0 is because project vs nas is 1:1 now
-    nas = project.nasprofile_set.values()[0]
-    
-    # add consumer for celery
-    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
-    print(cmd)
-    time.sleep(3)
-    # add scheduler every hour
-    periodic_check_points = []
-    periodic_time = start_time
-    while periodic_time < end_time:
-        periodic_check_points.append(periodic_time)
-        periodic_time += interval_time
-    periodic_check_points.append(end_time)
-
-    print("periodic points: ", periodic_check_points)
-    m = Monitor()
-    for periodic_time in periodic_check_points:
-        m.add_periodic_jobs(
-            time.mktime(periodic_time.timetuple()),
-            arrange_periodic_task,
-            (camera['id'], nas['id'], start_time, end_time) 
-         )
-    m.start()
-    monitor.camera_id_2_monitor[str(camera['id'])] = m
-    print("monitor: ", monitor.camera_id_2_monitor)
-    return Response({'message': "Insert camera into schedule successfully", 'camera_id': camera['id']})
+    ret = module_detect_periodic_videos(project_pk)
+    return Response(ret)
 
     
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
 def stop_detect_periodic_videos(request, project_pk):
-    # get project object
-    project = ProjectSetting.objects.get(id=project_pk)
-
-    # search camera with project
-    # index 0 is because project vs camera is 1:1 now
-    camera = project.cameraprofile_set.values()[0]
-    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
-        m = monitor.camera_id_2_monitor[str(camera['id'])]
-        m.stop()
-
-    # cancel consumer of celery
-    cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
-    print( cmd )
-    time.sleep(3)
-
-    # clear tasks from a specific queue by id
-    cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
-    p = pexpect.spawn(cmd)
-    print( cmd )
-    time.sleep(3)
-
-    return Response({'message': "Cancel camera from schedule successfully", 'camera_id': camera['id']})
+    ret = module_stop_detect_periodic_videos(project_pk)
+    return Response(ret)
 
 
 def detect_broken_image(pk):
@@ -201,9 +215,6 @@ def detect_broken_image(pk):
     framefolder = os.path.join(os.path.dirname(clippath), 'broken', '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
     print("clippath= ", clippath)
     print("framefolder= ", framefolder)
-    # #   1-1. remove framefolder if exists
-    # if os.path.exists(framefolder):
-    #     shutil.rmtree(framefolder)
     #   2. cut to frames
     anly.cut_to_frames(
         clippath,
@@ -225,7 +236,7 @@ def detect_broken_image(pk):
     )
 
     # # create brokenInfo
-    # video_status = {
+    # ex: video_status = {
     #     'result': 'failed',
     #     'failed_frames': [
     #         {
@@ -237,15 +248,30 @@ def detect_broken_image(pk):
     #             'path': "a/b/c.mp4"
     #         },
     #     ] }
-    for failed_frame in video_status['failed_frames']:
-        print("each failed frame: ", failed_frame)
-        m = re.search(r"mul(?P<timestamp>[0-9]+).jpg", failed_frame['path'])
-        BrokenFrame.objects.create(
-            error_message=failed_frame['error_message'],
-            frame_path=failed_frame['path'],
-            clip=clip,
-            timestamp=datetime.timedelta(seconds=round(int(m.group('timestamp'))/2, 1)) if m else None # FPS=2
-        )
+    BrokenFrameHelper(clip.id).batch_create_db(video_status)
+
+    # for failed_frame in video_status['failed_frames']:
+    #     print("each failed frame: ", failed_frame)
+    #     m = re.search(r"mul(?P<timestamp>[0-9]+).jpg", failed_frame['path'])
+    #     if m:
+    #         seq_to_seconds = round(int(m.group('timestamp'))/2, 1) # 2: fps
+    #         timestamp = datetime.timedelta(seconds=seq_to_seconds)
+    #         # replace broken frame path with timestamp
+    #         renamed_path = failed_frame['path'].replace(
+    #             'mul'+m.group('timestamp'),
+    #             str(timestamp).replace(":", "'")
+    #         )
+    #         os.rename(failed_frame['path'], renamed_path)
+    #         failed_frame['path'] = renamed_path
+    #     else:
+    #         timestamp = None
+
+    #     BrokenFrame.objects.create(
+    #         error_message=failed_frame['error_message'],
+    #         frame_path=failed_ftatusbroken/rame['path'],
+    #         clip=clip,
+    #         timestamp=timestamp
+    #     )
 
     print( "video_status: ", video_status )
 
