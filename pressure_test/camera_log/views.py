@@ -158,7 +158,7 @@ def get_sd_recording_file(request):
 @permission_classes((AllowAny,))
 def run_camera_schedule(request):
     result = {}
-    schedule.every().minute.do(set_camera_log, 13)
+    schedule.every().minute.do(set_camera_log, 17)
 
     while True:
         try:
@@ -284,8 +284,6 @@ def set_camera_log(projectid):
 
     medium_or_high = task_camera_obj.type
     if medium_or_high.lower() == "high":
-
-
         ######################## To Do ################################
         # check NAS cycle
         new_nas_file_list = []
@@ -327,29 +325,23 @@ def set_camera_log(projectid):
 
     # medium (by VAST)
     else:
-        pass
-
     # ####################### To Do ################################
     # #check VAST cycle
-    #     try:
-    #         print("!!")
-    #         timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
-    #         timestamp_vast_end = datetime.now()
-    #         # datetime.now()
-    #         print("!!!!")
-    #         # print(end_datetime_object)
-    #
-    #
-    #         test_vast_obj = VastStorage('eric', 'eric')
-    #         path = '\\\\172.19.1.54\\recording\\2017-06-02\\33-IB8360-W'.replace('\\','/')
-    #         vast_files_dict = test_vast_obj.get_video_vast('eric', 'eric', '', path, timestamp_vast_start, timestamp_vast_end)
-    #         print(vast_files_dict)
-    #
-    #         vast_files_list = list(vast_files_dict.keys())
-    #         print("VAST!!!!")
-    #         print(vast_files_list)
-    #     except:
-    #         print("VAST get files Fail! or Timeout")
+        try:
+            timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
+            timestamp_vast_end = datetime.now()
+            # print(end_datetime_object)
+
+            test_vast_obj = VastStorage(storage_user, storage_password)
+            path = storage_path.replace('\\','/')
+            vast_files_dict = test_vast_obj.get_video_vast(storage_user, storage_password, '', path, timestamp_vast_start, timestamp_vast_end)
+            print(vast_files_dict)
+
+            vast_files_list = list(vast_files_dict.keys())
+            print("VAST!!!!")
+            print(vast_files_list)
+        except:
+            print("VAST get files Fail! or Timeout")
 
     ####################### To Do ################################
 
@@ -404,7 +396,8 @@ def get_all_camera_log(request):
         log_data_dict["sdCardStatus"] = log_obj.sd_status
         log_data_dict["sdCardUsed"] = log_obj.sd_used_percent
         log_data_dict["sdCardCycling"] = log_obj.sd_card_cycling
-        log_data_dict["storageCycling"] = "Adding"
+        log_data_dict["nasCycling"] = log_obj.nas_cycling
+        log_data_dict["vastCycling"] = log_obj.vast_cycling
 
         data_list.append(log_data_dict)
 
