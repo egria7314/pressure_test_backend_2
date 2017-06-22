@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^sd_recording_file/$', views.get_sd_recording_file),
     # url(r'^camera_log/$', views.set_camera_log),
     # url(r'^camera_log/$', views.run_camera_schedule),
-    url(r'^test_camera_log/$', views.test_camera_by_id),
+    url(r'^test_camera_log/$', views.test_camera),
 
 
     url(r'^get_camera_log_schedule/$', views.get_schedule_status),
