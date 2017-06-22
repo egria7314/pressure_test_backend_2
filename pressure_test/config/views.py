@@ -10,6 +10,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.models import DefaultSetting
 from libs.nas_storage import NasStorage
 from rest_framework import status
+from rest_framework.decorators import api_view
+from django.utils.timezone import localtime
 from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
 from camera_log.views import run_camera_schedule, test_run_camera_thread
@@ -166,7 +168,9 @@ def return_project_setting(requests, pk=None):
         return_json['projectName'] = return_json.pop('project_name')
         return_json['cameraIp'] = return_json.pop('ip')
         return_json['startTime'] = return_json.pop('start_time')
+        return_json['startTime'] = localtime(return_json['startTime'])
         return_json['endTime'] = return_json.pop('end_time')
+        return_json['endTime'] = localtime(return_json['end_time'])
 
     else:
         querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
@@ -177,7 +181,9 @@ def return_project_setting(requests, pk=None):
             item_json['projectName'] = item_json.pop('project_name')
             item_json['cameraIp'] = item_json.pop('ip')
             item_json['startTime'] = item_json.pop('start_time')
+            item_json['startTime'] = localtime(item_json['startTime'])
             item_json['endTime'] = item_json.pop('end_time')
+            item_json['endTime'] = localtime(item_json['endTime'])
     return Response(return_json)
 
 @api_view(['GET'])
