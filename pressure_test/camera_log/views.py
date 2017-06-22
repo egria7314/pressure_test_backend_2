@@ -136,16 +136,14 @@ def get_sd_recording_file(request):
     return Response(sd_recording_file_json)
 
 
-def test_run_camera_thread(project_id):
-    th = Thread(target=run_camera_schedule, args=(project_id,))
-    th.start()
+# def test_run_camera_thread(project_id):
+#     th = Thread(target=run_camera_schedule, args=(project_id,))
+#     th.start()
 
 
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def test_camera_by_id(request):
-    run_camera_schedule(107)
 def test_camera(request):
     run_cameralog_schedule_by_id(69)
     return Response({'status:': 'ok '})
