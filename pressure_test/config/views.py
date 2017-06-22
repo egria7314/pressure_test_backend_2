@@ -13,9 +13,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
-from camera_log.views import run_camera_schedule
+from camera_log.views import run_camera_schedule, test_run_camera_thread
+from broken_tests.views import module_detect_periodic_videos
 import re, collections
-import _threading_local
+from threading import Thread
 import time
 
 
@@ -27,23 +28,24 @@ class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
-    
-    def post(self, request, format=None):
+
+
+    def post(self, request):
         serializer = ProjectSettingSerializer(data=request.data)
         camera_ip = request.data['ip']
         camera_user = request.data['username']
         camera_password = request.data['password']
         prefix_name = self.get_recording_prefix(camera_ip, camera_user, camera_password)
-        print('prefix_name:', prefix_name)
         request.data['prefix_name'] = prefix_name
         if serializer.is_valid():
             a = serializer.save()
             project_id = a.id
-            # print(project_id)
             # analyze_videos(project_id=project_id)
-            run_camera_schedule(project_id=project_id)
+            # test_run_camera_thread(project_id=project_id)
+            # module_detect_periodic_videos(project_pk=project_id)
             result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
             return Response(result, status=status.HTTP_201_CREATED)
+
         result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}
         return Response(result)
 
@@ -81,6 +83,8 @@ class ProjectSettingList(generics.ListCreateAPIView):
             prefix = 'get recording prefix error'
         finally:
             return prefix
+
+
 
 
 @api_view(['GET'])

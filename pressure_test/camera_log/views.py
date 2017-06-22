@@ -20,6 +20,7 @@ from datetime import datetime
 import re
 import time
 import schedule
+from threading import Thread
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
@@ -130,6 +131,11 @@ def get_sd_recording_file(request):
     return Response(sd_recording_file_json)
 
 
+def test_run_camera_thread(project_id):
+    th = Thread(target=run_camera_schedule, args=(project_id,))
+    th.start()
+
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -142,7 +148,7 @@ def test_camera_by_id(request):
 
 def run_camera_schedule(project_id):
     result = {}
-    schedule.every().minute.do(set_camera_log, project_id)
+    schedule.every().hour.do(set_camera_log, project_id)
 
     while True:
         try:
