@@ -16,7 +16,10 @@ from camera_log.models import SdRecordingFile
 
 from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
-from datetime import datetime
+# from datetime import datetime
+import datetime
+
+from threading import Thread
 import re
 import time
 import schedule
@@ -27,6 +30,8 @@ from libs.nas_storage import NasStorage
 from camera_log.nas_vast_storage_cycle import NasVastCycle
 from camera_log.libs.cgi import CGI
 from config.models import ProjectSetting
+from django.utils.timezone import localtime
+from camera_log.libs.monitor import Monitor
 
 
 CAMERA_IP = "172.19.16.119"  # support SD
@@ -34,7 +39,7 @@ CAMERA_IP = "172.19.16.119"  # support SD
 CAMERA_USER = "root"
 CAMERA_PWD = "12345678z"
 
-START_DATE = datetime(2000, 6, 3, 0, 0, 0)
+START_DATE = datetime.datetime(2000, 6, 3, 0, 0, 0)
 
 
 # def job():
@@ -141,27 +146,67 @@ def test_run_camera_thread(project_id):
 @permission_classes((AllowAny,))
 def test_camera_by_id(request):
     run_camera_schedule(107)
+def test_camera(request):
+    run_cameralog_schedule_by_id(69)
+    return Response({'status:': 'ok '})
 
-    return Response("OK")
 
 
+def run_cameralog_schedule_by_id(project_id):
+    # test_run_camera_thread(1)
 
-def run_camera_schedule(project_id):
-    result = {}
-    schedule.every().hour.do(set_camera_log, project_id)
+    from camera_log.libs import monitor
+    project_id = project_id
 
-    while True:
-        try:
-            result["status"] = "OK"
-            schedule.run_pending()
-            # print(schedule.jobs)
-            # time.sleep(1)
+    task_camera_obj = ProjectSetting.objects.get(id=project_id)
+    start_time = localtime(task_camera_obj.start_time)
+    end_time = localtime(task_camera_obj.end_time)
+    # interval_time = datetime.timedelta(hours=1)
+    interval_time = datetime.timedelta(hours=1)
 
-        except BaseException as e:
-            result["status"] = "Schedule Unknown Fail"
-            print(e)
+    periodic_check_points = []
+    while start_time < end_time:
+        periodic_check_points.append(start_time)
+        start_time += interval_time
+    periodic_check_points.append(end_time)
+    m = Monitor()
+    start_time_periodic_check_points = periodic_check_points[:-1]
+    end_time_periodic_check_points = periodic_check_points[1:]
 
-    return True
+    for start_time, end_time in zip(start_time_periodic_check_points, end_time_periodic_check_points):
+        m.add_periodic_jobs(
+            time.mktime(end_time.timetuple()),
+            set_camera_log,(project_id,)
+        )
+    m.start()
+    monitor.camera_id_2_monitor[str(project_id)] = m
+    print("monitor: ", monitor.camera_id_2_monitor)
+
+    return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
+
+
+# # OK!!
+# def test_run_camera_thread(project_id):
+#     th = Thread(target=run_camera_schedule, args=(project_id,))
+#     th.start()
+
+#
+#
+# def run_camera_schedule(project_id):
+#     result = {}
+#     schedule.every().minute.do(set_camera_log, project_id)
+#
+#     while True:
+#         try:
+#             result["status"] = "OK"
+#             schedule.run_pending()
+#             # print(schedule.jobs)
+#             # time.sleep(1)
+#
+#         except BaseException as e:
+#             result["status"] = "Schedule Unknown Fail"
+#             print(e)
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -223,6 +268,7 @@ def set_camera_log(projectid):
         sd_status_json = my_sd_status.get_result()
         camera_log_json.update(sd_status_json)
 
+
         # sd recording file
         sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
         sd_recording_file_json = sd_recording_file.get_fw_file_dict()
@@ -282,9 +328,8 @@ def set_camera_log(projectid):
 
         try:
             timestamp_nas_start = START_DATE
-            timestamp_nas_end = datetime.now()
+            timestamp_nas_end = datetime.datetime.now()
             nas_sudo_password = 'fftbato'
-
             test_vast_obj = NasStorage(storage_user, storage_password)
             # print(test_vast_obj)
             # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
@@ -302,9 +347,9 @@ def set_camera_log(projectid):
             nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
                                        new_file_list=new_nas_file_list)
             nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
-        except:
+        except Exception as e:
             print("NAS get files Fail! or Timeout")
-
+            print(e)
 
     # medium (by VAST)
     else:
@@ -312,7 +357,7 @@ def set_camera_log(projectid):
     # #check VAST cycle
         try:
             timestamp_vast_start = START_DATE    #TODO
-            timestamp_vast_end = datetime.now()
+            timestamp_vast_end = datetime.datetime.now()
             # print(end_datetime_object)
 
             test_vast_obj = VastStorage(storage_user, storage_password)
