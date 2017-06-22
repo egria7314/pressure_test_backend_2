@@ -213,8 +213,9 @@ class ContentAnalysis(object):
             ret = {'result': 'passed', 'frame_path': imgPath, 'error_boxes': None}
         else:
             ret = {'result': 'failed', 'frame_path': imgPath, 'error_boxes': "Without any box"}
-        
+        print("READDDD before: ", imgPath)
         img = Image.open(imgPath)
+        print("READDDD succ: ", imgPath)
         for i, mask in enumerate(privacy_masks):
             # normal_frame = self.check_no_broken_pixel(mask, img) and self.check_lines(mask, 2, img)
             normal_frame = self.check_no_broken_pixel(mask, img)
@@ -340,6 +341,7 @@ class ContentAnalysis(object):
         privacy_masks = privacyMasks
         
         # concurrent do verifying
+        print("BEGIN PIPELINE+++++++++++++++++")
         job = group(check_single_image_as_usual.s(privacy_masks, frame) for frame in sorted(frames) )
         result = job.apply_async()
         # [See Ref] https://stackoverflow.com/questions/33280456/calling-async-result-get-from-within-a-celery-task
@@ -347,7 +349,7 @@ class ContentAnalysis(object):
         with allow_join_result():    
             video_summary = result.get()      
         # print( "video_summary: ", video_summary )
-        
+        print("END PIPELINE+++++++++++++++++")
         is_usual = all(map(lambda x: x == 'passed', [ each_frame['result'] for each_frame in video_summary ]))
         status = 'passed' if is_usual else 'failed'
         
@@ -357,6 +359,48 @@ class ContentAnalysis(object):
         print( "broken_frames_list: ", broken_frames_list )
         return { 'result': status, 'failed_frames': broken_frames_list }
     
+
+    def check_video_frames_as_usual_v4(self, framesFolderPath, privacyMasks):
+        """Return True if the video sequence detected by 1 fps is not unusual.
+        
+        v3 is with celery group module.
+        
+        Keyword arguments:
+        framesFolderPath -- the string of directory path to extracted video frames 
+        
+        Return:
+        dict -- the return value, including literal blocks::
+            {
+                'result': the string of video result,
+                'failed_frames': the list of check_single_image_as_usual dict to indicate failed frames info 
+            }
+        
+        """
+        # collect frames
+        frames = glob.glob(os.path.join(framesFolderPath, '*.jpg'))
+
+        if not frames:
+            return { 'result': 'failed', 'failed_frames': [] }
+            
+        # transform mask position
+        privacy_masks = privacyMasks
+        
+        # concurrent do verifying
+        print("BEGIN V4+++++++++++++++++")
+        video_summary = []
+        for frame in sorted(frames):
+            video_summary.append(self.check_single_image_as_usual((privacy_masks, frame)))
+        
+        print("END V4+++++++++++++++++")
+        is_usual = all(map(lambda x: x == 'passed', [ each_frame['result'] for each_frame in video_summary ]))
+        status = 'passed' if is_usual else 'failed'
+        
+        # add broken frame info        
+        broken_frames_list = [] if status == 'passed' else self.filter_broken_frames_to_list(video_summary)
+
+        print( "broken_frames_list: ", broken_frames_list )
+        return { 'result': status, 'failed_frames': broken_frames_list }
+
 
     def filter_broken_frames_to_list(self, all_frames):
         """

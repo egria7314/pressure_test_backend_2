@@ -27,8 +27,10 @@ class VastStorage(object):
             date_list.append((time_start + datetime.timedelta(days=i)).strftime('%Y-%m-%d'))
         videos = {}
         for date in date_list:
+            print("DATE: ", date)
             remote_path = re.sub('\d{4}-\d{2}-\d{2}', '{0}', remote_path).format(date)
-            local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_').replace('.', '_'))
+            local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_'))
+            # local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_').replace('.', '_'))
             self.mount_folder(
                 remote_username=remote_username,
                 remote_password=remote_password,
@@ -52,7 +54,8 @@ class VastStorage(object):
         file_local = {}
         file_path_map = {}
         if platform.system() == 'Linux':
-            search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_').replace('.', '_'))
+            # search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_').replace('.', '_'))
+            search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_'))
         else:
             search_dir = search_dir_web
         for root, dirs, files in os.walk(search_dir):
