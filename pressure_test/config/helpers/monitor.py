@@ -1,11 +1,11 @@
-from broken_tests.helpers.monitor import Monitor
+# from broken_tests.views import
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 import json
 
-@api_view(['GET'])
-def monitor_alive(request):
-    broken = Monitor().get_schedule_status()
-    json.dumps(broken)
-
-    return Response(json.dumps(broken))
+# @api_view(['GET'])
+# def monitor_alive(request):
+#     broken = Monitor().get_schedule_status()
+#     json.dumps(broken)
+#
+#     return Response(json.dumps(broken))
