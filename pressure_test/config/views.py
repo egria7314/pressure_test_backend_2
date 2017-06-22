@@ -175,8 +175,10 @@ def return_project_setting(requests, pk=None):
         return_json['startTime'] = localtime(return_json['startTime'])
         return_json['endTime'] = return_json.pop('end_time')
         return_json['endTime'] = localtime(return_json['endTime'])
-        return_json['continuity_status'] = continous_running_status(project_pk=pk)['status']
-
+        return_json['continuityStatus'] = return_json.pop('continuity_status')
+        return_json['continuityStatus'] = continous_running_status(project_pk=pk)['status']
+        return_json['logStatus'] = return_json.pop('log_status')
+        return_json['brokenStatus'] = return_json.pop('broken_status')
 
     else:
         querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
@@ -191,7 +193,8 @@ def return_project_setting(requests, pk=None):
             item_json['startTime'] = localtime(item_json['startTime'])
             item_json['endTime'] = item_json.pop('end_time')
             item_json['endTime'] = localtime(item_json['endTime'])
-            return_json['continuity_status'] = continous_running_status(project_pk=pk)['status']
+            item_json['continuityStatus'] = item_json.pop('continuity_status')
+            item_json['continuity_status'] = continous_running_status(project_pk=pk)['status']
     return Response(return_json)
 
 @api_view(['GET'])
