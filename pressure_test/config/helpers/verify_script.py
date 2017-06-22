@@ -87,13 +87,14 @@ def mount_status(destination, username, password):
     out, error = check_status.communicate()
     mount_result = ''
     if destination:
+        destination.replace('\\', '/')
         if out:
-            if destination not in str(out):
-                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(destination, source, username, password), shell=True)
+            if destination.replace('\\', '/') not in str(out):
+                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(destination.replace('\\', '/'), source, username, password), shell=True)
                 status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
                 out, error = status.communicate()
                 if out:
-                    if destination in str(out):
+                    if destination.replace('\\', '/') in str(out):
                         mount_result = 'Mount storage successful'
                     else:
                         mount_result = 'Mount storage failed'
