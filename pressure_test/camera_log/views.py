@@ -33,6 +33,8 @@ CAMERA_IP = "172.19.16.119"  # support SD
 CAMERA_USER = "root"
 CAMERA_PWD = "12345678z"
 
+START_DATE = datetime(2000, 6, 3, 0, 0, 0)
+
 
 # def job():
 #     print("I'm working...")
@@ -77,32 +79,6 @@ def get_sd_status(requests):
         sd_status=sd_status_json["sdCardStatus"],
         sd_used_percent=sd_status_json["sdCardUsed"],
     )
-
-    # print(my_up_time)
-
-    # UpTime.objects.create(
-    #     camera_uptime=
-    #
-    # )
-    #
-
-    # data = requests.data
-    # username = data.get('username')
-    # password = data.get('password')
-    #
-    # try:
-    #     # payload = {
-    #     #     'username': username,
-    #     #     'password': password
-    #     # }
-    #     # login_url = 'http://172.19.16.51:8881/jarvis-auth/auth_and_obtain_jwt_token'
-    #     # r = req.post(login_url, data=payload)
-    #     # print(r.text)
-    #     # res_json = json.loads(r.text)
-    #
-    #     # requests.post( )
-    # except Exception as e:
-    #     print(e)
 
     return Response(sd_status_json)
 
@@ -154,11 +130,19 @@ def get_sd_recording_file(request):
     return Response(sd_recording_file_json)
 
 
+
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def run_camera_schedule(request):
+def test_camera_by_id(request):
+    run_camera_schedule(15)
+
+    return Response("OK")
+
+
+
+def run_camera_schedule(project_id):
     result = {}
-    schedule.every().minute.do(set_camera_log, 17)
+    schedule.every().hour.do(set_camera_log, project_id)
 
     while True:
         try:
@@ -171,7 +155,7 @@ def run_camera_schedule(request):
             result["status"] = "Schedule Unknown Fail"
             print(e)
 
-    return Response(result)
+    return True
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -183,9 +167,6 @@ def get_schedule_status(request):
     return Response(jobs_status)
 
 
-# @api_view(['GET'])
-# @permission_classes((AllowAny,))
-# def set_camera_log(request):
 def set_camera_log(projectid):
     print("*****************************")
     print("Set camera log is working....")
@@ -245,9 +226,6 @@ def set_camera_log(projectid):
         new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
         new_sd_all_file_str = ','.join(sd_recording_file_json["sd_all_file"])
 
-
-        # camera_log_json.update(sd_recording_file_json)
-
         # check SD cycle
         former_cam_obj = CameraLog.objects.last()
 
@@ -297,7 +275,7 @@ def set_camera_log(projectid):
             former_nas_file_list=[]
 
         try:
-            timestamp_nas_start = datetime(2000, 6, 3, 0, 0, 0)
+            timestamp_nas_start = START_DATE
             timestamp_nas_end = datetime.now()
             nas_sudo_password = 'fftbato'
 
@@ -327,7 +305,7 @@ def set_camera_log(projectid):
     # ####################### VAST ################################
     # #check VAST cycle
         try:
-            timestamp_vast_start = datetime(2017, 6, 2, 0, 0, 0)
+            timestamp_vast_start = START_DATE    #TODO
             timestamp_vast_end = datetime.now()
             # print(end_datetime_object)
 
@@ -346,6 +324,7 @@ def set_camera_log(projectid):
 
     # write db
     CameraLog.objects.create(
+        project_id=projectid,
         create_at=time_now,
         camera_ip=CAMERA_IP,
         sd_status=sd_status_json["sdCardStatus"],
@@ -380,12 +359,20 @@ def check_list(file_list):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_all_camera_log(request):
+def get_all_camera_log(request, pi=None):
+    project_id = pi
+    print("*****ID*****")
+    print(project_id)
+    print(type(project_id))
+    print("*****ID*****")
+
+
+
     final_camera_log_json = {}
-    final_camera_log_json["id"] = "1"
+    final_camera_log_json["id"] = project_id
     data_list = []
 
-    all_camera_logs = CameraLog.objects.all()
+    all_camera_logs = CameraLog.objects.filter(project_id=project_id)
     for log_obj in all_camera_logs:
         log_data_dict = {}
         log_data_dict["createAt"] = log_obj.create_at
