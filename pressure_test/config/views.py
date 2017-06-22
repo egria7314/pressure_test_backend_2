@@ -16,7 +16,7 @@ from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
 from camera_log.views import run_cameralog_schedule_by_id
 from broken_tests.views import module_detect_periodic_videos
-from recording_continous.views import continous_running_status
+from recording_continous.views import continuous_running_status
 import re, collections
 
 from threading import Thread
@@ -163,12 +163,11 @@ def return_nas_location(requests):
 @permission_classes((AllowAny,))
 def return_project_setting(requests, pk=None):
     if pk:
-        querry_set = ProjectSetting.objects.filter(id = pk).values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+        query_set = ProjectSetting.objects.filter(id = pk).values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
                                                      "path_username", "continued", "username", "type", "broken", "owner",
                                                      "prefix_name", "cgi", "password", "path_password", "ip", "log_status", "broken_status",
                                                                    "continuity_status")
-        return_json = list(querry_set)[0]
-        # print(return_json)
+        return_json = list(query_set)[0]
         return_json['projectName'] = return_json.pop('project_name')
         return_json['cameraIp'] = return_json.pop('ip')
         return_json['startTime'] = return_json.pop('start_time')
@@ -176,16 +175,16 @@ def return_project_setting(requests, pk=None):
         return_json['endTime'] = return_json.pop('end_time')
         return_json['endTime'] = localtime(return_json['endTime'])
         return_json['continuityStatus'] = return_json.pop('continuity_status')
-        return_json['continuityStatus'] = continous_running_status(project_pk=pk)['status']
+        return_json['continuityStatus'] = continuous_running_status(project_pk=pk)['status']
         return_json['logStatus'] = return_json.pop('log_status')
         return_json['brokenStatus'] = return_json.pop('broken_status')
 
     else:
-        querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+        query_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
                                                      "path_username", "continued", "username", "type", "broken", "owner",
                                                      "prefix_name", "cgi", "password", "path_password", "ip", "log_status", "broken_status",
                                                                    "continuity_status")
-        return_json = list(querry_set)
+        return_json = list(query_set)
         for item_json in return_json:
             item_json['projectName'] = item_json.pop('project_name')
             item_json['cameraIp'] = item_json.pop('ip')
@@ -194,7 +193,7 @@ def return_project_setting(requests, pk=None):
             item_json['endTime'] = item_json.pop('end_time')
             item_json['endTime'] = localtime(item_json['endTime'])
             item_json['continuityStatus'] = item_json.pop('continuity_status')
-            item_json['continuity_status'] = continous_running_status(project_pk=pk)['status']
+            item_json['continuity_status'] = continuous_running_status(project_pk=pk)['status']
     return Response(return_json)
 
 @api_view(['GET'])
