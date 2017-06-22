@@ -19,6 +19,7 @@ from recording_continous.video_continous import VideoContinous
 from rest_framework.decorators import api_view, permission_classes
 from recording_continous.tasks import arrange_periodic_task
 from recording_continous.monitor import Monitor
+from recording_continous import monitor
 from django.utils.timezone import localtime
 import pexpect
 
