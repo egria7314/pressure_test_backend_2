@@ -33,7 +33,7 @@ from config.models import ProjectSetting
 from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 
-
+TEST_PROJECT_ID = 105
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -145,37 +145,24 @@ def get_sd_recording_file(request):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_camera(request):
-    run_cameralog_schedule_by_id(103)
+    run_cameralog_schedule_by_id(TEST_PROJECT_ID)
     # set_camera_log(69)
 
 
-    return Response({'status:': 'ok'})
+    return Response({'status: ': 'ok'})
 
 def run_cameralog_schedule_by_id(project_id):
     # test_run_camera_thread(1)
 
     from camera_log.libs import monitor
-    import pexpect
     project_id = project_id
 
     task_camera_obj = ProjectSetting.objects.get(id=project_id)
     start_time = localtime(task_camera_obj.start_time)
     end_time = localtime(task_camera_obj.end_time)
 
-    print("********")
-    print(start_time)
-    print(end_time)
-    print("********")
-
-
     # interval_time = datetime.timedelta(hours=1)
-    interval_time = datetime.timedelta(minutes=2)
-
-
-    # # add consumer for celery
-    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer continous_test_camera{}".format(project_id)
-    # p = pexpect.spawn(cmd)
-
+    interval_time = datetime.timedelta(minutes=1)
 
     periodic_check_points = []
     while start_time < end_time:
@@ -201,7 +188,13 @@ def run_cameralog_schedule_by_id(project_id):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def stop_detect_periodic_videos(request, project_id):
+def test_stop_camera_log(request):
+    stop_detect_periodic_videos(TEST_PROJECT_ID)
+    return Response({'status:': 'OK'})
+
+
+
+def stop_detect_periodic_videos(project_id):
     ret = module_stop_detect_periodic_videos(project_id)
 
     return Response(ret)
@@ -215,6 +208,9 @@ def module_stop_detect_periodic_videos(project_id):
     # search camera with project
     # index 0 is because project vs camera is 1:1 now
     camera = project.cameraprofile_set.values()[0]
+
+
+
     if str(camera['id']) in monitor.camera_id_2_monitor.keys():
         m = monitor.camera_id_2_monitor[str(camera['id'])]
         m.stop()
@@ -369,36 +365,36 @@ def set_camera_log(projectid):
 
         former_cam_obj = CameraLog.objects.last()
 
-        if former_cam_obj:
-            former_nas_file_list = former_cam_obj.nas_file.split(',')
-            former_nas_file_list = check_list(former_nas_file_list)
-        else:
-            former_nas_file_list=[]
-
-        try:
-            timestamp_nas_start = START_DATE
-            timestamp_nas_end = datetime.datetime.now()
-            nas_sudo_password = 'fftbato'
-            test_vast_obj = NasStorage(storage_user, storage_password)
-            # print(test_vast_obj)
-            # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
-            nas_path = storage_path.replace('\\','/')
-
-            nas_files_dict = test_vast_obj.get_video_nas(storage_user, storage_password, nas_sudo_password, nas_path,
-                                                         PREFIX, timestamp_nas_start, timestamp_nas_end)
-
-            nas_files_list = list(nas_files_dict.keys())
-            new_nas_file_list = []
-            for nas_file in nas_files_list:
-                end_index = nas_file.find(nas_path) + len(nas_path) + 1
-                new_nas_file_list.append(nas_file[end_index:])
-
-            nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
-                                       new_file_list=new_nas_file_list)
-            nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
-        except Exception as e:
-            print("NAS get files Fail! or Timeout")
-            print(e)
+        # if former_cam_obj:
+        #     former_nas_file_list = former_cam_obj.nas_file.split(',')
+        #     former_nas_file_list = check_list(former_nas_file_list)
+        # else:
+        #     former_nas_file_list=[]
+        #
+        # try:
+        #     timestamp_nas_start = START_DATE
+        #     timestamp_nas_end = datetime.datetime.now()
+        #     nas_sudo_password = 'fftbato'
+        #     test_vast_obj = NasStorage(storage_user, storage_password)
+        #     # print(test_vast_obj)
+        #     # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
+        #     nas_path = storage_path.replace('\\','/')
+        #
+        #     nas_files_dict = test_vast_obj.get_video_nas(storage_user, storage_password, nas_sudo_password, nas_path,
+        #                                                  PREFIX, timestamp_nas_start, timestamp_nas_end)
+        #
+        #     nas_files_list = list(nas_files_dict.keys())
+        #     new_nas_file_list = []
+        #     for nas_file in nas_files_list:
+        #         end_index = nas_file.find(nas_path) + len(nas_path) + 1
+        #         new_nas_file_list.append(nas_file[end_index:])
+        #
+        #     nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
+        #                                new_file_list=new_nas_file_list)
+        #     nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
+        # except Exception as e:
+        #     print("NAS get files Fail! or Timeout")
+        #     print(e)
 
     # medium (by VAST)
     else:
@@ -421,7 +417,7 @@ def set_camera_log(projectid):
             print("VAST get files Fail! or Timeout")
 
     ####################### To Do ################################
-
+    print("create DB:")
     # write db
     CameraLog.objects.create(
         project_id=projectid,
@@ -441,6 +437,8 @@ def set_camera_log(projectid):
         nas_file=','.join(new_nas_file_list),
         nas_cycling=nas_cycle_result
     )
+
+    print("create DB")
 
     all_data_list.append(camera_log_json)
     final_camera_log_json["data"] = all_data_list
