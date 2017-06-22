@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view
 from django.utils.timezone import localtime
 from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
-from camera_log.views import run_camera_schedule, test_run_camera_thread
+from camera_log.views import run_cameralog_schedule_by_id
 from broken_tests.views import module_detect_periodic_videos
 import re, collections
 from threading import Thread
@@ -44,7 +44,7 @@ def post(request):
         a = serializer.save()
         project_id = a.id
         analyze_videos(project_id=project_id)
-        test_run_camera_thread(project_id=project_id)
+        run_cameralog_schedule_by_id(project_id=project_id)
         module_detect_periodic_videos(project_pk=project_id)
         result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
         return Response(result, status=status.HTTP_201_CREATED)
