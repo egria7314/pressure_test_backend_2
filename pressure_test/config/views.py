@@ -17,6 +17,8 @@ from recording_continous.views import analyze_videos
 from camera_log.views import run_cameralog_schedule_by_id
 from broken_tests.views import module_detect_periodic_videos
 from recording_continous.views import continuous_running_status
+from broken_tests.views import module_running_status
+from camera_log.views import running_status
 import re, collections
 
 from threading import Thread
@@ -177,7 +179,9 @@ def return_project_setting(requests, pk=None):
         return_json['continuityStatus'] = return_json.pop('continuity_status')
         return_json['continuityStatus'] = continuous_running_status(project_pk=pk)['status']
         return_json['logStatus'] = return_json.pop('log_status')
+        return_json['logStatus'] = running_status(project_pk=pk)['status']
         return_json['brokenStatus'] = return_json.pop('broken_status')
+        return_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
 
     else:
         query_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
@@ -194,6 +198,10 @@ def return_project_setting(requests, pk=None):
             item_json['endTime'] = localtime(item_json['endTime'])
             item_json['continuityStatus'] = item_json.pop('continuity_status')
             item_json['continuity_status'] = continuous_running_status(project_pk=pk)['status']
+            item_json['brokenStatus'] = item_json.pop('broken_status')
+            item_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
+            item_json['logStatus'] = item_json.pop('log_status')
+            item_json['logStatus'] = running_status(project_pk=pk)['status']
     return Response(return_json)
 
 @api_view(['GET'])
