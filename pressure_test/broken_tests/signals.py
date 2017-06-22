@@ -5,22 +5,20 @@ from django.dispatch import receiver
 from broken_tests.models import CameraProfile, NasProfile
 
 
-
 @receiver(post_save, sender=ProjectSetting)
 def save_camera_and_nas_profile(sender, instance, **kwargs):
     """
     """
-    CameraProfile.objects.create(
-        host=instance.ip,
-        user=instance.username,
-        password=instance.password,
-        project_profile=instance
-    )
+    # Now Project and Camera object is 1:1
+    camera, created = CameraProfile.objects.get_or_create(project_profile=instance)
+    camera.host = instance.ip
+    camera.user = instance.username
+    camera.password = instance.password
+    camera.save()
 
-    NasProfile.objects.create(
-        user=instance.path_username,
-        password=instance.path_password,
-        location=instance.path,
-        project_profile=instance
-    )
-
+    # Now Project and Nas object is 1:1
+    nas, created = NasProfile.objects.get_or_create(project_profile=instance)
+    nas.user = instance.path_username
+    nas.password = instance.path_password
+    nas.location = instance.path
+    nas.save()

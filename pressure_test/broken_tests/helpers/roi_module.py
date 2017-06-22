@@ -67,13 +67,13 @@ class RoiModule(object):
         recording_data = url.read().decode('utf-8')
         recording_dest = re.findall("dest='(.+)'",recording_data)
         recording_source = re.findall("source='(.+)'",recording_data)
-        #dest = cf =>SD card; dest = 2  =>NAS
+        #dest = cf =>SD card; dest = 2  =>NAS; VAST
         for i in range(len(recording_dest)):
             if recording_dest[i] == 'cf':
                 recording_information['SD'] = str(recording_source[i])
             else:
                 recording_information['NAS'] = str(recording_source[i])
-
+        recording_information['VAST'] = '0'
         return recording_information[str(self.video_destination)]
     
     def get_recording_source(self):
