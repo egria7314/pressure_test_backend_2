@@ -33,7 +33,7 @@ from config.models import ProjectSetting
 from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 
-
+TEST_PROJECT_ID = 105
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -145,10 +145,11 @@ def get_sd_recording_file(request):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_camera(request):
-    run_cameralog_schedule_by_id(69)
-    return Response({'status:': 'ok '})
+    run_cameralog_schedule_by_id(TEST_PROJECT_ID)
+    # set_camera_log(69)
 
 
+    return Response({'status: ': 'ok'})
 
 def run_cameralog_schedule_by_id(project_id):
     # test_run_camera_thread(1)
@@ -159,8 +160,9 @@ def run_cameralog_schedule_by_id(project_id):
     task_camera_obj = ProjectSetting.objects.get(id=project_id)
     start_time = localtime(task_camera_obj.start_time)
     end_time = localtime(task_camera_obj.end_time)
+
     # interval_time = datetime.timedelta(hours=1)
-    interval_time = datetime.timedelta(minutes=10)
+    interval_time = datetime.timedelta(minutes=1)
 
     periodic_check_points = []
     while start_time < end_time:
@@ -168,12 +170,12 @@ def run_cameralog_schedule_by_id(project_id):
         start_time += interval_time
     periodic_check_points.append(end_time)
     m = Monitor()
-    start_time_periodic_check_points = periodic_check_points[:-1]
-    end_time_periodic_check_points = periodic_check_points[1:]
+    # start_time_periodic_check_points = periodic_check_points[:-1]
+    # end_time_periodic_check_points = periodic_check_points[1:]
 
-    for start_time, end_time in zip(start_time_periodic_check_points, end_time_periodic_check_points):
+    for checkpoint in periodic_check_points:
         m.add_periodic_jobs(
-            time.mktime(end_time.timetuple()),
+            time.mktime(checkpoint.timetuple()),
             set_camera_log,(project_id,)
         )
     m.start()
@@ -181,6 +183,92 @@ def run_cameralog_schedule_by_id(project_id):
     print("monitor: ", monitor.camera_id_2_monitor)
 
     return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
+
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def test_camera_status(request):
+    running_status(TEST_PROJECT_ID)
+    # set_camera_log(69)
+
+    return Response({'status: ': 'ok'})
+
+
+def running_status(project_pk):
+    from camera_log.libs import monitor
+
+    INVALID_PROJ_ID = 'invalid project id'
+    INVALID_MONITOR_ID = 'invalid monitor id'
+    FINISHED = 'finished'
+    # get project object
+    project = ProjectSetting.objects.filter(id=project_pk).first()
+    status = INVALID_PROJ_ID
+    queue_size = 0
+    next_schedule = []
+    if project:
+        camera = project.cameraprofile_set.values()[0]
+        if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+            m = monitor.camera_id_2_monitor[str(camera['id'])]
+            if m:
+                status, queue_size, next_schedule = m.get_schedule_status()
+                # print('scheduleObj: ', schedule_obj)
+            else:
+                status = FINISHED
+        else:
+            status = INVALID_MONITOR_ID
+
+
+    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+
+
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def test_stop_camera_logs(request):
+    stop_detect_periodic_logs(TEST_PROJECT_ID)
+    return Response({'status:': 'OK'})
+
+
+
+def stop_detect_periodic_logs(project_id):
+    ret = module_stop_detect_periodic_logs(project_id)
+    return ret
+
+
+def module_stop_detect_periodic_logs(project_id):
+    from camera_log.libs import monitor
+    # get project object
+    project = ProjectSetting.objects.get(id=project_id)
+
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+
+    print("++++++++")
+    print(camera)
+    print(monitor.camera_id_2_monitor.keys())
+    print("++++++++++")
+
+
+    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(camera['id'])]
+        m.stop()
+
+    # # cancel consumer of celery
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+    #
+    # # clear tasks from a specific queue by id
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+    ret = {'message': "Cancel camera from schedule successfully"}
+    return ret
 
 
 # # OK!!
@@ -230,7 +318,7 @@ def set_camera_log(projectid):
     task_camera_obj = ProjectSetting.objects.get(id=projectid)         # id now is temp, will get POST from Leo
     print("*****")
     print(task_camera_obj.prefix_name)
-    print("****")
+    print("*****")
 
     camera_ip = task_camera_obj.ip
     camera_user = task_camera_obj.username
@@ -370,7 +458,7 @@ def set_camera_log(projectid):
             print("VAST get files Fail! or Timeout")
 
     ####################### To Do ################################
-
+    print("create DB:")
     # write db
     CameraLog.objects.create(
         project_id=projectid,
