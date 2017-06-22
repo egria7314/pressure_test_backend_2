@@ -188,19 +188,56 @@ def run_cameralog_schedule_by_id(project_id):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def test_stop_camera_log(request):
-    stop_detect_periodic_videos(TEST_PROJECT_ID)
+def test_camera_status(request):
+    running_status(TEST_PROJECT_ID)
+    # set_camera_log(69)
+
+    return Response({'status: ': 'ok'})
+
+
+def running_status(project_pk):
+    from camera_log.libs import monitor
+
+    INVALID_PROJ_ID = 'invalid project id'
+    INVALID_MONITOR_ID = 'invalid monitor id'
+    FINISHED = 'finished'
+    # get project object
+    project = ProjectSetting.objects.filter(id=project_pk).first()
+    status = INVALID_PROJ_ID
+    queue_size = 0
+    next_schedule = []
+    if project:
+        camera = project.cameraprofile_set.values()[0]
+        if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+            m = monitor.camera_id_2_monitor[str(camera['id'])]
+            if m:
+                status, queue_size, next_schedule = m.get_schedule_status()
+                # print('scheduleObj: ', schedule_obj)
+            else:
+                status = FINISHED
+        else:
+            status = INVALID_MONITOR_ID
+
+
+    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+
+
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def test_stop_camera_logs(request):
+    stop_detect_periodic_logs(TEST_PROJECT_ID)
     return Response({'status:': 'OK'})
 
 
 
-def stop_detect_periodic_videos(project_id):
-    ret = module_stop_detect_periodic_videos(project_id)
+def stop_detect_periodic_logs(project_id):
+    ret = module_stop_detect_periodic_logs(project_id)
+    return ret
 
-    return Response(ret)
 
-
-def module_stop_detect_periodic_videos(project_id):
+def module_stop_detect_periodic_logs(project_id):
     from camera_log.libs import monitor
     # get project object
     project = ProjectSetting.objects.get(id=project_id)
