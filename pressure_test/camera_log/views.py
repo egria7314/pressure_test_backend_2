@@ -145,22 +145,37 @@ def get_sd_recording_file(request):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_camera(request):
-    run_cameralog_schedule_by_id(69)
-    return Response({'status:': 'ok '})
+    run_cameralog_schedule_by_id(103)
+    # set_camera_log(69)
 
 
+    return Response({'status:': 'ok'})
 
 def run_cameralog_schedule_by_id(project_id):
     # test_run_camera_thread(1)
 
     from camera_log.libs import monitor
+    import pexpect
     project_id = project_id
 
     task_camera_obj = ProjectSetting.objects.get(id=project_id)
     start_time = localtime(task_camera_obj.start_time)
     end_time = localtime(task_camera_obj.end_time)
+
+    print("********")
+    print(start_time)
+    print(end_time)
+    print("********")
+
+
     # interval_time = datetime.timedelta(hours=1)
-    interval_time = datetime.timedelta(hours=1)
+    interval_time = datetime.timedelta(minutes=2)
+
+
+    # # add consumer for celery
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer continous_test_camera{}".format(project_id)
+    # p = pexpect.spawn(cmd)
+
 
     periodic_check_points = []
     while start_time < end_time:
@@ -168,12 +183,12 @@ def run_cameralog_schedule_by_id(project_id):
         start_time += interval_time
     periodic_check_points.append(end_time)
     m = Monitor()
-    start_time_periodic_check_points = periodic_check_points[:-1]
-    end_time_periodic_check_points = periodic_check_points[1:]
+    # start_time_periodic_check_points = periodic_check_points[:-1]
+    # end_time_periodic_check_points = periodic_check_points[1:]
 
-    for start_time, end_time in zip(start_time_periodic_check_points, end_time_periodic_check_points):
+    for checkpoint in periodic_check_points:
         m.add_periodic_jobs(
-            time.mktime(end_time.timetuple()),
+            time.mktime(checkpoint.timetuple()),
             set_camera_log,(project_id,)
         )
     m.start()
@@ -181,6 +196,42 @@ def run_cameralog_schedule_by_id(project_id):
     print("monitor: ", monitor.camera_id_2_monitor)
 
     return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
+
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def stop_detect_periodic_videos(request, project_id):
+    ret = module_stop_detect_periodic_videos(project_id)
+
+    return Response(ret)
+
+
+def module_stop_detect_periodic_videos(project_id):
+    from camera_log.libs import monitor
+    # get project object
+    project = ProjectSetting.objects.get(id=project_id)
+
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(camera['id'])]
+        m.stop()
+
+    # # cancel consumer of celery
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+    #
+    # # clear tasks from a specific queue by id
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+    ret = {'message': "Cancel camera from schedule successfully"}
+    return ret
 
 
 # # OK!!
@@ -230,7 +281,7 @@ def set_camera_log(projectid):
     task_camera_obj = ProjectSetting.objects.get(id=projectid)         # id now is temp, will get POST from Leo
     print("*****")
     print(task_camera_obj.prefix_name)
-    print("****")
+    print("*****")
 
     camera_ip = task_camera_obj.ip
     camera_user = task_camera_obj.username

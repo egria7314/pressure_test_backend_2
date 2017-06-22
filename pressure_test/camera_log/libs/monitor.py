@@ -13,7 +13,7 @@ class Monitor(object):
 
     def add_periodic_jobs(self, abs_time, action, actionargs=()):
         piror = 1
-        print( "PERIOD JOB: ", abs_time, action, actionargs)
+        # print( "PERIOD JOB: ", abs_time, action, actionargs)
         evt = self.schedule.enterabs(abs_time, piror, action, actionargs)
         self.events.append(evt)
         self.total_events_counts = len(self.events)
