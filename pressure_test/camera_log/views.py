@@ -194,13 +194,13 @@ def test_stop_camera_log(request):
 
 
 
-def stop_detect_periodic_videos(project_id):
-    ret = module_stop_detect_periodic_videos(project_id)
+def stop_detect_periodic_logs(project_id):
+    ret = module_stop_detect_periodic_logs(project_id)
 
     return Response(ret)
 
 
-def module_stop_detect_periodic_videos(project_id):
+def module_stop_detect_periodic_logs(project_id):
     from camera_log.libs import monitor
     # get project object
     project = ProjectSetting.objects.get(id=project_id)

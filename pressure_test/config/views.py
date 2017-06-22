@@ -17,8 +17,10 @@ from recording_continous.views import analyze_videos
 from camera_log.views import run_cameralog_schedule_by_id
 from broken_tests.views import module_detect_periodic_videos
 from recording_continous.views import continous_running_status
+from broken_tests import views as broken_views
+from recording_continous import views as continue_views
+from camera_log import views as log_views
 import re, collections
-
 from threading import Thread
 import time
 
@@ -199,6 +201,15 @@ def return_project_setting(requests, pk=None):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
+def stop_running_test(requests, pk):
+    broken_views.module_stop_detect_periodic_videos(pk)
+    continue_views.stop_continous_test(pk)
+    log_views.module_stop_detect_periodic_logs(pk)
+    return Response({"comment": 'Stop current running test'})
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def return_daily_summary(requests, pk):
     querry_set = RecordingFile.objects.filter(project_id = pk).values("project_id", "path")
     file_list = list(querry_set)
@@ -224,4 +235,10 @@ def transform_dict(file_list, p_id):
     for date, count in date_count_dict.items():
         transform_list.append({'createAt': date.replace('-', ''), 'count': count})
     return transform_list
+
+
+
+
+
+
 
