@@ -170,7 +170,7 @@ def return_project_setting(requests, pk=None):
         return_json['startTime'] = return_json.pop('start_time')
         return_json['startTime'] = localtime(return_json['startTime'])
         return_json['endTime'] = return_json.pop('end_time')
-        return_json['endTime'] = localtime(return_json['end_time'])
+        return_json['endTime'] = localtime(return_json['endTime'])
 
     else:
         querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
