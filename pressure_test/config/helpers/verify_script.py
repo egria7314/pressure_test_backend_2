@@ -22,6 +22,7 @@ def test_button(request):
     path_username = request.GET["path_username"]
     path_password = request.GET["path_password"]
     broken = request.GET["broken"]
+    type = request.GET["type"]
     test_broken_result = None
     field_dict = {"project_name":project_name, "start_time":start_time, "end_time":end_time, "owner":owner, "cgi":cgi, "delay":delay,
                   "ip":ip, "username":username, "password":password, "path":path, "path_username":path_username, "path_password":path_password,
@@ -35,7 +36,7 @@ def test_button(request):
     ping_result = ping_camera(ip)
     mount_result = mount_status(path, path_username, path_password)
     if broken == 'true':
-        test_broken_result = module_pretest_broken_image(camera_host=ip, camera_user=username, camera_password=password)
+        test_broken_result = module_pretest_broken_image(camera_host=ip, camera_user=username, camera_password=password, storage_type=type)
     if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == [] and test_broken_result['result'] == "passed":
         test_result = {
             "testCheck": True, "info": {

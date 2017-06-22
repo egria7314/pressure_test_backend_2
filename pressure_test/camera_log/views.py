@@ -33,7 +33,7 @@ from config.models import ProjectSetting
 from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 
-TEST_PROJECT_ID = 105
+TEST_PROJECT_ID = 106
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -161,8 +161,8 @@ def run_cameralog_schedule_by_id(project_id):
     start_time = localtime(task_camera_obj.start_time)
     end_time = localtime(task_camera_obj.end_time)
 
-    # interval_time = datetime.timedelta(hours=1)
-    interval_time = datetime.timedelta(minutes=1)
+    interval_time = datetime.timedelta(hours=1)
+    # interval_time = datetime.timedelta(minutes=1)
 
     periodic_check_points = []
     while start_time < end_time:
@@ -188,16 +188,50 @@ def run_cameralog_schedule_by_id(project_id):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def test_stop_camera_log(request):
-    stop_detect_periodic_videos(TEST_PROJECT_ID)
+def test_camera_status(request):
+    res = running_status(TEST_PROJECT_ID)
+    # set_camera_log(69)
+
+    return Response(res)
+
+
+def running_status(project_pk):
+    from camera_log.libs import monitor
+
+    INVALID_PROJ_ID = 'invalid project id'
+    INVALID_MONITOR_ID = 'invalid monitor id'
+    FINISHED = 'finished'
+    # get project object
+    project = ProjectSetting.objects.filter(id=project_pk).first()
+    status = INVALID_PROJ_ID
+    queue_size = 0
+    next_schedule = []
+    if project:
+        camera = project.cameraprofile_set.values()[0]
+        if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+            m = monitor.camera_id_2_monitor[str(camera['id'])]
+            if m:
+                status, queue_size, next_schedule = m.get_schedule_status()
+                # print('scheduleObj: ', schedule_obj)
+            else:
+                status = FINISHED
+        else:
+            status = INVALID_MONITOR_ID
+
+
+    return {'status': status, 'size': queue_size, 'next schedule': next_schedule}
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def test_stop_camera_logs(request):
+    stop_detect_periodic_logs(TEST_PROJECT_ID)
     return Response({'status:': 'OK'})
 
 
 
 def stop_detect_periodic_logs(project_id):
     ret = module_stop_detect_periodic_logs(project_id)
-
-    return Response(ret)
+    return ret
 
 
 def module_stop_detect_periodic_logs(project_id):

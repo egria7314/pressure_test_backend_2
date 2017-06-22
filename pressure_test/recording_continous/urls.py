@@ -10,7 +10,7 @@ from recording_continous import views
 urlpatterns = [
     url(r'^implement_in/$', views.implement_in),
     url(r'^ana_videos/(?P<project_id>[0-9]+)/$', views.ana_videos),
-    url(r'^continous_report/(?P<project_id>[0-9]+)/$', views.continous_report),
+    url(r'^continous_report/(?P<project_id>[0-9]+)/$', views.continuous_report),
 
 
 ]
