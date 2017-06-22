@@ -223,7 +223,7 @@ def set_camera_log(projectid):
 
     ############
     camera_log_json = {}
-    time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+    time_now = datetime.datetime.now().strftime('%Y%m%d %H:%M:%S')
     camera_log_json["createAt"] = time_now
 
     # get camera info by id ()
