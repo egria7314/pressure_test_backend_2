@@ -33,7 +33,7 @@ from config.models import ProjectSetting
 from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 
-TEST_PROJECT_ID = 105
+TEST_PROJECT_ID = 106
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -161,8 +161,8 @@ def run_cameralog_schedule_by_id(project_id):
     start_time = localtime(task_camera_obj.start_time)
     end_time = localtime(task_camera_obj.end_time)
 
-    # interval_time = datetime.timedelta(hours=1)
-    interval_time = datetime.timedelta(minutes=1)
+    interval_time = datetime.timedelta(hours=1)
+    # interval_time = datetime.timedelta(minutes=1)
 
     periodic_check_points = []
     while start_time < end_time:
