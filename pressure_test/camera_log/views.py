@@ -189,10 +189,10 @@ def run_cameralog_schedule_by_id(project_id):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_camera_status(request):
-    running_status(TEST_PROJECT_ID)
+    res = running_status(TEST_PROJECT_ID)
     # set_camera_log(69)
 
-    return Response({'status: ': 'ok'})
+    return Response(res)
 
 
 def running_status(project_pk):
@@ -219,7 +219,7 @@ def running_status(project_pk):
             status = INVALID_MONITOR_ID
 
 
-    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+    return {'status': status, 'size': queue_size, 'next schedule': next_schedule}
 
 
 

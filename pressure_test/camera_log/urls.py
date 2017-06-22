@@ -18,9 +18,10 @@ urlpatterns = [
 
 
     url(r'^get_camera_log_schedule/$', views.get_schedule_status),
-    url(r'^stop_camera_log_schedule/$', views.test_stop_camera_log),
+    url(r'^stop_camera_log_schedule/$', views.test_stop_camera_logs),
+    url(r'^stop_camera_log_schedule/$', views.test_camera_status),
 
-    url(r'^logs/(?P<pi>[0-9]+)/$', views.get_all_camera_log)   #TODO
+    url(r'^logs/(?P<pi>[0-9]+)/$', views.get_all_camera_log)
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
