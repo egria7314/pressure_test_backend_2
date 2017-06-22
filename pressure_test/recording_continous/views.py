@@ -85,7 +85,7 @@ def continous_running_status(project_pk):
     else:
         status = INVALID_MONITOR_ID
 
-    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+    return {'status': status, 'size': queue_size, 'next schedule': next_schedule}
 
 
 def stop_continous_test(project_pk):

@@ -365,36 +365,36 @@ def set_camera_log(projectid):
 
         former_cam_obj = CameraLog.objects.last()
 
-        # if former_cam_obj:
-        #     former_nas_file_list = former_cam_obj.nas_file.split(',')
-        #     former_nas_file_list = check_list(former_nas_file_list)
-        # else:
-        #     former_nas_file_list=[]
-        #
-        # try:
-        #     timestamp_nas_start = START_DATE
-        #     timestamp_nas_end = datetime.datetime.now()
-        #     nas_sudo_password = 'fftbato'
-        #     test_vast_obj = NasStorage(storage_user, storage_password)
-        #     # print(test_vast_obj)
-        #     # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
-        #     nas_path = storage_path.replace('\\','/')
-        #
-        #     nas_files_dict = test_vast_obj.get_video_nas(storage_user, storage_password, nas_sudo_password, nas_path,
-        #                                                  PREFIX, timestamp_nas_start, timestamp_nas_end)
-        #
-        #     nas_files_list = list(nas_files_dict.keys())
-        #     new_nas_file_list = []
-        #     for nas_file in nas_files_list:
-        #         end_index = nas_file.find(nas_path) + len(nas_path) + 1
-        #         new_nas_file_list.append(nas_file[end_index:])
-        #
-        #     nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
-        #                                new_file_list=new_nas_file_list)
-        #     nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
-        # except Exception as e:
-        #     print("NAS get files Fail! or Timeout")
-        #     print(e)
+        if former_cam_obj:
+            former_nas_file_list = former_cam_obj.nas_file.split(',')
+            former_nas_file_list = check_list(former_nas_file_list)
+        else:
+            former_nas_file_list=[]
+
+        try:
+            timestamp_nas_start = START_DATE
+            timestamp_nas_end = datetime.datetime.now()
+            nas_sudo_password = 'fftbato'
+            test_vast_obj = NasStorage(storage_user, storage_password)
+            # print(test_vast_obj)
+            # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
+            nas_path = storage_path.replace('\\','/')
+
+            nas_files_dict = test_vast_obj.get_video_nas(storage_user, storage_password, nas_sudo_password, nas_path,
+                                                         PREFIX, timestamp_nas_start, timestamp_nas_end)
+
+            nas_files_list = list(nas_files_dict.keys())
+            new_nas_file_list = []
+            for nas_file in nas_files_list:
+                end_index = nas_file.find(nas_path) + len(nas_path) + 1
+                new_nas_file_list.append(nas_file[end_index:])
+
+            nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
+                                       new_file_list=new_nas_file_list)
+            nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
+        except Exception as e:
+            print("NAS get files Fail! or Timeout")
+            print(e)
 
     # medium (by VAST)
     else:
@@ -437,8 +437,6 @@ def set_camera_log(projectid):
         nas_file=','.join(new_nas_file_list),
         nas_cycling=nas_cycle_result
     )
-
-    print("create DB")
 
     all_data_list.append(camera_log_json)
     final_camera_log_json["data"] = all_data_list
