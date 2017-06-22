@@ -209,6 +209,10 @@ def module_stop_detect_periodic_videos(project_id):
     # index 0 is because project vs camera is 1:1 now
     camera = project.cameraprofile_set.values()[0]
 
+    print("++++++++")
+    print(camera)
+    print(monitor.camera_id_2_monitor.keys())
+    print("++++++++++")
 
 
     if str(camera['id']) in monitor.camera_id_2_monitor.keys():
