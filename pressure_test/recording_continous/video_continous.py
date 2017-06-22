@@ -24,8 +24,8 @@ class VideoContinous(object):
         video_path_before = self.video_before
         video_path_now = self.video_now
 
-        log_file_before = video_path_before.replace(".mp4", "_log.txt")
-        log_file_now = video_path_now.replace(".mp4", "_log.txt")
+        log_file_before = video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+        log_file_now = video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
 
         self.__produce_video_log(self.mp4parser_path, video_path_before, log_file_before)
         self.__produce_video_log(self.mp4parser_path, video_path_now, log_file_now)
@@ -52,7 +52,7 @@ class VideoContinous(object):
         # Todo : Change video_path from NAS_path
         # video_path = os.path.join(self.directory_path, self.video_now)
         video_path = self.video_now
-        log_file = video_path.replace(".mp4","_log.txt")
+        log_file = video_path.replace(".mp4","_log.txt").replace(".3gp", "_log.txt")
         self.__produce_video_log(self.mp4parser_path, video_path, log_file)
         time_list = self.__analyze_video_log(log_file)
         time_delay=[]

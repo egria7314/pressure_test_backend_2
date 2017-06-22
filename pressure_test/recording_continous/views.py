@@ -65,6 +65,55 @@ def analyze_videos(project_id):
     print("monitor: ", monitor.camera_id_2_monitor)
     return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
 
+
+def continous_running_status(project_pk):
+    INVALID_PROJ_ID = 'invalid project id'
+    INVALID_MONITOR_ID = 'invalid monitor id'
+    FINISHED = 'finished'
+    # get project object
+    project = ProjectSetting.objects.filter(id=project_pk).first()
+    status = INVALID_PROJ_ID
+    queue_size = 0
+    next_schedule = []
+    if str(project_pk) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(project_pk)]
+        if m:
+            status, queue_size, next_schedule = m.get_schedule_status()
+        else:
+            status = FINISHED
+    else:
+        status = INVALID_MONITOR_ID
+
+    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+
+
+def stop_continous_test(project_pk):
+    # get project object
+    project = ProjectSetting.objects.get(project_name=project_pk)
+
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+
+
+    if str(project_pk) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(project_pk)]
+        m.stop()
+
+    # cancel consumer of celery
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+
+    # clear tasks from a specific queue by id
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+
+    return Response({'message': "Cancel camera from schedule successfully", 'project_name': project})
+
+
 #*********************************
 #*****Create your views here.*****
 #*********************************
@@ -90,7 +139,7 @@ def implement_in(requests):
         seconds=between_result["seconds"],
 
     )
-    return Response('done')
+    return Response('Done')
 
 
 @api_view(['GET'])
