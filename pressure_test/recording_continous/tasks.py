@@ -18,7 +18,7 @@ from recording_continous.models import Config
 from recording_continous.video_continous import VideoContinous
 
 def arrange_periodic_task(project_id, start_time, end_time):
-    obj = ProjectSetting.objects.get(project_name=str(project_id))
+    obj = ProjectSetting.objects.get(id=project_id)
     remote_path = obj.path
     remote_username = obj.path_username
     remote_password = obj.path_password
@@ -69,6 +69,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         file_path_before = query.path
     else:
         file_path_before = 'first video'
+
 
 
 
