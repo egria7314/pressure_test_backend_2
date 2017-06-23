@@ -18,13 +18,17 @@ from recording_continous.models import Config
 from recording_continous.video_continous import VideoContinous
 
 def arrange_periodic_task(project_id, start_time, end_time):
-    obj = ProjectSetting.objects.get(id=project_id)
+    obj = ProjectSetting.objects.get(project_name=str(project_id))
     remote_path = obj.path
     remote_username = obj.path_username
     remote_password = obj.path_password
     sudo_password = ""
     prefix = obj.prefix_name
     pressure_test_video_type = obj.type
+    print ('************************')
+    print (type(pressure_test_video_type))
+    print (pressure_test_video_type)
+    print ('************************')
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
         clips = vast.get_video_vast(remote_username, remote_password, sudo_password, remote_path, start_time, end_time)
@@ -33,7 +37,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
         clips = ns.get_video_nas(remote_username, remote_password, sudo_password, remote_path, prefix, start_time, end_time)
 
     for file_path in sorted(clips):
-        push_detect_broken_image_tasks_to_queue(remote_username, remote_password, project_id, remote_path, file_path, pressure_test_video_type)
+        push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type)
         time.sleep(5)
 
     # for file_path in clips:
@@ -51,7 +55,6 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
     clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
 
-
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
         vast.mount_folder(remote_username, remote_password, remote_path, '', local_path)
@@ -59,10 +62,14 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         ns = NasStorage()
         ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
 
+    query = RecordingFile.objects.filter(project_id=project_id)
 
+    if len(query) > 0:
+        query = RecordingFile.objects.filter(project_id=project_id).order_by('-id')[0]
+        file_path_before = query.path
+    else:
+        file_path_before = 'first video'
 
-    query = RecordingFile.objects.filter(project_id=project_id).order_by('-id')[0]
-    file_path_before = query.path
 
 
     file_modify_time =  datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
@@ -77,13 +84,14 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     print("PUSH QUEUE:", clippath)
     vc = VideoContinous(file_path_before, clippath)
     in_result = vc.continuity_in_recording_files()
-    query = RecordingFile.objects.filter(project_id=project_id)
-    if len(query)>0:
+
+    if 'first video' not in file_path_before:
         between_result = vc.continuity_bwtween_recording_files()
     else :
         between_result ={}
-        between_result["between_result"] = 'failed'
+        between_result["between_result"] = '-'
         between_result["seconds"] = 'First video'
+
 
     RecordingContinuty.objects.create(
         project_id=project_id,
@@ -99,6 +107,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         count=in_result["count"],
         between_result=between_result["between_result"],
         seconds=between_result["seconds"],
+
 
         )
 

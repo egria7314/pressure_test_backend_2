@@ -221,9 +221,6 @@ def running_status(project_pk):
 
     return {'status': status, 'size': queue_size, 'next schedule': next_schedule}
 
-
-
-
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_stop_camera_logs(request):

@@ -147,7 +147,7 @@ def implement_in(requests):
 @permission_classes((permissions.AllowAny,))
 def ana_videos(request, project_id):
     # ns = NasStorage()
-    query = ProjectSetting.objects.get(project_name=project_id)
+    query = ProjectSetting.objects.get(project_name=str(project_id))
     # remote_path = obj.path
     # remote_username = obj.path_username
     # remote_password = obj.path_password
