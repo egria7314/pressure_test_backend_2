@@ -19,6 +19,7 @@ from recording_continous.video_continous import VideoContinous
 from rest_framework.decorators import api_view, permission_classes
 from recording_continous.tasks import arrange_periodic_task
 from recording_continous.monitor import Monitor
+from recording_continous import monitor
 from django.utils.timezone import localtime
 import pexpect
 
@@ -146,7 +147,7 @@ def implement_in(requests):
 @permission_classes((permissions.AllowAny,))
 def ana_videos(request, project_id):
     # ns = NasStorage()
-    query = ProjectSetting.objects.get(project_name=project_id)
+    query = ProjectSetting.objects.get(project_name=str(project_id))
     # remote_path = obj.path
     # remote_username = obj.path_username
     # remote_password = obj.path_password
