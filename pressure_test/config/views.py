@@ -49,6 +49,8 @@ def post(request):
     camera_password = request.data['password']
     prefix_name = get_recording_prefix(camera_ip, camera_user, camera_password)
     request.data['prefix_name'] = prefix_name
+    request.data['path'] = request.data['path'].replace('\\', '/')
+    # print('path=', request.data['path'])
     if serializer.is_valid():
         a = serializer.save()
         project_id = a.id
