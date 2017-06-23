@@ -29,31 +29,36 @@ from django.conf import settings
 
 
 # Create your views here.
-def module_pretest_broken_image(camera_host, camera_user, camera_password):
+def module_pretest_broken_image(camera_host, camera_user, camera_password, storage_type):
     # detect broken
-    anly = ContentAnalysis()
-    #   1. get snapshot to local folder
-    roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
-    stream_id = roi.get_recording_source()
-    pretest_dir = time.time()
-    anly(camera_host, camera_user, camera_password).save_snapshot_to_dir(
-        '/home/dqa/data/pretests/{}'.format(pretest_dir),
-        stream_id
-    )
-    #   2. get privacy mask
-    roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
-    names_to_corners = roi.return_mask()
-    #   3. check broken
-    privacy_mask_list = list(map(anly.trans_from_points_to_box, names_to_corners.values()))
-    # privacy_mask_list = [ 
-    #     anly.trans_from_points_to_box(names_to_corners['mask_up']),
-    #     anly.trans_from_points_to_box(names_to_corners['mask_down']),
-    #     anly.trans_from_points_to_box(names_to_corners['mask_left']),
-    #     anly.trans_from_points_to_box(names_to_corners['mask_right']) ]
+    try:
+        video_destination = 'NAS' if storage_type == 'high' else 'VAST' 
+        anly = ContentAnalysis()
+        #   1. get snapshot to local folder
+        roi = RoiModule(camera_host, camera_user, camera_password, video_destination)
+        stream_id = roi.get_recording_source()
+        pretest_dir = time.time()
+        anly(camera_host, camera_user, camera_password).save_snapshot_to_dir(
+            '/home/dqa/data/pretests/{}'.format(pretest_dir),
+            stream_id
+        )
+        #   2. get privacy mask
+        roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
+        names_to_corners = roi.return_mask()
+        #   3. check broken
+        privacy_mask_list = list(map(anly.trans_from_points_to_box, names_to_corners.values()))
+        # privacy_mask_list = [
+        #     anly.trans_from_points_to_box(names_to_corners['mask_up']),
+        #     anly.trans_from_points_to_box(names_to_corners['mask_down']),
+        #     anly.trans_from_points_to_box(names_to_corners['mask_left']),
+        #     anly.trans_from_points_to_box(names_to_corners['mask_right']) ]
 
-    frames = glob.glob(os.path.join('/home/dqa/data/pretests/{}'.format(pretest_dir), '*.jpg'))
-    params = (privacy_mask_list, frames[0])
-    results = anly.check_single_image_as_usual(params)
+        frames = glob.glob(os.path.join('/home/dqa/data/pretests/{}'.format(pretest_dir), '*.jpg'))
+        params = (privacy_mask_list, frames[0])
+        results = anly.check_single_image_as_usual(params)
+    except Exception as e:
+        results = e
+
     return results
 
 
@@ -129,25 +134,7 @@ def module_stop_detect_periodic_videos(project_pk):
     return ret
 
 
-@api_view(['GET'])
-@permission_classes((permissions.AllowAny, ))
-def pretest_broken_image(request):
-    # get query params
-    camera_host = request.query_params.get('host', None)
-    camera_user = request.query_params.get('user', None)
-    camera_password = request.query_params.get('password', None)
-    print("host: ", camera_host)
-    print("user: ", camera_user)
-    print("password: ", camera_password)
-    # call core module
-    results = module_pretest_broken_image(camera_host, camera_user, camera_password)
-    print( results )
-    return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
-    
-
-@api_view(['GET'])
-@permission_classes((permissions.AllowAny, ))
-def running_status(request, project_pk):
+def module_running_status(project_pk):
     INVALID_PROJ_ID = 'invalid project id'
     INVALID_MONITOR_ID = 'invalid monitor id'
     FINISHED = 'finished'
@@ -167,8 +154,34 @@ def running_status(request, project_pk):
                 status = FINISHED
         else:
             status = INVALID_MONITOR_ID
-        
-        
+    
+    return status, queue_size, next_schedule
+
+
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny, ))
+def pretest_broken_image(request):
+    # get query params
+    camera_host = request.query_params.get('host', None)
+    camera_user = request.query_params.get('user', None)
+    camera_password = request.query_params.get('password', None)
+    storage_type = request.query_params.get('type', None)
+    print("host: ", camera_host)
+    print("user: ", camera_user)
+    print("password: ", camera_password)
+    print("storage: ", storage_type)
+    # call core module
+    results = module_pretest_broken_image(camera_host, camera_user, camera_password, storage_type)
+    print( results )
+    return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
+    
+
+
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny, ))
+def running_status(request, project_pk):
+    status, queue_size, next_schedule = module_running_status(project_pk)
+               
     return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
 
 
@@ -219,6 +232,7 @@ def detect_broken_image(pk):
     #   3. check broken
     print("clipprivacy= ", clip.privacy_masks)
     privacy_mask_list = list(map(anly.trans_from_points_to_box, eval(clip.privacy_masks).values()))
+    print("privacy_mask_list= ", privacy_mask_list)
     # names_to_corners = eval(clip.privacy_masks)
     # privacy_mask_list = [ 
     #     anly.trans_from_points_to_box(names_to_corners['mask_up']),
@@ -230,7 +244,7 @@ def detect_broken_image(pk):
         framefolder,
         privacy_mask_list
     )
-
+    print("video_status: ", video_status)
     # # create brokenInfo
     # ex: video_status = {
     #     'result': 'failed',
@@ -264,7 +278,7 @@ def detect_broken_image(pk):
 
     #     BrokenFrame.objects.create(
     #         error_message=failed_frame['error_message'],
-    #         frame_path=failed_ftatusbroken/rame['path'],
+    #         frame_path=failed_frame['path'],
     #         clip=clip,
     #         timestamp=timestamp
     #     )

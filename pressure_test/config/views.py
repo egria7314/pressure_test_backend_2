@@ -11,8 +11,23 @@ from config.models import DefaultSetting
 from libs.nas_storage import NasStorage
 from rest_framework import status
 from rest_framework.decorators import api_view
+from django.utils.timezone import localtime
 from libs.telnet_module import URI
+from recording_continous.views import analyze_videos
+from camera_log.views import run_cameralog_schedule_by_id
+from broken_tests.views import module_detect_periodic_videos
+
+from broken_tests import views as broken_views
+from recording_continous import views as continue_views
+from camera_log import views as log_views
+
+from recording_continous.views import continuous_running_status
+from broken_tests.views import module_running_status
+from camera_log.views import running_status
+
 import re, collections
+from threading import Thread
+import time
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -23,60 +38,63 @@ class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProjectSettingList(generics.ListCreateAPIView):
     queryset = ProjectSetting.objects.all()
     serializer_class = ProjectSettingSerializer
-    
-    def post(self, request, format=None):
-        serializer = ProjectSettingSerializer(data=request.data)
-        camera_ip = request.data['ip']
-        camera_user = request.data['username']
-        camera_password = request.data['password']
-        prefix_name = self.get_recording_prefix(camera_ip, camera_user, camera_password)
 
 
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def post(request):
+    serializer = ProjectSettingSerializer(data=request.data)
+    camera_ip = request.data['ip']
+    camera_user = request.data['username']
+    camera_password = request.data['password']
+    prefix_name = get_recording_prefix(camera_ip, camera_user, camera_password)
+    request.data['prefix_name'] = prefix_name
+    if serializer.is_valid():
+        a = serializer.save()
+        project_id = a.id
+        analyze_videos(project_id=project_id)
+        run_cameralog_schedule_by_id(project_id=project_id)
+        module_detect_periodic_videos(project_pk=project_id)
+        result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
+        return Response(result, status=status.HTTP_201_CREATED)
 
-        print('prefix_name:', prefix_name)
-        request.data['prefix_name'] = prefix_name
-        if serializer.is_valid():
-            serializer.save()
-            result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
-            return Response(result, status=status.HTTP_201_CREATED)
-        result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":serializer.errors}
-        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+    result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}
+    return Response(result)
 
-    def get_recording_type(self, camera_ip, camera_name, camera_password):
-        """Get nas location from camera by cgi"""
-        type_code = None
-        for index in range(2):
-            command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_dest'.format(index)
-            try:
-                url = URI.set(command, camera_name, camera_password)
-                url = url.read().decode('utf-8').split("\r\n")
-                result = url[0].replace('recording_i{0}_dest'.format(index), '').replace("'", "").replace("=", "")
-                if result != 'cf':
-                    type_code = index
-                    break
-                else:
-                    continue
-            except:
-                type_code = 'get recording type error'
-
-        return type_code
-
-    def get_recording_prefix(self, camera_ip, camera_name, camera_password):
-        """Get nas location from camera by cgi"""
-        index = self.get_recording_type(camera_ip, camera_name, camera_password)
-        command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_prefix'.format(index)
-
-        prefix = None
+def get_recording_type(camera_ip, camera_name, camera_password):
+    """Get nas location from camera by cgi"""
+    type_code = None
+    for index in range(2):
+        command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_dest'.format(index)
         try:
             url = URI.set(command, camera_name, camera_password)
             url = url.read().decode('utf-8').split("\r\n")
-            result = url[0].replace('recording_i{0}_prefix'.format(index), '').replace("'", "").replace("=", "")
-            prefix = result
+            result = url[0].replace('recording_i{0}_dest'.format(index), '').replace("'", "").replace("=", "")
+            if result != 'cf':
+                type_code = index
+                break
+            else:
+                continue
         except:
-            prefix = 'get recording prefix error'
-        finally:
-            return prefix
+            type_code = 'get recording type error'
 
+    return type_code
+
+def get_recording_prefix(camera_ip, camera_name, camera_password):
+    """Get nas location from camera by cgi"""
+    index = get_recording_type(camera_ip, camera_name, camera_password)
+    command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_prefix'.format(index)
+
+    prefix = None
+    try:
+        url = URI.set(command, camera_name, camera_password)
+        url = url.read().decode('utf-8').split("\r\n")
+        result = url[0].replace('recording_i{0}_prefix'.format(index), '').replace("'", "").replace("=", "")
+        prefix = result
+    except:
+        prefix = 'get recording prefix error'
+    finally:
+        return prefix
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -152,26 +170,53 @@ def return_nas_location(requests):
 @permission_classes((AllowAny,))
 def return_project_setting(requests, pk=None):
     if pk:
-        querry_set = ProjectSetting.objects.filter(id = pk).values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+        query_set = ProjectSetting.objects.filter(id = pk).values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
                                                      "path_username", "continued", "username", "type", "broken", "owner",
-                                                     "prefix_name", "cgi", "password", "path_password", "ip")
-        return_json = list(querry_set)[0]
+                                                     "prefix_name", "cgi", "password", "path_password", "ip", "log_status", "broken_status",
+                                                                   "continuity_status")
+        return_json = list(query_set)[0]
         return_json['projectName'] = return_json.pop('project_name')
         return_json['cameraIp'] = return_json.pop('ip')
         return_json['startTime'] = return_json.pop('start_time')
+        return_json['startTime'] = localtime(return_json['startTime'])
         return_json['endTime'] = return_json.pop('end_time')
+        return_json['endTime'] = localtime(return_json['endTime'])
+        return_json['continuityStatus'] = return_json.pop('continuity_status')
+        return_json['continuityStatus'] = continuous_running_status(project_pk=pk)['status']
+        return_json['logStatus'] = return_json.pop('log_status')
+        return_json['logStatus'] = running_status(project_pk=pk)['status']
+        return_json['brokenStatus'] = return_json.pop('broken_status')
+        return_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
 
     else:
-        querry_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
+        query_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
                                                      "path_username", "continued", "username", "type", "broken", "owner",
-                                                     "prefix_name", "cgi", "password", "path_password", "ip")
-        return_json = list(querry_set)
+                                                     "prefix_name", "cgi", "password", "path_password", "ip", "log_status", "broken_status",
+                                                                   "continuity_status")
+        return_json = list(query_set)
         for item_json in return_json:
             item_json['projectName'] = item_json.pop('project_name')
             item_json['cameraIp'] = item_json.pop('ip')
             item_json['startTime'] = item_json.pop('start_time')
+            item_json['startTime'] = localtime(item_json['startTime'])
             item_json['endTime'] = item_json.pop('end_time')
+            item_json['endTime'] = localtime(item_json['endTime'])
+            item_json['continuityStatus'] = item_json.pop('continuity_status')
+            item_json['continuity_status'] = continuous_running_status(project_pk=pk)['status']
+            item_json['brokenStatus'] = item_json.pop('broken_status')
+            item_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
+            item_json['logStatus'] = item_json.pop('log_status')
+            item_json['logStatus'] = running_status(project_pk=pk)['status']
     return Response(return_json)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def stop_running_test(requests, pk):
+    broken_views.module_stop_detect_periodic_videos(pk)
+    continue_views.stop_continous_test(pk)
+    log_views.module_stop_detect_periodic_logs(pk)
+    return Response({"comment": 'Stop current running test'})
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -200,4 +245,10 @@ def transform_dict(file_list, p_id):
     for date, count in date_count_dict.items():
         transform_list.append({'createAt': date.replace('-', ''), 'count': count})
     return transform_list
+
+
+
+
+
+
 

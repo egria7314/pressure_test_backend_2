@@ -7,7 +7,7 @@ from django.contrib import admin
 # Register your models here.
 class ProjectSettingAdmin(admin.ModelAdmin):
     list_display = ('id', 'project_name', 'prefix_name', 'start_time', 'end_time', 'owner', 'ip', 'username', 'password', 'type', 'path', 'path_username',
-                    'path_password', 'broken', 'continued', 'log', 'cgi', 'delay')
+                    'path_password', 'broken', 'continued', 'log', 'cgi', 'delay', 'log_status', 'broken_status', 'continuity_status')
 
 class DefaultSettingAdmin(admin.ModelAdmin):
     list_display = ('default_type', 'log_sd_card_status', 'log_cyclic_recording', 'log_nas_recording', 'broken_image',

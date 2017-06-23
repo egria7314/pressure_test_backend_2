@@ -89,10 +89,8 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         between_result = vc.continuity_bwtween_recording_files()
     else :
         between_result ={}
-        between_result["between_result"] = 'failed'
+        between_result["between_result"] = '-'
         between_result["seconds"] = 'First video'
-
-
 
 
     RecordingContinuty.objects.create(

@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from config.lib import verify_script
+from config.helpers import verify_script
 # from pressure_test.camera_log import views
 from rest_framework.urlpatterns import format_suffix_patterns
 from config import views
@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^nas$', views.return_nas_location),
     url(r'^projects/(?P<pk>[0-9]+)/$', views.return_project_setting),
     url(r'^projects/$', views.return_project_setting),
-    url(r'^save_project_setting/$', views.ProjectSettingList.as_view()),
+    url(r'^save_project_setting/$', views.post),
     url(r'^daily-summary/(?P<pk>[0-9]+)/$', views.return_daily_summary)
 ]
 

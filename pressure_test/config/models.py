@@ -17,7 +17,7 @@ class ProjectSetting(models.Model):
         ('medium', 'Medium'),
         ('high', 'High')
     )
-    type = models.CharField(max_length=100, choices=CHOICES, default='MED')
+    type = models.CharField(max_length=100, choices=CHOICES, default='medium')
     path = models.CharField(max_length=100)
     path_username = models.CharField(max_length=100)
     path_password = models.CharField(max_length=100)
@@ -26,6 +26,9 @@ class ProjectSetting(models.Model):
     log = models.BooleanField(default=False)
     cgi = models.IntegerField()
     delay = models.IntegerField()
+    log_status = models.CharField(max_length=100, blank=True)
+    broken_status = models.CharField(max_length=100, blank=True)
+    continuity_status = models.CharField(max_length=100, blank=True)
 
 class DefaultSetting(models.Model):
     default_type = models.CharField(max_length=100)

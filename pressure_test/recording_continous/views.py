@@ -28,7 +28,7 @@ import pexpect
 #*****Create your function here.*****
 #************************************
 def analyze_videos(project_id):
-    query = ProjectSetting.objects.get(project_name=project_id)
+    query = ProjectSetting.objects.get(id=project_id)
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
     print ('******************')
@@ -67,7 +67,7 @@ def analyze_videos(project_id):
     return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
 
 
-def continous_running_status(project_pk):
+def continuous_running_status(project_pk):
     INVALID_PROJ_ID = 'invalid project id'
     INVALID_MONITOR_ID = 'invalid monitor id'
     FINISHED = 'finished'
@@ -85,10 +85,10 @@ def continous_running_status(project_pk):
     else:
         status = INVALID_MONITOR_ID
 
-    return Response({'status': status, 'size': queue_size, 'next schedule': next_schedule})
+    return {'status': status, 'size': queue_size, 'next schedule': next_schedule}
 
 
-def stop_continous_test(project_pk):
+def stop_continuous_test(project_pk):
     # get project object
     project = ProjectSetting.objects.get(project_name=project_pk)
 
@@ -208,9 +208,9 @@ def ana_videos(request, project_id):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def continous_report(requests, project_id):
+def continuous_report(requests, project_id):
     query = RecordingContinuty.objects.filter(project_id=project_id)
-    # query = RecordingContinuty.objects.filter(project_id=project_id).order_by("video_path")
+    # query = RecordingContinuity.objects.filter(project_id=project_id).order_by("video_path")
     result = {}
     result["id"] = project_id
     result["data"] = []

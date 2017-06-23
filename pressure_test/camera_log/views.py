@@ -16,24 +16,30 @@ from camera_log.models import SdRecordingFile
 
 from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
-from datetime import datetime
+# from datetime import datetime
+import datetime
+
+from threading import Thread
 import re
 import time
 import schedule
+from threading import Thread
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
 from camera_log.nas_vast_storage_cycle import NasVastCycle
 from camera_log.libs.cgi import CGI
 from config.models import ProjectSetting
+from django.utils.timezone import localtime
+from camera_log.libs.monitor import Monitor
 
-
+TEST_PROJECT_ID = 106
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
 CAMERA_PWD = "12345678z"
 
-START_DATE = datetime(2000, 6, 3, 0, 0, 0)
+START_DATE = datetime.datetime(2000, 6, 3, 0, 0, 0)
 
 
 # def job():
@@ -130,32 +136,160 @@ def get_sd_recording_file(request):
     return Response(sd_recording_file_json)
 
 
+# def test_run_camera_thread(project_id):
+#     th = Thread(target=run_camera_schedule, args=(project_id,))
+#     th.start()
+
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def test_camera_by_id(request):
-    run_camera_schedule(15)
-
-    return Response("OK")
-
+def test_camera(request):
+    run_cameralog_schedule_by_id(TEST_PROJECT_ID)
+    # set_camera_log(69)
 
 
-def run_camera_schedule(project_id):
-    result = {}
-    schedule.every().hour.do(set_camera_log, project_id)
+    return Response({'status: ': 'ok'})
 
-    while True:
-        try:
-            result["status"] = "OK"
-            schedule.run_pending()
-            # print(schedule.jobs)
-            # time.sleep(1)
+def run_cameralog_schedule_by_id(project_id):
+    # test_run_camera_thread(1)
 
-        except BaseException as e:
-            result["status"] = "Schedule Unknown Fail"
-            print(e)
+    from camera_log.libs import monitor
+    project_id = project_id
 
-    return True
+    task_camera_obj = ProjectSetting.objects.get(id=project_id)
+    start_time = localtime(task_camera_obj.start_time)
+    end_time = localtime(task_camera_obj.end_time)
+
+    interval_time = datetime.timedelta(hours=1)
+    # interval_time = datetime.timedelta(minutes=1)
+
+    periodic_check_points = []
+    while start_time < end_time:
+        periodic_check_points.append(start_time)
+        start_time += interval_time
+    periodic_check_points.append(end_time)
+    m = Monitor()
+    # start_time_periodic_check_points = periodic_check_points[:-1]
+    # end_time_periodic_check_points = periodic_check_points[1:]
+
+    for checkpoint in periodic_check_points:
+        m.add_periodic_jobs(
+            time.mktime(checkpoint.timetuple()),
+            set_camera_log,(project_id,)
+        )
+    m.start()
+    monitor.camera_id_2_monitor[str(project_id)] = m
+    print("monitor: ", monitor.camera_id_2_monitor)
+
+    return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
+
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def test_camera_status(request):
+    res = running_status(TEST_PROJECT_ID)
+    # set_camera_log(69)
+
+    return Response(res)
+
+
+def running_status(project_pk):
+    from camera_log.libs import monitor
+
+    INVALID_PROJ_ID = 'invalid project id'
+    INVALID_MONITOR_ID = 'invalid monitor id'
+    FINISHED = 'finished'
+    # get project object
+    project = ProjectSetting.objects.filter(id=project_pk).first()
+    status = INVALID_PROJ_ID
+    queue_size = 0
+    next_schedule = []
+    if project:
+        camera = project.cameraprofile_set.values()[0]
+        if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+            m = monitor.camera_id_2_monitor[str(camera['id'])]
+            if m:
+                status, queue_size, next_schedule = m.get_schedule_status()
+                # print('scheduleObj: ', schedule_obj)
+            else:
+                status = FINISHED
+        else:
+            status = INVALID_MONITOR_ID
+
+
+    return {'status': status, 'size': queue_size, 'next schedule': next_schedule}
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def test_stop_camera_logs(request):
+    stop_detect_periodic_logs(TEST_PROJECT_ID)
+    return Response({'status:': 'OK'})
+
+
+
+def stop_detect_periodic_logs(project_id):
+    ret = module_stop_detect_periodic_logs(project_id)
+    return ret
+
+
+def module_stop_detect_periodic_logs(project_id):
+    from camera_log.libs import monitor
+    # get project object
+    project = ProjectSetting.objects.get(id=project_id)
+
+    # search camera with project
+    # index 0 is because project vs camera is 1:1 now
+    camera = project.cameraprofile_set.values()[0]
+
+    print("++++++++")
+    print(camera)
+    print(monitor.camera_id_2_monitor.keys())
+    print("++++++++++")
+
+
+    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(camera['id'])]
+        m.stop()
+
+    # # cancel consumer of celery
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+    #
+    # # clear tasks from a specific queue by id
+    # cmd = "/home/dqa/code/env/bin/celery -A pressure_test purge -Q broken_test_camera{} -f".format(camera['id'])
+    # p = pexpect.spawn(cmd)
+    # print( cmd )
+    # time.sleep(3)
+    ret = {'message': "Cancel camera from schedule successfully"}
+    return ret
+
+
+# # OK!!
+# def test_run_camera_thread(project_id):
+#     th = Thread(target=run_camera_schedule, args=(project_id,))
+#     th.start()
+
+#
+#
+# def run_camera_schedule(project_id):
+#     result = {}
+#     schedule.every().minute.do(set_camera_log, project_id)
+#
+#     while True:
+#         try:
+#             result["status"] = "OK"
+#             schedule.run_pending()
+#             # print(schedule.jobs)
+#             # time.sleep(1)
+#
+#         except BaseException as e:
+#             result["status"] = "Schedule Unknown Fail"
+#             print(e)
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -174,14 +308,14 @@ def set_camera_log(projectid):
 
     ############
     camera_log_json = {}
-    time_now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+    time_now = datetime.datetime.now().strftime('%Y%m%d %H:%M:%S')
     camera_log_json["createAt"] = time_now
 
     # get camera info by id ()
     task_camera_obj = ProjectSetting.objects.get(id=projectid)         # id now is temp, will get POST from Leo
     print("*****")
     print(task_camera_obj.prefix_name)
-    print("****")
+    print("*****")
 
     camera_ip = task_camera_obj.ip
     camera_user = task_camera_obj.username
@@ -216,6 +350,7 @@ def set_camera_log(projectid):
         my_sd_status = SDstatus(camera_ip, camera_user, camera_password)
         sd_status_json = my_sd_status.get_result()
         camera_log_json.update(sd_status_json)
+
 
         # sd recording file
         sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
@@ -276,9 +411,8 @@ def set_camera_log(projectid):
 
         try:
             timestamp_nas_start = START_DATE
-            timestamp_nas_end = datetime.now()
+            timestamp_nas_end = datetime.datetime.now()
             nas_sudo_password = 'fftbato'
-
             test_vast_obj = NasStorage(storage_user, storage_password)
             # print(test_vast_obj)
             # nas_path = '\\\\172.19.11.189\\Public\\autotest\\steven'.replace('\\','/')
@@ -296,9 +430,9 @@ def set_camera_log(projectid):
             nas_cycle_obj = NasVastCycle(former_file_list=former_nas_file_list,
                                        new_file_list=new_nas_file_list)
             nas_cycle_result = nas_cycle_obj.get_result(PREFIX)
-        except:
+        except Exception as e:
             print("NAS get files Fail! or Timeout")
-
+            print(e)
 
     # medium (by VAST)
     else:
@@ -306,7 +440,7 @@ def set_camera_log(projectid):
     # #check VAST cycle
         try:
             timestamp_vast_start = START_DATE    #TODO
-            timestamp_vast_end = datetime.now()
+            timestamp_vast_end = datetime.datetime.now()
             # print(end_datetime_object)
 
             test_vast_obj = VastStorage(storage_user, storage_password)
@@ -321,7 +455,7 @@ def set_camera_log(projectid):
             print("VAST get files Fail! or Timeout")
 
     ####################### To Do ################################
-
+    print("create DB:")
     # write db
     CameraLog.objects.create(
         project_id=projectid,

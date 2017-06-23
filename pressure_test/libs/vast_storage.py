@@ -27,6 +27,7 @@ class VastStorage(object):
             date_list.append((time_start + datetime.timedelta(days=i)).strftime('%Y-%m-%d'))
         videos = {}
         for date in date_list:
+            print("DATE: ", date)
             remote_path = re.sub('\d{4}-\d{2}-\d{2}', '{0}', remote_path).format(date)
             local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_'))
             self.mount_folder(

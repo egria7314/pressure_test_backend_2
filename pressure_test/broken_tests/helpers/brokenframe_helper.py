@@ -42,7 +42,7 @@ class BrokenFrameHelper(object):
 
             BrokenFrame.objects.create(
                 error_message=failed_frame['error_message'],
-                frame_path=failed_ftatusbroken/rame['path'],
+                frame_path=failed_frame['path'],
                 clip=self.clip,
                 timestamp=timestamp
             )
