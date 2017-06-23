@@ -206,7 +206,9 @@ def detect_broken_image(pk):
     clip = ClipInfo.objects.get(id=pk)
     camera = clip.camera_profile
     nas = clip.nas_profile
-    
+    # temporary replace without saving
+    nas.location = os.path.dirname(clip.full_path) if nas.project_profile.type == 'medium' else nas.location
+    print("rename nas location= ", nas.location)
     # detect broken
     anly = ContentAnalysis()
     #   1. mount folder
@@ -221,7 +223,12 @@ def detect_broken_image(pk):
     print("is_mounted= ", is_mounted)
     clippath = os.path.join(local_path, clip.full_path.lower()[len(nas.location)+1:])
     # framefolder = os.path.join(os.path.dirname(clippath), 'broken', os.path.splitext(os.path.basename(clippath))[0])
-    framefolder = os.path.join(os.path.dirname(clippath), 'broken', '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
+    # framefolder = os.path.join(os.path.dirname(clippath), 'broken', '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
+    # [TODO]
+    subfolder_with_clipname = clip.full_path.lower()[len(nas.location)+1:].replace('/', '_')
+    framefolder = os.path.join('/home/dqa/data/clip2frames', 'camera{}'.format(camera.id), '_'.join([os.path.splitext(subfolder_with_clipname)[0], str(time.time())]))
+    # framefolder = os.path.join('/home/dqa/data/clip2frames', 'camera{}'.format(camera.id), '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
+
     print("clippath= ", clippath)
     print("framefolder= ", framefolder)
     #   2. cut to frames
@@ -240,7 +247,7 @@ def detect_broken_image(pk):
     #     anly.trans_from_points_to_box(names_to_corners['mask_left']),
     #     anly.trans_from_points_to_box(names_to_corners['mask_right']) ]
 
-    video_status = anly.check_video_frames_as_usual_v3(
+    video_status = anly.check_video_frames_as_usual_v4(
         framefolder,
         privacy_mask_list
     )
@@ -284,13 +291,107 @@ def detect_broken_image(pk):
     #     )
 
     print( "video_status: ", video_status )
-
+    # copy framefolder's jpgs to clipath folder
+    shutil.copytree(framefolder, os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(framefolder)))
     # update analysis info
     clip.size = os.path.getsize(clippath)
     clip.is_broken = False if video_status['result'] == 'passed' else True
     clip.save()
 
     # return clip
+
+# def detect_broken_image(pk):
+
+#     print("pk= ", pk)
+#     # filter clip object by id
+#     clip = ClipInfo.objects.get(id=pk)
+#     camera = clip.camera_profile
+#     nas = clip.nas_profile
+    
+#     # detect broken
+#     anly = ContentAnalysis()
+    # #   1. mount folder
+    # local_path = os.path.join("/mnt/", nas.location.replace('//', '').replace('/', '_'))
+    # is_mounted = anly.mount_folder(
+    #     nas.user,
+    #     nas.password,
+    #     nas.location,
+    #     '',
+    #     local_path)
+    # print("local path= ", local_path)
+    # print("is_mounted= ", is_mounted)
+    # clippath = os.path.join(local_path, clip.full_path.lower()[len(nas.location)+1:])
+    # # framefolder = os.path.join(os.path.dirname(clippath), 'broken', os.path.splitext(os.path.basename(clippath))[0])
+    # framefolder = os.path.join(os.path.dirname(clippath), 'broken', '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
+    # print("clippath= ", clippath)
+    # print("framefolder= ", framefolder)
+    # #   2. cut to frames
+    # anly.cut_to_frames(
+    #     clippath,
+    #     framefolder
+    # )
+    # #   3. check broken
+    # print("clipprivacy= ", clip.privacy_masks)
+    # privacy_mask_list = list(map(anly.trans_from_points_to_box, eval(clip.privacy_masks).values()))
+    # print("privacy_mask_list= ", privacy_mask_list)
+    # # names_to_corners = eval(clip.privacy_masks)
+    # # privacy_mask_list = [ 
+    # #     anly.trans_from_points_to_box(names_to_corners['mask_up']),
+    # #     anly.trans_from_points_to_box(names_to_corners['mask_down']),
+    # #     anly.trans_from_points_to_box(names_to_corners['mask_left']),
+    # #     anly.trans_from_points_to_box(names_to_corners['mask_right']) ]
+
+    # video_status = anly.check_video_frames_as_usual_v3(
+    #     framefolder,
+    #     privacy_mask_list
+    # )
+    # print("video_status: ", video_status)
+    # # # create brokenInfo
+    # # ex: video_status = {
+    # #     'result': 'failed',
+    # #     'failed_frames': [
+    # #         {
+    # #             'error_message': "decoede error",
+    # #             'path': "a/b/c.mp4"
+    # #         },
+    # #         {
+    # #             'error_message': "decoede error",
+    # #             'path': "a/b/c.mp4"
+    # #         },
+    # #     ] }
+    # BrokenFrameHelper(clip.id).batch_create_db(video_status)
+
+    # # for failed_frame in video_status['failed_frames']:
+    # #     print("each failed frame: ", failed_frame)
+    # #     m = re.search(r"mul(?P<timestamp>[0-9]+).jpg", failed_frame['path'])
+    # #     if m:
+    # #         seq_to_seconds = round(int(m.group('timestamp'))/2, 1) # 2: fps
+    # #         timestamp = datetime.timedelta(seconds=seq_to_seconds)
+    # #         # replace broken frame path with timestamp
+    # #         renamed_path = failed_frame['path'].replace(
+    # #             'mul'+m.group('timestamp'),
+    # #             str(timestamp).replace(":", "'")
+    # #         )
+    # #         os.rename(failed_frame['path'], renamed_path)
+    # #         failed_frame['path'] = renamed_path
+    # #     else:
+    # #         timestamp = None
+
+    # #     BrokenFrame.objects.create(
+    # #         error_message=failed_frame['error_message'],
+    # #         frame_path=failed_frame['path'],
+    # #         clip=clip,
+    # #         timestamp=timestamp
+    # #     )
+
+    # print( "video_status: ", video_status )
+
+    # # update analysis info
+    # clip.size = os.path.getsize(clippath)
+    # clip.is_broken = False if video_status['result'] == 'passed' else True
+    # clip.save()
+
+    # # return clip
 
 
 # def no_such_action_to_analysis(pk, action):

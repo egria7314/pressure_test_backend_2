@@ -401,6 +401,50 @@ class ContentAnalysis(object):
         print( "broken_frames_list: ", broken_frames_list )
         return { 'result': status, 'failed_frames': broken_frames_list }
 
+    
+    def check_video_frames_as_usual_v5(self, framesFolderPath, privacyMasks):
+        """Return True if the video sequence detected by 1 fps is not unusual.
+        
+        v3 is with celery group module.
+        
+        Keyword arguments:
+        framesFolderPath -- the string of directory path to extracted video frames 
+        
+        Return:
+        dict -- the return value, including literal blocks::
+            {
+                'result': the string of video result,
+                'failed_frames': the list of check_single_image_as_usual dict to indicate failed frames info 
+            }
+        
+        """
+        # collect frames
+        frames = glob.glob(os.path.join(framesFolderPath, '*.jpg'))
+
+        if not frames:
+            return { 'result': 'failed', 'failed_frames': [] }
+            
+        # transform mask position
+        privacy_masks = privacyMasks
+        
+        # concurrent do verifying
+        print("BEGIN PIPELINE+++++++++++++++++")
+        for frame in sorted(frames):
+            result = check_single_image_as_usual.apply_async(args=[privacy_masks, frame], queue='check_single_image_inside_{}'.format(os.path.dirname(frame)))
+        while not result.ready():
+            time.sleep(5)
+        video_summary = result.get()      
+        # print( "video_summary: ", video_summary )
+        print("END PIPELINE+++++++++++++++++")
+        is_usual = all(map(lambda x: x == 'passed', [ each_frame['result'] for each_frame in video_summary ]))
+        status = 'passed' if is_usual else 'failed'
+        
+        # add broken frame info        
+        broken_frames_list = [] if status == 'passed' else self.filter_broken_frames_to_list(video_summary)
+
+        print( "broken_frames_list: ", broken_frames_list )
+        return { 'result': status, 'failed_frames': broken_frames_list }
+
 
     def filter_broken_frames_to_list(self, all_frames):
         """
