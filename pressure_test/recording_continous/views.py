@@ -32,6 +32,8 @@ def ana_videos(request, project_id):
 
 def analyze_videos(project_id):
     query = ProjectSetting.objects.get(id=project_id)
+    if not query.continued:
+        return Response({'message': "Not project setting for broken"})
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
     print ('********video_continuous**********')
@@ -162,6 +164,7 @@ def continuous_report(requests, project_id):
         result_detail ={}
         result_detail["creatAt"] = i.creat_at
         result_detail["path"] = i.video_path
+        result_detail["videoPathBefore"] = i.video_path_before
         result_detail["size"] = i.size
         result_detail["in"] = i.in_result
         result_detail["errorCode"] = i.error_code

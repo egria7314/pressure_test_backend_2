@@ -120,6 +120,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
 #     from recording_continous.models import RecordingFile
 #     import os
 #
+
 #
 #
 #     local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
