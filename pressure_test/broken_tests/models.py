@@ -43,7 +43,10 @@ class ClipInfo(models.Model):
 
     @property
     def path(self):
-        return self.full_path.replace(self.nas_profile.location, '')
+        if self.camera_profile.project_profile.type == 'medium':
+            return os.path.basename(self.full_path)
+        else: 
+            return self.full_path.replace(self.nas_profile.location, '')
 
     @property
     def result(self):
