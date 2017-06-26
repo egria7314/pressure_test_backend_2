@@ -28,4 +28,4 @@ class ClipInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClipInfo
-        fields = ('id', 'path', 'full_path', 'size', 'privacy_masks', 'is_broken', 'result', 'errorCode', 'count', 'link', 'broken_frames')
+        fields = ('id', 'creation_time', 'path', 'full_path', 'size', 'privacy_masks', 'is_broken', 'result', 'errorCode', 'count', 'link', 'broken_frames')

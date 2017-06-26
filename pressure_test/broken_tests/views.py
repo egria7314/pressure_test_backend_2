@@ -25,7 +25,9 @@ import shutil
 import re
 from django.utils.timezone import localtime
 from django.core.cache import cache
-from django.conf import settings 
+from django.conf import settings
+from pressure_test import celery
+import humanize 
 
 
 # Create your views here.
@@ -43,7 +45,7 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password, stora
             stream_id
         )
         #   2. get privacy mask
-        roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
+        roi = RoiModule(camera_host, camera_user, camera_password, video_destination)
         names_to_corners = roi.return_mask()
         #   3. check broken
         privacy_mask_list = list(map(anly.trans_from_points_to_box, names_to_corners.values()))
@@ -82,8 +84,9 @@ def module_detect_periodic_videos(project_pk):
     nas = project.nasprofile_set.values()[0]
     
     # add consumer for celery
+    celery.app.control.add_consumer("broken_test_camera{}".format(camera['id']))
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
+    # p = pexpect.spawn(cmd)
     print(cmd)
     time.sleep(3)
     # add scheduler every hour
@@ -120,8 +123,9 @@ def module_stop_detect_periodic_videos(project_pk):
         m.stop()
 
     # cancel consumer of celery
+    celery.app.control.cancel_consumer("broken_test_camera{}".format(camera['id']))
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
+    # p = pexpect.spawn(cmd)
     print( cmd )
     time.sleep(3)
 
@@ -296,6 +300,7 @@ def detect_broken_image(pk):
     # update analysis info
     clip.size = os.path.getsize(clippath)
     clip.is_broken = False if video_status['result'] == 'passed' else True
+    clip.creation_time = datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
     clip.save()
 
     # return clip
@@ -422,11 +427,12 @@ def broken_report(requests, project_pk):
    for i in clips:
        result_detail ={}
        result_detail["path"] = i.path
-       result_detail["size"] = i.size
+       result_detail["size"] = humanize.naturalsize(int(i.size)) if i.size else i.size
        result_detail["result"] = i.result
        result_detail["errorCode"] = i.errorCode
        result_detail["link"] = i.link
        result_detail["count"] = i.count
+       result_detail["createdAt"] = localtime(i.creation_time) if i.creation_time else i.creation_time
        
        result["data"].append(result_detail)    
     

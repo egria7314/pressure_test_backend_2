@@ -33,7 +33,7 @@ def ana_videos(request, project_id):
 def analyze_videos(project_id):
     query = ProjectSetting.objects.get(id=project_id)
     if not query.continued:
-        return Response({'message': "Not project setting for broken"})
+        return Response({'message': "Not project setting for continuous_test"})
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
     print ('********video_continuous**********')
@@ -60,12 +60,13 @@ def analyze_videos(project_id):
     periodic_check_points.append(end_time)
 
     m = Monitor()
-    start_time_periodic_check_points = periodic_check_points[:-1]
-    end_time_periodic_check_points = periodic_check_points[1:]
+    # start_time_periodic_check_points = periodic_check_points[:-1]
+    # end_time_periodic_check_points = periodic_check_points[1:]
 
-    for start_time, end_time in zip(start_time_periodic_check_points, end_time_periodic_check_points):
+    # for start_time, end_time in zip(start_time_periodic_check_points, end_time_periodic_check_points):
+    for periodic_time in periodic_check_points:
         m.add_periodic_jobs(
-            time.mktime(end_time.timetuple()),
+            time.mktime(periodic_time.timetuple()),
             arrange_periodic_task,
             (project_id, start_time, end_time)
         )
