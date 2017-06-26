@@ -11,7 +11,7 @@ class NasProfileAdmin(admin.ModelAdmin):
     search_fields = ('user', 'password', 'location', 'workgroup', )
 
 class ClipInfoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'full_path', 'privacy_masks', 'is_broken', )
+    list_display = ('id', 'creation_time' ,'full_path', 'privacy_masks', 'is_broken', )
     search_fields = ('full_path', 'privacy_masks', 'is_broken', )
 
 class BrokenFrameAdmin(admin.ModelAdmin):

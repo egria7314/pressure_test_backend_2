@@ -26,7 +26,8 @@ import re
 from django.utils.timezone import localtime
 from django.core.cache import cache
 from django.conf import settings
-from pressure_test import celery 
+from pressure_test import celery
+import humanize 
 
 
 # Create your views here.
@@ -299,6 +300,7 @@ def detect_broken_image(pk):
     # update analysis info
     clip.size = os.path.getsize(clippath)
     clip.is_broken = False if video_status['result'] == 'passed' else True
+    clip.creation_time = datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
     clip.save()
 
     # return clip
@@ -425,11 +427,12 @@ def broken_report(requests, project_pk):
    for i in clips:
        result_detail ={}
        result_detail["path"] = i.path
-       result_detail["size"] = i.size
+       result_detail["size"] = humanize.naturalsize(int(i.size)) if i.size else i.size
        result_detail["result"] = i.result
        result_detail["errorCode"] = i.errorCode
        result_detail["link"] = i.link
        result_detail["count"] = i.count
+       result_detail["createdAt"] = localtime(i.creation_time) if i.creation_time else i.creation_time
        
        result["data"].append(result_detail)    
     
