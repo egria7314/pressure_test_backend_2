@@ -25,6 +25,8 @@ class VastStorage(object):
         date_list = []
         for i in range(delta.days + 1):
             date_list.append((time_start + datetime.timedelta(days=i)).strftime('%Y-%m-%d'))
+        if time_end.strftime('%Y-%m-%d') not in date_list:
+            date_list.append(time_end.strftime('%Y-%m-%d'))
         videos = {}
         for date in date_list:
             print("DATE: ", date)
