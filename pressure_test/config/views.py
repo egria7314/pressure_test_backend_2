@@ -215,7 +215,7 @@ def return_project_setting(requests, pk=None):
 @permission_classes((AllowAny,))
 def stop_running_test(requests, pk):
     broken_views.module_stop_detect_periodic_videos(pk)
-    continue_views.stop_continous_test(pk)
+    continue_views.stop_continuous_test(pk)
     log_views.module_stop_detect_periodic_logs(pk)
     return Response({"comment": 'Stop current running test'})
 
