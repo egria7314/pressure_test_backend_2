@@ -43,7 +43,7 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password, stora
             stream_id
         )
         #   2. get privacy mask
-        roi = RoiModule(camera_host, camera_user, camera_password, 'NAS')
+        roi = RoiModule(camera_host, camera_user, camera_password, video_destination)
         names_to_corners = roi.return_mask()
         #   3. check broken
         privacy_mask_list = list(map(anly.trans_from_points_to_box, names_to_corners.values()))
