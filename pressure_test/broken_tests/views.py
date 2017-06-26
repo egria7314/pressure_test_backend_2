@@ -25,7 +25,8 @@ import shutil
 import re
 from django.utils.timezone import localtime
 from django.core.cache import cache
-from django.conf import settings 
+from django.conf import settings
+from pressure_test import celery 
 
 
 # Create your views here.
@@ -82,8 +83,9 @@ def module_detect_periodic_videos(project_pk):
     nas = project.nasprofile_set.values()[0]
     
     # add consumer for celery
+    celery.app.control.add_consumer("broken_test_camera{}".format(camera['id']))
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
+    # p = pexpect.spawn(cmd)
     print(cmd)
     time.sleep(3)
     # add scheduler every hour
@@ -120,8 +122,9 @@ def module_stop_detect_periodic_videos(project_pk):
         m.stop()
 
     # cancel consumer of celery
+    celery.app.control.cancel_consumer("broken_test_camera{}".format(camera['id']))
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control cancel_consumer broken_test_camera{}".format(camera['id'])
-    p = pexpect.spawn(cmd)
+    # p = pexpect.spawn(cmd)
     print( cmd )
     time.sleep(3)
 
