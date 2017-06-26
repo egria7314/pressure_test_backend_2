@@ -38,6 +38,12 @@ def arrange_periodic_task(camera_id, nas_id, start_time, end_time):
         nas = NasProfile.objects.get(id=nas_id)
         print( "got nas: ", nas.id )
         video_destination = 'VAST' if nas.project_profile.type == 'medium' else 'NAS'
+        # rename nas location for VAST 
+        # [TODO]
+        # if nas.project_profile.type == 'medium':
+        #     nas.location = os.path.dirname(file_path)
+        #     nas.save()
+        #     print( "VAST nas location: ", nas.location )
         roi = RoiModule(camera.host, camera.user, camera.password, video_destination)
         clip, created = ClipInfo.objects.get_or_create(full_path=file_path)
         if created or clip.is_broken == None:
