@@ -21,10 +21,22 @@ class SDcycle(object):
 
     def get_result(self, PREFIX):
         result = ""
+        # print("******set(self.former_locked_file_list)**********")
+        # print(set(self.former_locked_file_list))
+        # print("******self.new_all_file**********")
+        # print(self.new_all_file)
+        # print("******set(self.former_unlocked_file_list)**********")
+        # print(set(self.former_unlocked_file_list))
+        # print("******self.new_unlocked_file_list**********")
+        # print(self.new_unlocked_file_list)
+
+
 
         try:
             # loss locked file
             if not set(self.former_locked_file_list).issubset(self.new_all_file):
+                print("+++TEST1++++")
+
                 loss_locked_file_list = list(set(self.former_locked_file_list) - set(self.new_all_file))
                 result += "Error! Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
                 return result
@@ -33,11 +45,13 @@ class SDcycle(object):
             # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
             exist_surpass, comment = self.__surpass_exist(PREFIX)
             if exist_surpass:
+                print("+++TEST2+++")
                 result += comment + '\n'
                 return result
 
             # loss unlocked file (unlock of 1 is not subset of 2)
             if not set(self.former_unlocked_file_list).issubset(self.new_unlocked_file_list):
+                print("+++TEST3++++")
                 loss_unlocked_file_list = list(set(self.former_unlocked_file_list) - set(self.new_unlocked_file_list))
                 result += "Error! Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
                 return result
@@ -45,19 +59,24 @@ class SDcycle(object):
             # check cycle
             cycle, comment = self.__check_cycle(PREFIX)
             if cycle:
+                print("+++TEST4+++")
                 return comment
 
 
             # check adding
             adding, comment = self.__check_adding(PREFIX)
             if adding:
+                print("+++TEST5++++")
                 return comment
 
 
             else:
+                print("+++TEST6++++")
                 result = "Nothing change!"
                 return result
-        except:
+        except Exception as e:
+            print("SD Cycle Fail:")
+            print(e)
             result = "Fail"
             return result
 

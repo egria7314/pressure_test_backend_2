@@ -18,13 +18,14 @@ from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
 # from datetime import datetime
 import datetime
-
+from libs.timeout import timeout
 from threading import Thread
 import re
 import time
 import schedule
 import pytz
 from threading import Thread
+import threading
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
@@ -35,7 +36,7 @@ from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
-TEST_PROJECT_ID = 112
+TEST_PROJECT_ID = 108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -99,7 +100,7 @@ def get_up_time(requests):
     # camera_ip = "172.19.16.119"
     # camera_user = "root"
     # camera_pwd = "12345678z"
-    #
+
     my_up_time = Uptime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
     my_up_time_json = my_up_time.get_result()
 
@@ -168,8 +169,8 @@ def run_cameralog_schedule_by_id(project_id):
         start_time = localtime(task_camera_obj.start_time)
         end_time = localtime(task_camera_obj.end_time)
 
-        interval_time = datetime.timedelta(hours=1)
-        # interval_time = datetime.timedelta(minutes=2)
+        # interval_time = datetime.timedelta(hours=1)
+        interval_time = datetime.timedelta(minutes=3)
 
         periodic_check_points = []
         periodic_time = start_time
@@ -316,18 +317,15 @@ def test_set_camera_api(request):
 
     task_camera_obj = ProjectSetting.objects.get(id=TEST_PROJECT_ID)
 
-    # need_log_bool = task_camera_obj.log
-    # print("LOG STATUS!!!!!")
-    # print(need_log_bool)
-
     start_time = localtime(task_camera_obj.start_time)
     set_camera_log(TEST_PROJECT_ID, start_time)
-    # return Response(' : '.join(clips))
 
+
+    ##### test of carlos ####
     # start_time = localtime(task_camera_obj.start_time)
     # timestamp_end = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
 
-    # test of carlos
+
     # print("START")
     # print(start_time)
     # print("END")
@@ -338,8 +336,35 @@ def test_set_camera_api(request):
     # print (clips)
     # print ("******************")
     # return Response(' : '.join(sorted(clips)))
+    ##### test of carlos ####
+
+
+    ###### TIMEOUT TEST  ##########
+    # try:
+    #     # print(mytest())
+    #     test = mytest()
+    #     print(test)
+    # except Exception as e:
+    #     print("EXCEPT!!!!!")
+    #     print(e)
+
 
     return Response({'status:': 'OK'})
+
+
+@timeout(1)
+def mytest():
+    print("Start!!!")
+    # for i in range(1,10):
+    #     time.sleep(1)
+    #     print("%d seconds have passed" % i)
+    num = 0
+    num_add = num + 1
+
+    time.sleep(2)
+
+    return str(threading.current_thread()) + ": " + str(num) + str(num_add)
+
 
 
 @api_view(['GET'])
@@ -382,9 +407,9 @@ def set_camera_log(project_id, start_time):
     PREFIX = task_camera_obj.prefix_name   # temp
 
     # up time
-    my_up_time = Uptime(camera_ip, camera_user, camera_password)
-    my_up_time_json = my_up_time.get_result()
+    my_up_time_json = set_up_time(camera_ip, camera_user, camera_password)
     camera_log_json.update(my_up_time_json)
+
 
     # epoch time
     camera_epoch_time = Epochtime(camera_ip, camera_user, camera_password)
@@ -401,16 +426,10 @@ def set_camera_log(project_id, start_time):
         sd_status_json = set_sd_status(camera_ip, camera_user, camera_password)
         camera_log_json.update(sd_status_json)
 
-
         # sd recording file
+        new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+        new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX)
 
-        sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
-        sd_recording_file_json = sd_recording_file.get_fw_file_dict()
-        new_sd_locked_file_list = sd_recording_file_json["sd_locked_file"]
-        new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
-        new_sd_unlocked_file_list = sd_recording_file_json["sd_unlocked_file"]
-        new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
-        new_sd_all_file_str = ','.join(sd_recording_file_json["sd_all_file"])
 
         # check SD cycle #
         former_cam_obj = CameraLog.objects.last()
@@ -443,7 +462,7 @@ def set_camera_log(project_id, start_time):
         new_sd_unlocked_file_str = comment
         new_sd_all_file_str = comment
         sd_cycle_result = comment
-#
+
 
     # storage cycle
     new_nas_file_list = []
@@ -453,7 +472,6 @@ def set_camera_log(project_id, start_time):
     medium_or_high = task_camera_obj.type
     if medium_or_high.lower() == "high":
         new_nas_file_list, nas_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "NAS", NAS_START_DATE)
-
     # medium (by VAST)
     else:
     # ####################### VAST ################################
@@ -488,12 +506,43 @@ def set_camera_log(project_id, start_time):
     final_camera_log_json["data"] = all_data_list
 
 
+def set_up_time(camera_ip, camera_user, camera_password):
+    my_up_time = Uptime(camera_ip, camera_user, camera_password)
+    my_up_time_json = my_up_time.get_result()
+
+    return my_up_time_json
+
 
 def set_sd_status(camera_ip, camera_user, camera_password):
     my_sd_status = SDstatus(camera_ip, camera_user, camera_password)
     sd_status_json = my_sd_status.get_result()
 
     return sd_status_json
+
+
+def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX):
+    new_sd_locked_file_str = ""
+    new_sd_unlocked_file_str = ""
+    new_sd_all_file_str = ""
+    new_sd_locked_file_list = []
+    new_sd_unlocked_file_list = []
+
+    sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
+    sd_recording_file_json = sd_recording_file.get_fw_file_dict()
+    new_sd_locked_file_list = [file for file in sd_recording_file_json["sd_locked_file"] if PREFIX in file]
+
+
+    new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+
+    new_sd_unlocked_file_list = [file for file in sd_recording_file_json["sd_unlocked_file"] if PREFIX in file]
+
+
+    new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
+    new_sd_all_file_str = ','.join([file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file])
+
+    return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+           new_sd_locked_file_list, new_sd_unlocked_file_list
+
 
 
 
