@@ -432,7 +432,7 @@ def broken_report(requests, project_pk):
        result_detail["errorCode"] = i.errorCode
        result_detail["link"] = i.link
        result_detail["count"] = i.count
-       result_detail["createdAt"] = localtime(i.creation_time) if i.creation_time else i.creation_time
+       result_detail["createAt"] = localtime(i.creation_time) if i.creation_time else i.creation_time
        
        result["data"].append(result_detail)    
     
