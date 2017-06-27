@@ -159,58 +159,58 @@ def run_cameralog_schedule_by_id(project_id):
     # test_run_camera_thread(1)
 
     from camera_log.libs import monitor
-    project_id = project_id
-
     task_camera_obj = ProjectSetting.objects.get(id=project_id)
-    start_time = localtime(task_camera_obj.start_time)
-    end_time = localtime(task_camera_obj.end_time)
 
-    # interval_time = datetime.timedelta(hours=1)
-    interval_time = datetime.timedelta(minutes=2)
+    need_log_bool = task_camera_obj.log
+    print("LOG STATUS!!!")
+    print(need_log_bool)
+    if need_log_bool:
+        start_time = localtime(task_camera_obj.start_time)
+        end_time = localtime(task_camera_obj.end_time)
 
-    periodic_check_points = []
-    periodic_time = start_time
-    while periodic_time < end_time:
-        periodic_check_points.append(periodic_time)
-        periodic_time += interval_time
-    periodic_check_points.append(end_time)
+        # interval_time = datetime.timedelta(hours=1)
+        interval_time = datetime.timedelta(minutes=2)
 
-    print("periodic points: ", periodic_check_points)
-    m = Monitor()
-    for periodic_time in periodic_check_points:
-        m.add_periodic_jobs(
-            time.mktime(periodic_time.timetuple()),
-            set_camera_log,(project_id, start_time)
-         )
-    m.start()
+        periodic_check_points = []
+        periodic_time = start_time
+        while periodic_time < end_time:
+            periodic_check_points.append(periodic_time)
+            periodic_time += interval_time
+        periodic_check_points.append(end_time)
+
+        print("periodic points: ", periodic_check_points)
+        m = Monitor()
+        for periodic_time in periodic_check_points:
+            m.add_periodic_jobs(
+                time.mktime(periodic_time.timetuple()),
+                set_camera_log,(project_id, start_time)
+             )
+        m.start()
+
+        #########ori
+        #
+        # periodic_check_points = []
+        # while start_time < end_time:
+        #     periodic_check_points.append(start_time)
+        #     start_time += interval_time
+        # periodic_check_points.append(end_time)
+        # m = Monitor()
+        # # start_time_periodic_check_points = periodic_check_points[:-1]
+        # # end_time_periodic_check_points = periodic_check_points[1:]
+        # # TODO check if we have to do camera log by project setting
+        #
+        #
+        # for checkpoint in periodic_check_points:
+        #     m.add_periodic_jobs(
+        #         time.mktime(checkpoint.timetuple()),
+        #         set_camera_log,(project_id, start_time)
+        #     )
+        # m.start()
+        # ori!!!!!!
 
 
-    #########ori
-    #
-    # periodic_check_points = []
-    # while start_time < end_time:
-    #     periodic_check_points.append(start_time)
-    #     start_time += interval_time
-    # periodic_check_points.append(end_time)
-    # m = Monitor()
-    # # start_time_periodic_check_points = periodic_check_points[:-1]
-    # # end_time_periodic_check_points = periodic_check_points[1:]
-    # # TODO check if we have to do camera log by project setting
-    #
-    #
-    # for checkpoint in periodic_check_points:
-    #     m.add_periodic_jobs(
-    #         time.mktime(checkpoint.timetuple()),
-    #         set_camera_log,(project_id, start_time)
-    #     )
-    # m.start()
-    # ori!!!!!!
-
-
-
-
-    monitor.camera_id_2_monitor[str(project_id)] = m
-    print("monitor: ", monitor.camera_id_2_monitor)
+        monitor.camera_id_2_monitor[str(project_id)] = m
+        print("monitor: ", monitor.camera_id_2_monitor)
 
     return Response({'message': "Insert camera into schedule successfully", 'project_id': project_id })
 
@@ -309,16 +309,37 @@ def module_stop_detect_periodic_logs(project_id):
 #             print(e)
 
 
+
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def test_set_camera_api(request):
 
     task_camera_obj = ProjectSetting.objects.get(id=TEST_PROJECT_ID)
+
+    # need_log_bool = task_camera_obj.log
+    # print("LOG STATUS!!!!!")
+    # print(need_log_bool)
+
     start_time = localtime(task_camera_obj.start_time)
     set_camera_log(TEST_PROJECT_ID, start_time)
     # return Response(' : '.join(clips))
-    return Response({'status': 'ok'})
 
+    # start_time = localtime(task_camera_obj.start_time)
+    # timestamp_end = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
+
+    # test of carlos
+    # print("START")
+    # print(start_time)
+    # print("END")
+    # print(timestamp_end)
+    # vs=VastStorage()
+    # clips = vs.get_video_vast('autotest', 'autotest', '', '//172.19.11.189/Public/autotest/steven/VAST/2017-06-26/4-FD816B-HT', start_time, timestamp_end)
+    # print ("*******************")
+    # print (clips)
+    # print ("******************")
+    # return Response(' : '.join(sorted(clips)))
+
+    return Response({'status:': 'OK'})
 
 
 @api_view(['GET'])
