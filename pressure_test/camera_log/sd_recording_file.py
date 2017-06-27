@@ -25,13 +25,12 @@ class Sdrecordingfile(object):
         """Get all recording file from SD card."""
         tn = TelnetModule(self.ip, self.account, self.password).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
         # tn = TelnetModule(self.ip, self.account, self.password).login().send_command('find /mnt/auto/CF/NCMF -name "*medium_stress*.mp4"')
-
         filename =  re.findall(b"NCMF\D(.*)",tn.result()[0])
-
         for i in range(len(filename)):
             filename[i] = filename[i].strip()
         # filename.remove("-name \"*medium_stress*.mp4\"")
         filename.remove(b"-name \"*.mp4\"")
+        # print(filename)
         return filename
 
     def get_ui_all_filename(self):
@@ -43,7 +42,6 @@ class Sdrecordingfile(object):
         file_starttime =  re.findall(b"beginTime>(.*)<",data)
         file_endtime   =  re.findall(b"endTime>(.*)<",data)
         all_file=[]
-
         #all_file : [filename,starttime,file_endtime]
         for i in range(len(filename)):
             all_file.append([filename[i], file_starttime[i], file_endtime[i]])
@@ -51,6 +49,7 @@ class Sdrecordingfile(object):
         #TO DO:for datetime format
         #'2016-04-01 00:44:56.637'
         #['2016', '04', '01', '00', '44', '56', '637']
+
         for i in range(len(all_file)):
             for j in range(1,len(all_file[0]),1):
                 all_file[i][j] = re.split(b'-| |:|\.',all_file[i][j])
@@ -163,9 +162,9 @@ class Sdrecordingfile(object):
         Key2 : locked_file;
         Key3 : unlocked_file;
         """
-
         file_dict={}
         ftp_all_filename = self.get_ftp_all_filename()
+
         ui_all_filename =self.get_ui_all_filename()
         while 1:
             continuous_filename_time = self.continuous_filename_time()
