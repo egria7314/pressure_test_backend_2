@@ -32,19 +32,34 @@ from libs.vast_storage import VastStorage
 def ana_videos(request, project_id):
     # query = ProjectSetting.objects.get(id=project_id)
     # start_time = localtime(query.start_time)
-    # end_time = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
+    # end_time = localtime(query.end_time)
     #
     # vs=VastStorage()
     # clips = vs.get_video_vast('ptest', 'ptest', '', '//172.19.11.189/Ptest/2017-06-23/37-FD816B-HT', start_time, end_time)
     #
+    # clips = order_vast_file(clips)
     # print ("++++++++++++++++")
     # print (end_time)
     # print ("++++++++++++++++")
-
-    # return Response(' : '.join(sorted(clips)))
+    #
+    # return Response(' : '.join(clips))
 
     response = analyze_videos(project_id)
     return Response(response)
+
+def order_vast_file(clips):
+    clips_timelist = []
+    sorted_filelist = []
+    for file_path in clips:
+        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+        clippath = os.path.join(local_path, os.path.basename(file_path))
+
+        clip_modify_time = os.stat(clippath).st_mtime
+
+        clips_timelist.append([clip_modify_time, file_path])
+    for i in sorted(clips_timelist):
+        sorted_filelist.append(i[1])
+    return sorted_filelist
 
 
 def analyze_videos(project_id):

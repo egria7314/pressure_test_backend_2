@@ -32,11 +32,13 @@ def arrange_periodic_task(project_id, start_time, end_time):
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
         clips = vast.get_video_vast(remote_username, remote_password, sudo_password, remote_path, start_time, end_time)
+        clips = order_vast_file(clips)
     elif pressure_test_video_type == 'high':
         ns = NasStorage()
         clips = ns.get_video_nas(remote_username, remote_password, sudo_password, remote_path, prefix, start_time, end_time)
+        clips = order_vast_file(clips)
 
-    for file_path in sorted(clips):
+    for file_path in clips:
 
         if pressure_test_video_type == 'medium':
             local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
@@ -144,8 +146,23 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
             between_result=between_result["between_result"],
             seconds=between_result["seconds"],
         )
+def order_vast_file(clips):
+    clips_timelist = []
+    sorted_filelist = []
 
+    for file_path in clips:
 
+        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+        clippath = os.path.join(local_path, os.path.basename(file_path))
+
+        clip_modify_time = os.stat(clippath).st_mtime
+        # clips_dictionary[file_path] = datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
+        clips_timelist.append([clip_modify_time, file_path])
+
+    for i in sorted(clips_timelist):
+        print (i)
+        sorted_filelist.append(i[1])
+    return sorted_filelist
 # @shared_task
 # def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, project_id, remote_path, file_path):
 #     from libs.nas_storage import NasStorage

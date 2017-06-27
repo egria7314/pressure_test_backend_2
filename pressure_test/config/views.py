@@ -27,7 +27,7 @@ from camera_log.views import running_status
 
 import re, collections
 from threading import Thread
-import time
+import time,datetime
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -237,15 +237,17 @@ def transform_dict(file_list, p_id):
     for dict_item in file_list:
         if test_type != "medium":
             create_at = re.search('\d{8}', dict_item['path']).group(0)
+            create_at = datetime.datetime.strptime(create_at, "%Y%m%d")
         else:
             create_at = re.search('\d{4}\-\d{2}\-\d{2}', dict_item['path']).group(0)
+            create_at = datetime.datetime.strptime(create_at, "%Y-%m-%d")
         date_list.append(create_at)
     cnt = collections.Counter()
     for date in date_list:
         cnt[date] += 1
     date_count_dict = dict(cnt)
     for date, count in date_count_dict.items():
-        transform_list.append({'createAt': date.replace('-', ''), 'count': count})
+        transform_list.append({'createAt': date, 'count': count})
     return transform_list
 
 
