@@ -20,9 +20,30 @@ class SDstatus(object):
     def get_result(self):
         """Get the dictionary consist of camera SD status and usedpercent"""
         data_dict = {}
-        SD_status = self.__get_sd_status()
-        data_dict["sdCardStatus"] = SD_status[0]
-        data_dict["sdCardUsed"] = str(self.__get_sd_status()[1])
+
+        try:
+            SD_status = self.__get_sd_status()
+            data_dict["sdCardStatus"] = SD_status[0]
+            data_dict["sdCardUsed"] = str(self.__get_sd_status()[1])
+        except Exception as e:
+            print("******SD issue:*****")
+            print(e)
+            if "detached" in str(e):
+                data_dict["sdCardStatus"] = "detached"
+                data_dict["sdCardUsed"] = "detached"
+            else:
+
+                data_dict["sdCardStatus"] = "Fail"
+                data_dict["sdCardUsed"] = "Fail"
+
+            # if e == "disk_i0_cond=detached":
+            #
+            #     data_dict["sdCardStatus"] = "detached"
+            #     data_dict["sdCardUsed"] = "detached"
+            # else:
+            #     data_dict["sdCardStatus"] = "Fail"
+            #     data_dict["sdCardUsed"] = "Fail"
+
         #data_dict["SD_recording_filename"] = self.__get_recording_filename()
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict

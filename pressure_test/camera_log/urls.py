@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^up_time/$', views.get_up_time),
     url(r'^epoch_time/$', views.get_epoch_time),
     url(r'^sd_recording_file/$', views.get_sd_recording_file),
-    # url(r'^camera_log/$', views.set_camera_log),
+    url(r'^camera_log/$', views.test_set_camera_api),
     # url(r'^camera_log/$', views.run_camera_schedule),
     url(r'^test_camera_log/$', views.test_camera),
 

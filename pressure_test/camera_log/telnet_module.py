@@ -64,7 +64,6 @@ class TelnetModule(object):
 
     def login(self):
         """Login machine."""
-
         tn = self.tn
         tn.read_until(b"login: ")
         tn.write(self.account.encode(encoding="utf-8") + b"\n")
@@ -86,7 +85,7 @@ class TelnetModule(object):
         """
         tn = self.tn
         tn.write(str(commands).encode(encoding="utf-8") + b"\n")
-        self.data.append(tn.read_until(b"~ #", 3000))
+        self.data.append(tn.read_until(b"~ #", 3000))           # wait very long     # TODO
         return self
 
     def result(self):

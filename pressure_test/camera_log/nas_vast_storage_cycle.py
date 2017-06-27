@@ -185,13 +185,11 @@ class NasVastCycle():
 
 def trans_vast_file_to_nas_style(vast_sty_file_list):
     nas_sty_file_list = []
-    print(vast_sty_file_list)
 
     # 1_2017-06-14_110030.3gp    >   20170614/11/00.3gp
     for file in vast_sty_file_list:
         # m = re.match(r"(\w+) (\w+)", "Isaac Newton, physicist")
         m = re.match(r"(\d+)_(\d+)-(\d+)-(\d+)_(\d{2})(\d{2})(\d{2})\.", file)
-        print("TEST!!")
         # print(m.group(0))
         year = m.group(2)
         mon = m.group(3)
@@ -200,8 +198,6 @@ def trans_vast_file_to_nas_style(vast_sty_file_list):
         min = m.group(6)
 
         nas_sty_vastfile_str = year + mon + day + '/' + hour + '/' + min + '.3gp'
-
-        print("End")
         # print(m)
 
         nas_sty_file_list.append(nas_sty_vastfile_str)
