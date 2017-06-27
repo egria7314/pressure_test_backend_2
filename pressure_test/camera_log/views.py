@@ -168,8 +168,8 @@ def run_cameralog_schedule_by_id(project_id):
         start_time = localtime(task_camera_obj.start_time)
         end_time = localtime(task_camera_obj.end_time)
 
-        # interval_time = datetime.timedelta(hours=1)
-        interval_time = datetime.timedelta(minutes=2)
+        interval_time = datetime.timedelta(hours=1)
+        # interval_time = datetime.timedelta(minutes=2)
 
         periodic_check_points = []
         periodic_time = start_time
