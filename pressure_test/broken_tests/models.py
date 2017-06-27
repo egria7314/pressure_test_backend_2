@@ -40,10 +40,14 @@ class ClipInfo(models.Model):
     camera_profile = models.ForeignKey(CameraProfile, related_name='camera_profile', on_delete=models.CASCADE, null=True, blank=True)
     nas_profile = models.ForeignKey(NasProfile, related_name='nas_profile', on_delete=models.CASCADE, null=True, blank=True)
     is_broken = models.NullBooleanField(null=True, blank=True)
+    creation_time = models.DateTimeField(null=True, blank=True)
 
     @property
     def path(self):
-        return self.full_path.replace(self.nas_profile.location, '')
+        if self.camera_profile.project_profile.type == 'medium':
+            return os.path.basename(self.full_path)
+        else: 
+            return self.full_path.replace(self.nas_profile.location, '')
 
     @property
     def result(self):

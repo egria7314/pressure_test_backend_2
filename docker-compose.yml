@@ -7,7 +7,7 @@ services:
   celery:
     build: .
     privileged: true
-    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info"
+    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info -f %n-%i.log"
     volumes:
       - .:/home/dqa/data
     ports:

@@ -49,6 +49,8 @@ def post(request):
     camera_password = request.data['password']
     prefix_name = get_recording_prefix(camera_ip, camera_user, camera_password)
     request.data['prefix_name'] = prefix_name
+    request.data['path'] = request.data['path'].replace('\\', '/')
+    # print('path=', request.data['path'])
     if serializer.is_valid():
         a = serializer.save()
         project_id = a.id
@@ -213,7 +215,7 @@ def return_project_setting(requests, pk=None):
 @permission_classes((AllowAny,))
 def stop_running_test(requests, pk):
     broken_views.module_stop_detect_periodic_videos(pk)
-    continue_views.stop_continous_test(pk)
+    continue_views.stop_continuous_test(pk)
     log_views.module_stop_detect_periodic_logs(pk)
     return Response({"comment": 'Stop current running test'})
 

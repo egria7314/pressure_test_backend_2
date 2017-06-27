@@ -18,7 +18,7 @@ from recording_continous.models import Config
 from recording_continous.video_continous import VideoContinous
 
 def arrange_periodic_task(project_id, start_time, end_time):
-    obj = ProjectSetting.objects.get(project_name=str(project_id))
+    obj = ProjectSetting.objects.get(id=project_id)
     remote_path = obj.path
     remote_username = obj.path_username
     remote_password = obj.path_password
@@ -52,8 +52,14 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     from recording_continous.models import RecordingFile
     import os
 
-    local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
-    clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
+    if pressure_test_video_type== 'medium':
+        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+        print (local_path)
+        # clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
+        clippath = os.path.join(local_path, os.path.basename(file_path))
+    else:
+        local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
+        clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
 
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
@@ -69,6 +75,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         file_path_before = query.path
     else:
         file_path_before = 'first video'
+
 
 
 
@@ -92,24 +99,41 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         between_result["between_result"] = '-'
         between_result["seconds"] = 'First video'
 
+    if pressure_test_video_type == 'high':
+        RecordingContinuty.objects.create(
+            project_id=project_id,
+            creat_at=str(file_modify_time),
+            video_path=file_path.replace(remote_path+"/", ""),
+            video_path_before=file_path_before.replace(local_path+"/", ""),
+            size=file_size,
+            in_result=in_result["in_result"],
+            error_code=in_result["error_code"],
+            start_time=in_result["start_time"],
+            end_time=in_result["start_time"],
+            link=in_result["link"],
+            count=in_result["count"],
+            between_result=between_result["between_result"],
+            seconds=between_result["seconds"],
 
-    RecordingContinuty.objects.create(
-        project_id=project_id,
-        creat_at=str(file_modify_time),
-        video_path=file_path.replace(remote_path+"/", ""),
-        video_path_before=file_path_before.replace(local_path+"/", ""),
-        size=file_size,
-        in_result=in_result["in_result"],
-        error_code=in_result["error_code"],
-        start_time=in_result["start_time"],
-        end_time=in_result["start_time"],
-        link=in_result["link"],
-        count=in_result["count"],
-        between_result=between_result["between_result"],
-        seconds=between_result["seconds"],
 
-
+            )
+    else:
+        RecordingContinuty.objects.create(
+            project_id=project_id,
+            creat_at=str(file_modify_time),
+            video_path=file_path.replace(local_path + "/", ""),
+            video_path_before=file_path_before.replace(local_path + "/", ""),
+            size=file_size,
+            in_result=in_result["in_result"],
+            error_code=in_result["error_code"],
+            start_time=in_result["start_time"],
+            end_time=in_result["start_time"],
+            link=in_result["link"],
+            count=in_result["count"],
+            between_result=between_result["between_result"],
+            seconds=between_result["seconds"],
         )
+
 
 # @shared_task
 # def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, project_id, remote_path, file_path):
@@ -119,6 +143,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
 #     from recording_continous.models import RecordingFile
 #     import os
 #
+
 #
 #
 #     local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))

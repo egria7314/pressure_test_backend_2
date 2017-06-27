@@ -56,3 +56,4 @@
         - redis
         - djangorestframework-jsonapi
         - schedule
+        - humanize
