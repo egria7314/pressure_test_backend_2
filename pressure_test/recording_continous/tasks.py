@@ -37,8 +37,19 @@ def arrange_periodic_task(project_id, start_time, end_time):
         clips = ns.get_video_nas(remote_username, remote_password, sudo_password, remote_path, prefix, start_time, end_time)
 
     for file_path in sorted(clips):
-        push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type)
-        time.sleep(5)
+
+        if pressure_test_video_type == 'medium':
+            local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+            clippath = os.path.join(local_path, os.path.basename(file_path))
+        else:
+            local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
+            clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
+
+        recording_file_obj = RecordingFile.objects.filter(path=clippath)
+        if len(recording_file_obj) <= 0:
+
+            push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type)
+            time.sleep(5)
 
     # for file_path in clips:
     #     push_detect_broken_image_tasks_to_queue.apply_async(args=[remote_username, remote_password, project_id, remote_path, file_path],queue='continous_test_camera{}'.format(str(project_id)))
@@ -121,7 +132,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         RecordingContinuty.objects.create(
             project_id=project_id,
             creat_at=str(file_modify_time),
-            video_path=file_path.replace(local_path + "/", ""),
+            video_path=clippath.replace(local_path + "/", ""),
             video_path_before=file_path_before.replace(local_path + "/", ""),
             size=file_size,
             in_result=in_result["in_result"],

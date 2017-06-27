@@ -22,10 +22,27 @@ from recording_continous.monitor import Monitor
 from recording_continous import monitor
 from django.utils.timezone import localtime
 import pexpect
+from datetime import timezone
+import pytz
 
+
+from libs.vast_storage import VastStorage
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def ana_videos(request, project_id):
+    # query = ProjectSetting.objects.get(id=project_id)
+    # start_time = localtime(query.start_time)
+    # end_time = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
+    #
+    # vs=VastStorage()
+    # clips = vs.get_video_vast('ptest', 'ptest', '', '//172.19.11.189/Ptest/2017-06-23/37-FD816B-HT', start_time, end_time)
+    #
+    # print ("++++++++++++++++")
+    # print (end_time)
+    # print ("++++++++++++++++")
+
+    # return Response(' : '.join(sorted(clips)))
+
     response = analyze_videos(project_id)
     return Response(response)
 
@@ -54,16 +71,14 @@ def analyze_videos(project_id):
     time.sleep(3)
     # add scheduler every hour
     periodic_check_points = []
-    while start_time < end_time:
-        periodic_check_points.append(start_time)
-        start_time += interval_time
+    periodic_time = start_time
+    while periodic_time < end_time:
+        periodic_check_points.append(periodic_time)
+        periodic_time += interval_time
     periodic_check_points.append(end_time)
 
+    print("periodic points: ", periodic_check_points)
     m = Monitor()
-    # start_time_periodic_check_points = periodic_check_points[:-1]
-    # end_time_periodic_check_points = periodic_check_points[1:]
-
-    # for start_time, end_time in zip(start_time_periodic_check_points, end_time_periodic_check_points):
     for periodic_time in periodic_check_points:
         m.add_periodic_jobs(
             time.mktime(periodic_time.timetuple()),
@@ -163,7 +178,7 @@ def continuous_report(requests, project_id):
 
     for i in query:
         result_detail ={}
-        result_detail["creatAt"] = i.creat_at
+        result_detail["createAt"] = i.creat_at
         result_detail["path"] = i.video_path
         result_detail["videoPathBefore"] = i.video_path_before
         result_detail["size"] = i.size
