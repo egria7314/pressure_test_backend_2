@@ -36,7 +36,7 @@ from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
-TEST_PROJECT_ID = 108
+TEST_PROJECT_ID = 112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -168,12 +168,33 @@ def run_cameralog_schedule_by_id(project_id):
     if need_log_bool:
         start_time = localtime(task_camera_obj.start_time)
         end_time = localtime(task_camera_obj.end_time)
+        now_time = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
 
         interval_time = datetime.timedelta(hours=1)
-        # interval_time = datetime.timedelta(minutes=3)
+        # interval_time = datetime.timedelta(minutes=2)
 
         periodic_check_points = []
         periodic_time = start_time
+
+        if (end_time < now_time):
+            print("End < NOW ")
+
+
+            end_time = now_time
+            periodic_time = now_time
+        elif (start_time < now_time):
+            print("START < NOW")
+            periodic_time = now_time
+
+
+        print("Schedule START TIME")
+        print(start_time)
+        print("Schedule End TIME")
+        print(end_time)
+        print("Schedule Periodic TIME")
+        print(periodic_time)
+
+
         while periodic_time < end_time:
             periodic_check_points.append(periodic_time)
             periodic_time += interval_time
@@ -188,7 +209,7 @@ def run_cameralog_schedule_by_id(project_id):
              )
         m.start()
 
-        #########ori
+        ########ori
         #
         # periodic_check_points = []
         # while start_time < end_time:
@@ -198,7 +219,7 @@ def run_cameralog_schedule_by_id(project_id):
         # m = Monitor()
         # # start_time_periodic_check_points = periodic_check_points[:-1]
         # # end_time_periodic_check_points = periodic_check_points[1:]
-        # # TODO check if we have to do camera log by project setting
+        #
         #
         #
         # for checkpoint in periodic_check_points:
@@ -266,22 +287,14 @@ def stop_detect_periodic_logs(project_id):
 def module_stop_detect_periodic_logs(project_id):
     from camera_log.libs import monitor
     # get project object
-    project = ProjectSetting.objects.get(id=project_id)
 
-    # search camera with project
-    # index 0 is because project vs camera is 1:1 now
-    camera = project.cameraprofile_set.values()[0]
-
-    print("++++++++")
-    print(camera)
+    print("Kill project ids:")
     print(monitor.camera_id_2_monitor.keys())
-    print("++++++++++")
+    print("***")
 
-
-    if str(camera['id']) in monitor.camera_id_2_monitor.keys():
-        m = monitor.camera_id_2_monitor[str(camera['id'])]
+    if str(project_id) in monitor.camera_id_2_monitor.keys():
+        m = monitor.camera_id_2_monitor[str(project_id)]
         m.stop()
-
 
     ret = {'message': "Cancel camera from schedule successfully"}
     return ret
@@ -544,6 +557,9 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX):
            new_sd_locked_file_list, new_sd_unlocked_file_list
 
 
+# def set_sd_cycle():
+
+
 
 
 def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_time):
@@ -560,9 +576,6 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
         # get the latest obj of same project id
         former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
         if former_cam_obj:
-            print("TEST LAST TIME!!!!!!")
-            print(former_cam_obj.create_at)
-
             if storage_by == "NAS":
                 former_storage_file_list = former_cam_obj.nas_file.split(',')
             elif storage_by == "VAST":
@@ -642,12 +655,6 @@ def check_list(file_list):
 @permission_classes((AllowAny,))
 def get_all_camera_log(request, pi=None):
     project_id = pi
-    print("*****ID*****")
-    print(project_id)
-    print(type(project_id))
-    print("*****ID*****")
-
-
 
     final_camera_log_json = {}
     final_camera_log_json["id"] = project_id

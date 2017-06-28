@@ -19,9 +19,15 @@ class Epochtime(object):
     def get_result(self):
         """Get the dictionary consist of camera_uptime,camera_cpuloading_idle and camera_cpuloading_average"""
         data_dict = {}
-        tn = TelnetModule(self.ip,self.account,self.password).login().send_command('date +%s')
-        data = tn.result()
-        camera_epoch_time = self.__process_camera_epoch_time(data[0])
+
+        try:
+            tn = TelnetModule(self.ip,self.account,self.password).login().send_command('date +%s')
+            data = tn.result()
+            camera_epoch_time = self.__process_camera_epoch_time(data[0])
+        except Exception as e:
+            print(e)
+            camera_epoch_time = "Fail/Timeout"
+
         data_dict["camera_epoch_time"] = camera_epoch_time
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict
