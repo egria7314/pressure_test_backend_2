@@ -161,12 +161,12 @@ def stop_continuous_test(project_pk):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def implement_in(requests):
-    vc = VideoContinous("14.mp4","15.mp4")
+    vc = VideoContinous("/home/carlos/pressure_final/pressure_test_backend/pressure_test/recording_continous/125.3gp","/home/carlos/pressure_final/pressure_test_backend/pressure_test/recording_continous/126.3gp")
     in_result=vc.continuity_in_recording_files()
     between_result=vc.continuity_bwtween_recording_files()
 
     RecordingContinuty.objects.create(
-        project_id='1',
+        project_id='124_125',
         creat_at=in_result["creat_at"],
         video_path=in_result["video_path"],
         size=in_result["size"],

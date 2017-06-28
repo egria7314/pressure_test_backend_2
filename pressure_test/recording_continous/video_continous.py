@@ -10,12 +10,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from recording_continous.models import RecordingContinuty
 
 class VideoContinous(object):
-    def __init__(self,video_before, video_now):
+    def __init__(self,video_before, video_now, delay_time):
         self.directory_path = os.path.dirname(os.path.realpath(__file__))
         self.mp4parser_path = os.path.join(self.directory_path, "Mpeg4Parser_TimeParser.exe")
         self.video_before = video_before
         self.video_now  = video_now
-        self.delay_time = 1
+        self.delay_time = delay_time
 
 
     def continuity_bwtween_recording_files(self):
@@ -32,6 +32,7 @@ class VideoContinous(object):
 
         time_list_before = self.__analyze_video_log(log_file_before)
         time_list_now = self.__analyze_video_log(log_file_now)
+
         if "Decode error" in time_list_before or "Decode error" in time_list_now :
             result_dictionary = {"between_result": "failed", "seconds": "Decode error"}
 
@@ -70,19 +71,23 @@ class VideoContinous(object):
                 if now - before > self.delay_time:
                     time_delay.append([before, now, now - before])
 
-            lag_number = 0
+            lag_number = float(self.delay_time)
+            lag_index = 0
             if time_delay != []:
-                self.__produe_failed_detail(time_delay)
+                error_log_path = self.__produe_failed_detail(time_delay)
                 for index, value in enumerate(time_delay):
-                    if float(value[2] > lag_number): lag_number = index
-                time_delay[lag_number][0] = str(datetime.datetime.fromtimestamp(time_delay[lag_number][0]))
-                time_delay[lag_number][1] = str(datetime.datetime.fromtimestamp(time_delay[lag_number][1]))
-                time_delay[lag_number][2] = str(time_delay[lag_number][2])
+                    if float(value[2] > lag_number):
+                        lag_index = index
+                        lag_number = value[2]
+
+                time_delay[lag_index][0] = str(datetime.datetime.fromtimestamp(time_delay[lag_index][0]))
+                time_delay[lag_index][1] = str(datetime.datetime.fromtimestamp(time_delay[lag_index][1]))
+                time_delay[lag_index][2] = str(time_delay[lag_index][2])
                 analyze_result = 'failed'
-                start_time = time_delay[lag_number][0]
-                end_time = time_delay[lag_number][1]
+                start_time = time_delay[lag_index][0]
+                end_time = time_delay[lag_index][1]
                 error_code = 'error'
-                link = self.video_now
+                link = error_log_path.replace("/mnt","")
                 count = str(len(time_delay))
             else:
                 analyze_result = 'pass'
@@ -159,3 +164,4 @@ class VideoContinous(object):
             f.write('delay_time:'+str(i[2]) + '\n')
             f.write('******************************************\n')
         f.close()
+        return error_info_file_path
