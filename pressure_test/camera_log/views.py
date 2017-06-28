@@ -169,6 +169,11 @@ def run_cameralog_schedule_by_id(project_id):
         start_time = localtime(task_camera_obj.start_time)
         end_time = localtime(task_camera_obj.end_time)
 
+
+
+
+
+
         interval_time = datetime.timedelta(hours=1)
         # interval_time = datetime.timedelta(minutes=3)
 
@@ -198,7 +203,7 @@ def run_cameralog_schedule_by_id(project_id):
         # m = Monitor()
         # # start_time_periodic_check_points = periodic_check_points[:-1]
         # # end_time_periodic_check_points = periodic_check_points[1:]
-        # # TODO check if we have to do camera log by project setting
+        #
         #
         #
         # for checkpoint in periodic_check_points:
@@ -542,6 +547,9 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX):
 
     return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
            new_sd_locked_file_list, new_sd_unlocked_file_list
+
+
+# def set_sd_cycle():
 
 
 
