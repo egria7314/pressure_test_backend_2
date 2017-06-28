@@ -43,6 +43,10 @@ class ClipInfo(models.Model):
     creation_time = models.DateTimeField(null=True, blank=True)
 
     @property
+    def get_project_profile_id(self):
+        return self.camera_profile.project_profile.id
+        
+    @property
     def path(self):
         if self.camera_profile.project_profile.type == 'medium':
             return os.path.basename(self.full_path)
