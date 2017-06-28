@@ -18,7 +18,8 @@ from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
 # from datetime import datetime
 import datetime
-from libs.timeout import timeout
+from camera_log.libs.timeout import timeout
+
 from threading import Thread
 import re
 import time
@@ -36,7 +37,7 @@ from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
-TEST_PROJECT_ID = 112  #108
+TEST_PROJECT_ID = 108  #112
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -178,22 +179,11 @@ def run_cameralog_schedule_by_id(project_id):
 
         if (end_time < now_time):
             print("End < NOW ")
-
-
             end_time = now_time
             periodic_time = now_time
         elif (start_time < now_time):
             print("START < NOW")
             periodic_time = now_time
-
-
-        print("Schedule START TIME")
-        print(start_time)
-        print("Schedule End TIME")
-        print(end_time)
-        print("Schedule Periodic TIME")
-        print(periodic_time)
-
 
         while periodic_time < end_time:
             periodic_check_points.append(periodic_time)
@@ -219,8 +209,6 @@ def run_cameralog_schedule_by_id(project_id):
         # m = Monitor()
         # # start_time_periodic_check_points = periodic_check_points[:-1]
         # # end_time_periodic_check_points = periodic_check_points[1:]
-        #
-        #
         #
         # for checkpoint in periodic_check_points:
         #     m.add_periodic_jobs(
@@ -328,10 +316,10 @@ def module_stop_detect_periodic_logs(project_id):
 @permission_classes((AllowAny,))
 def test_set_camera_api(request):
 
-    task_camera_obj = ProjectSetting.objects.get(id=TEST_PROJECT_ID)
-
-    start_time = localtime(task_camera_obj.start_time)
-    set_camera_log(TEST_PROJECT_ID, start_time)
+    # task_camera_obj = ProjectSetting.objects.get(id=TEST_PROJECT_ID)
+    #
+    # start_time = localtime(task_camera_obj.start_time)
+    # set_camera_log(TEST_PROJECT_ID, start_time)
 
 
     ##### test of carlos ####
@@ -353,13 +341,13 @@ def test_set_camera_api(request):
 
 
     ###### TIMEOUT TEST  ##########
-    # try:
-    #     # print(mytest())
-    #     test = mytest()
-    #     print(test)
-    # except Exception as e:
-    #     print("EXCEPT!!!!!")
-    #     print(e)
+    try:
+        # print(mytest())
+        test = mytest()
+        print(test)
+    except Exception as e:
+        print("EXCEPT!!!!!")
+        print(e)
 
 
     return Response({'status:': 'OK'})
@@ -367,7 +355,7 @@ def test_set_camera_api(request):
 
 @timeout(1)
 def mytest():
-    print("Start!!!")
+    print("Start!!")
     # for i in range(1,10):
     #     time.sleep(1)
     #     print("%d seconds have passed" % i)
@@ -443,30 +431,10 @@ def set_camera_log(project_id, start_time):
         new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
         new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX)
 
-
         # check SD cycle #
-        former_cam_obj = CameraLog.objects.last()
-
-        if former_cam_obj:
-            former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
-            former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
-            former_sd_locked_file_list = check_list(former_sd_locked_file_list)
-            former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
-        else:
-            former_sd_locked_file_list = []
-            former_sd_unlocked_file_list = []
-
-        sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
-                                  former_unlocked_file_list=former_sd_unlocked_file_list,
-                                  new_locked_file_list=new_sd_locked_file_list,
-                                  new_unlocked_file_list=new_sd_unlocked_file_list)
-
-        sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
-        print("sd_cycle_result:")
-        print(sd_cycle_result)
-        sd_cycle_json = {}
-        sd_cycle_json["sdCardCycling"] = sd_cycle_result
+        sd_cycle_result, sd_cycle_json = set_sd_cycle(new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
         camera_log_json.update(sd_cycle_json)
+
     else:
         comment = "Not Support"
         sd_status_json["sdCardStatus"] = comment
@@ -557,7 +525,30 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX):
            new_sd_locked_file_list, new_sd_unlocked_file_list
 
 
-# def set_sd_cycle():
+def set_sd_cycle(new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX):
+    former_cam_obj = CameraLog.objects.last()
+
+    if former_cam_obj:
+        former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
+        former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
+        former_sd_locked_file_list = check_list(former_sd_locked_file_list)
+        former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
+    else:
+        former_sd_locked_file_list = []
+        former_sd_unlocked_file_list = []
+
+    sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
+                              former_unlocked_file_list=former_sd_unlocked_file_list,
+                              new_locked_file_list=new_sd_locked_file_list,
+                              new_unlocked_file_list=new_sd_unlocked_file_list)
+
+    sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
+    print("sd_cycle_result:")
+    print(sd_cycle_result)
+    sd_cycle_json = {}
+    sd_cycle_json["sdCardCycling"] = sd_cycle_result
+
+    return sd_cycle_result, sd_cycle_json
 
 
 
