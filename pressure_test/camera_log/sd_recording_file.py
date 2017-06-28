@@ -23,14 +23,18 @@ class Sdrecordingfile(object):
 
     def get_ftp_all_filename(self):
         """Get all recording file from SD card."""
-        tn = TelnetModule(self.ip, self.account, self.password).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
-        # tn = TelnetModule(self.ip, self.account, self.password).login().send_command('find /mnt/auto/CF/NCMF -name "*medium_stress*.mp4"')
-        filename =  re.findall(b"NCMF\D(.*)",tn.result()[0])
-        for i in range(len(filename)):
-            filename[i] = filename[i].strip()
-        # filename.remove("-name \"*medium_stress*.mp4\"")
-        filename.remove(b"-name \"*.mp4\"")
-        # print(filename)
+        try:
+            tn = TelnetModule(self.ip, self.account, self.password).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
+            filename =  re.findall(b"NCMF\D(.*)",tn.result()[0])
+            for i in range(len(filename)):
+                filename[i] = filename[i].strip()
+            # filename.remove("-name \"*medium_stress*.mp4\"")
+            filename.remove(b"-name \"*.mp4\"")
+            # print(filename)
+        except Exception as e:
+            print(e)
+            filename = "Fail/Timeout"
+
         return filename
 
     def get_ui_all_filename(self):

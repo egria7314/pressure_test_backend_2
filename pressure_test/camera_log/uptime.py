@@ -18,13 +18,23 @@ class Uptime(object):
     def get_result(self):
         """Get the dictionary consist of camera_uptime,camera_cpuloading_idle and camera_cpuloading_average"""
         data_dict = {}
-        tn = TelnetModule(self.ip,self.account,self.password).login().send_command('uptime').send_command('top -n 1')
-        data = tn.result()
-        camera_uptime = self.__process_camera_uptime(data[0])
-        camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
+
+        try:
+            tn = TelnetModule(self.ip,self.account,self.password).login().send_command('uptime').send_command('top -n 1')
+            data = tn.result()
+            camera_uptime = self.__process_camera_uptime(data[0])
+            camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
+        except Exception as e:
+            print(e)
+            camera_uptime = "Fail/Timeout"
+            camera_cpuloading_idle = "Fail/Timeout"
+            camera_load_average = "Fail/Timeout"
+
+
         data_dict["uptime"] = camera_uptime
         data_dict["idle"] = camera_cpuloading_idle
         data_dict["loadAverage"] = camera_load_average
+
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict
 
