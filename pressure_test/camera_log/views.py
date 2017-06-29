@@ -36,6 +36,8 @@ from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
+from libs.pressure_test_logging import PressureTestLogging as ptl
+
 TEST_PROJECT_ID = 112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
@@ -654,6 +656,7 @@ def check_list(file_list):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_all_camera_log(request, pi=None):
+    ptl.logging_error('hello log')
     project_id = pi
 
     final_camera_log_json = {}
