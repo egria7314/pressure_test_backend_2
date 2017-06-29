@@ -27,6 +27,21 @@ import pytz
 
 
 from libs.vast_storage import VastStorage
+
+def order_vast_file(clips):
+    clips_timelist = []
+    sorted_filelist = []
+    for file_path in clips:
+        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+        clippath = os.path.join(local_path, os.path.basename(file_path))
+
+        clip_modify_time = os.stat(clippath).st_mtime
+
+        clips_timelist.append([clip_modify_time, file_path])
+    for i in sorted(clips_timelist):
+        sorted_filelist.append(i[1])
+    return sorted_filelist
+
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def ana_videos(request, project_id):
@@ -46,20 +61,6 @@ def ana_videos(request, project_id):
 
     response = analyze_videos(project_id)
     return Response(response)
-
-def order_vast_file(clips):
-    clips_timelist = []
-    sorted_filelist = []
-    for file_path in clips:
-        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
-        clippath = os.path.join(local_path, os.path.basename(file_path))
-
-        clip_modify_time = os.stat(clippath).st_mtime
-
-        clips_timelist.append([clip_modify_time, file_path])
-    for i in sorted(clips_timelist):
-        sorted_filelist.append(i[1])
-    return sorted_filelist
 
 
 def analyze_videos(project_id):
@@ -82,7 +83,7 @@ def analyze_videos(project_id):
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer continous_test_camera{}".format(
         project_id)
     p = pexpect.spawn(cmd)
-    # print(cmd)
+    print(cmd)
     time.sleep(3)
     # add scheduler every hour
     periodic_check_points = []
@@ -160,12 +161,12 @@ def stop_continuous_test(project_pk):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def implement_in(requests):
-    vc = VideoContinous("14.mp4","15.mp4")
+    vc = VideoContinous("/home/carlos/pressure_final/pressure_test_backend/pressure_test/recording_continous/125.3gp","/home/carlos/pressure_final/pressure_test_backend/pressure_test/recording_continous/126.3gp")
     in_result=vc.continuity_in_recording_files()
     between_result=vc.continuity_bwtween_recording_files()
 
     RecordingContinuty.objects.create(
-        project_id='1',
+        project_id='124_125',
         creat_at=in_result["creat_at"],
         video_path=in_result["video_path"],
         size=in_result["size"],

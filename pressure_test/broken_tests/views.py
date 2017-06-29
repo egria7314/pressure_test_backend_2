@@ -225,11 +225,11 @@ def detect_broken_image(pk):
         local_path)
     print("local path= ", local_path)
     print("is_mounted= ", is_mounted)
-    clippath = os.path.join(local_path, clip.full_path.lower()[len(nas.location)+1:])
+    clippath = os.path.join(local_path, clip.full_path.lower()[len(nas.location):])
     # framefolder = os.path.join(os.path.dirname(clippath), 'broken', os.path.splitext(os.path.basename(clippath))[0])
     # framefolder = os.path.join(os.path.dirname(clippath), 'broken', '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
     # [TODO]
-    subfolder_with_clipname = clip.full_path.lower()[len(nas.location)+1:].replace('/', '_')
+    subfolder_with_clipname = clip.full_path.lower()[len(nas.location):].replace('/', '_')
     framefolder = os.path.join('/home/dqa/data/clip2frames', 'camera{}'.format(camera.id), '_'.join([os.path.splitext(subfolder_with_clipname)[0], str(time.time())]))
     # framefolder = os.path.join('/home/dqa/data/clip2frames', 'camera{}'.format(camera.id), '_'.join([os.path.splitext(os.path.basename(clippath))[0], str(time.time())]))
 
