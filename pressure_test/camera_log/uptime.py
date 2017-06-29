@@ -15,12 +15,12 @@ class Uptime(object):
         self.account = account
         self.password = password
 
-    def get_result(self):
+    def get_result(self, timeout=300):
         """Get the dictionary consist of camera_uptime,camera_cpuloading_idle and camera_cpuloading_average"""
         data_dict = {}
 
         try:
-            tn = TelnetModule(self.ip,self.account,self.password).login().send_command('uptime').send_command('top -n 1')
+            tn = TelnetModule(self.ip,self.account,self.password, timeout).login().send_command('uptime').send_command('top -n 1')
             data = tn.result()
             camera_uptime = self.__process_camera_uptime(data[0])
             camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])

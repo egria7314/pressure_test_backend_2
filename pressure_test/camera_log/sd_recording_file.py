@@ -21,10 +21,11 @@ class Sdrecordingfile(object):
         self.password = password
 
 
-    def get_ftp_all_filename(self):
+    def get_ftp_all_filename(self, timeout=300):
         """Get all recording file from SD card."""
+
         try:
-            tn = TelnetModule(self.ip, self.account, self.password).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
+            tn = TelnetModule(self.ip, self.account, self.password, timeout).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
             filename =  re.findall(b"NCMF\D(.*)",tn.result()[0])
             for i in range(len(filename)):
                 filename[i] = filename[i].strip()
@@ -35,12 +36,13 @@ class Sdrecordingfile(object):
             print(e)
             filename = "Fail/Timeout"
 
+
         return filename
 
-    def get_ui_all_filename(self):
+    def get_ui_all_filename(self, timeout=300):
         """Get all recording file from UI by cgi."""
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrl.cgi?cmd=search'
-        url = URI.set(command, self.account, self.password)
+        url = URI.set(command, self.account, self.password, timeout)
         data = url.read()
         filename = re.findall(b"NCMF\D\D(.*)<",data)
         file_starttime =  re.findall(b"beginTime>(.*)<",data)
@@ -60,27 +62,27 @@ class Sdrecordingfile(object):
 
         return all_file
 
-    def continuous_filename_time(self):
+    def continuous_filename_time(self, timeout=300):
         """Get locked continuous_filename begin time and end time."""
         restart_status = 0
-        locked_file = self.__get_continuous_locked_filename_time()
+        locked_file = self.__get_continuous_locked_filename_time(timeout)
 
         for file in locked_file:
             #index = 2 ,that is file endtime
             #if file[2] is None,stop recording
             if not file[2]:
                 restart_status = 1
-                self.__restart_recording()
+                self.__restart_recording(timeout)
 
         if restart_status == 0:
             return self.__process_continuous_filename(locked_file)
         else :
             return 'restart'
 
-    def __get_continuous_locked_filename_time(self):
+    def __get_continuous_locked_filename_time(self, timeout=300):
         """Get locked continuous_filename begin time and end time."""
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrlrec.cgi?cmd=getSlices'
-        url = URI.set(command, self.account, self.password)
+        url = URI.set(command, self.account, self.password, timeout)
         data = url.read()
         islocked = re.findall(b"<islocked>(\d)",data)
         lockedfile_starttime = re.findall(b"sliceStart>(.*)<",data)
@@ -94,13 +96,13 @@ class Sdrecordingfile(object):
                 lockedfile.append([islocked[i], lockedfile_starttime[i], lockedfile_endtime[i]])
         return lockedfile
 
-    def __restart_recording(self):
+    def __restart_recording(self, timeout=300):
         """Restart camera by cgi"""
         command = 'http://'+self.ip+'/cgi-bin/admin/setparam.cgi?recording_i0_enable=0'
-        URI.set(command, self.account, self.password)
+        URI.set(command, self.account, self.password, timeout)
         time.sleep(3)
         command = 'http://'+self.ip+'/cgi-bin/admin/setparam.cgi?recording_i0_enable=1'
-        URI.set(command, self.account, self.password)
+        URI.set(command, self.account, self.password, timeout)
         #avoid to blank info
         time.sleep(10)
 
@@ -116,24 +118,24 @@ class Sdrecordingfile(object):
                 file_time[file][time] = [_f for _f in file_time[file][time] if _f]
         return file_time
 
-    def get_fw_file_dict(self):
+    def get_fw_file_dict(self, timeout=300):
         try:
             command = 'http://'+self.ip+'/cgi-bin/admin/lsctrlrec.cgi?cmd=getSlices'
-            URI.set(command, self.account, self.password)
-            return self.get_new_fw_file_dict()
+            URI.set(command, self.account, self.password, timeout)
+            return self.get_new_fw_file_dict(timeout)
         except:
-            return self.get_old_fw_file_dict()
+            return self.get_old_fw_file_dict(timeout)
 
 
-    def get_old_fw_file_dict(self):
+    def get_old_fw_file_dict(self, timeout=300):
         # print("TESTold")
 
         file_dict={}
         unlocked_file =[]
-        ftp_all_filename = self.get_ftp_all_filename()
+        ftp_all_filename = self.get_ftp_all_filename(timeout)
 
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrl.cgi?cmd=search&isLocked=1'
-        url = URI.set(command, self.account, self.password)
+        url = URI.set(command, self.account, self.password, timeout)
         data = url.read()
         locked_file = re.findall(b"NCMF\D\D(.*)<",data)
 
@@ -160,18 +162,18 @@ class Sdrecordingfile(object):
         return file_dict
 
 
-    def get_new_fw_file_dict(self):
+    def get_new_fw_file_dict(self, timeout=300):
         """Return recording files by categories in dictionary
         Key1 : all_file ;
         Key2 : locked_file;
         Key3 : unlocked_file;
         """
         file_dict={}
-        ftp_all_filename = self.get_ftp_all_filename()
+        ftp_all_filename = self.get_ftp_all_filename(timeout)
 
-        ui_all_filename =self.get_ui_all_filename()
+        ui_all_filename =self.get_ui_all_filename(timeout)
         while 1:
-            continuous_filename_time = self.continuous_filename_time()
+            continuous_filename_time = self.continuous_filename_time(timeout)
             if continuous_filename_time != 'restart':
                 break
 

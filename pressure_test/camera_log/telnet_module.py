@@ -10,7 +10,7 @@ class URI(object):
     """This class build connection between server and client."""
 
     @staticmethod
-    def set(url, username="root", password=""):
+    def set(url, username="root", password="", timeout=300):
         """
         Set URI's content.
 
@@ -33,7 +33,7 @@ class URI(object):
 
         try:
             # result = urllib.urlopen(request)
-            result = urllib.request.urlopen(req)
+            result = urllib.request.urlopen(req, timeout=timeout)
         except Exception as e:
             # pass
             raise e
@@ -44,7 +44,7 @@ class URI(object):
 class TelnetModule(object):
     """This function build connection between server and client machine."""
 
-    def __init__(self, ip, account, password):
+    def __init__(self, ip, account, password, timeout=300):
         """
         TelnetModule initialize.
 
@@ -58,7 +58,7 @@ class TelnetModule(object):
         self.account = account
         self.password = password
         #open camera telnet
-        URI.set('http://' + self.ip + '/cgi-bin/admin/mod_inetd.cgi?telnet=on', self.account, self.password)
+        URI.set('http://' + self.ip + '/cgi-bin/admin/mod_inetd.cgi?telnet=on', self.account, self.password, timeout)
         self.tn = telnetlib.Telnet(self.ip, "", 5)
         self.data = []
 

@@ -17,14 +17,14 @@ class SDstatus(object):
         self.account = account
         self.password = password
 
-    def get_result(self):
+    def get_result(self, timeout=300):
         """Get the dictionary consist of camera SD status and usedpercent"""
         data_dict = {}
 
         try:
-            SD_status = self.__get_sd_status()
+            SD_status = self.__get_sd_status(timeout)
             data_dict["sdCardStatus"] = SD_status[0]
-            data_dict["sdCardUsed"] = str(self.__get_sd_status()[1])
+            data_dict["sdCardUsed"] = str(self.__get_sd_status(timeout)[1])
         except Exception as e:
             print("******SD issue:*****")
             print(e)
@@ -48,10 +48,10 @@ class SDstatus(object):
         print(json.dumps(data_dict, ensure_ascii=False))
         return data_dict
 
-    def __get_sd_status(self):
+    def __get_sd_status(self, timeout=300):
         """Get SD status from camera by cgi"""
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrl.cgi?cmd=queryStatus&retType=javascript'
-        url = URI.set(command, self.account, self.password)
+        url = URI.set(command, self.account, self.password, timeout)
         data = url.read().decode()
         print(data)
 
