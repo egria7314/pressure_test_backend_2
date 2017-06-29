@@ -125,8 +125,9 @@ def mount_status(destination, username, password):
     mount_result = ''
     if destination:
         if out:
-            if os.path.join(destination.replace('\\', '/'), '').replace('\\', '/') not in str(out):
-                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(os.path.join(destination.replace('\\', '/'), '').replace('\\', '/'), source, username, password), shell=True)
+            # print(os.path.join(destination, '').replace('\\', '/'))
+            if os.path.join(destination, '').replace('\\', '/') not in str(out):
+                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(os.path.join(destination, '').replace('\\', '/'), source, username, password), shell=True)
                 status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
                 out, error = status.communicate()
                 if out:
