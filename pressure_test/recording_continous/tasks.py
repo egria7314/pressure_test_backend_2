@@ -47,7 +47,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
             clippath = os.path.join(local_path, os.path.basename(file_path))
         else:
             local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
-            clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
+            clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
 
         recording_file_obj = RecordingFile.objects.filter(project_id =project_id,path=clippath)
         if len(recording_file_obj) <= 0:
@@ -71,7 +71,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         clippath = os.path.join(local_path, os.path.basename(file_path))
     else:
         local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
-        clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
+        clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
 
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
@@ -164,7 +164,7 @@ def order_nas_file(clips, remote_path):
 
     for file_path in clips:
         local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
-        clippath = os.path.join(local_path, file_path.lower()[len(remote_path) + 1:])
+        clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
 
         clip_modify_time = os.stat(clippath).st_mtime
         # clips_dictionary[file_path] = datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
