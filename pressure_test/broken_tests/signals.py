@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from broken_tests.models import CameraProfile, NasProfile
+import os
 
 
 @receiver(post_save, sender=ProjectSetting)
@@ -20,5 +21,5 @@ def save_camera_and_nas_profile(sender, instance, **kwargs):
     nas, created = NasProfile.objects.get_or_create(project_profile=instance)
     nas.user = instance.path_username
     nas.password = instance.path_password
-    nas.location = instance.path
+    nas.location = os.path.join(instance.path, '') # ensure location with ending slash
     nas.save()
