@@ -96,3 +96,9 @@ migrations/
 
 # pretests
 pretests/
+
+# logs
+log/
+
+# setup_of_django_settings.retry
+setup_of_django_settings.retry
