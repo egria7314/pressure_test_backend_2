@@ -98,7 +98,7 @@ migrations/
 pretests/
 
 # logs
-log/
+log/*.log
 
 # setup_of_django_settings.retry
 setup_of_django_settings.retry
