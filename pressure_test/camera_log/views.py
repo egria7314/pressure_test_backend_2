@@ -473,7 +473,7 @@ def set_camera_log(project_id, start_time):
 
         # check SD cycle #
         try:
-            sd_cycle_result, sd_cycle_json = set_sd_cycle(new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
+            sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
             camera_log_json.update(sd_cycle_json)
         except Exception as e:
             print(e)
@@ -575,8 +575,9 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, time
            new_sd_locked_file_list, new_sd_unlocked_file_list
 
 # @timeout(GLOBAL_TIMEOUT)
-def set_sd_cycle(new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX):
-    former_cam_obj = CameraLog.objects.last()
+def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX):
+    former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
+
 
     if former_cam_obj:
         former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
@@ -703,7 +704,7 @@ def check_list(file_list):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_all_camera_log(request, pi=None):
-    ptl.logging_error('hello log')
+    ptl.logging_info('hello log')
     project_id = pi
 
     final_camera_log_json = {}
