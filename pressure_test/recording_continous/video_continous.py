@@ -18,14 +18,33 @@ class VideoContinous(object):
         self.delay_time = delay_time
 
 
-    def continuity_bwtween_recording_files(self):
+    def continuity_bwtween_recording_files(self, camera_id):
         # video_path_before = os.path.join(self.directory_path, self.video_before)
         # video_path_now = os.path.join(self.directory_path, self.video_now)
         video_path_before = self.video_before
         video_path_now = self.video_now
 
-        log_file_before = video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
-        log_file_now = video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+
+        # log_file_before = video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+        # log_file_now = video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+
+
+        framefolder = os.path.join('/home/dqa/data/video_mp4parser_log', 'camera{}'.format(camera_id))
+        if not os.path.isdir(framefolder):
+            os.makedirs(framefolder)
+
+        log_file_before = (video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
+        log_file_before = os.path.join(framefolder, log_file_before)
+
+        log_file_now = (video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
+        log_file_now = os.path.join(framefolder, log_file_now)
+
+        if not os.path.isdir(os.path.dirname(log_file_before)):
+            os.makedirs(os.path.dirname(log_file_before))
+
+        if not os.path.isdir(os.path.dirname(log_file_now)):
+            os.makedirs(os.path.dirname(log_file_now))
+
 
         self.__produce_video_log(self.mp4parser_path, video_path_before, log_file_before)
         self.__produce_video_log(self.mp4parser_path, video_path_now, log_file_now)
@@ -49,11 +68,25 @@ class VideoContinous(object):
         return result_dictionary
 
 
-    def continuity_in_recording_files(self):
+
+
+    def continuity_in_recording_files(self, camera_id):
         # Todo : Change video_path from NAS_path
         # video_path = os.path.join(self.directory_path, self.video_now)
         video_path = self.video_now
-        log_file = video_path.replace(".mp4","_log.txt").replace(".3gp", "_log.txt")
+
+        framefolder = os.path.join('/home/dqa/data/video_mp4parser_log', 'camera{}'.format(camera_id))
+
+
+        log_file = (video_path.replace(".mp4","_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
+        log_file = os.path.join(framefolder,log_file)
+
+
+        if not os.path.isdir(os.path.dirname(log_file)):
+            os.makedirs(os.path.dirname(log_file))
+
+        # log_file = video_path.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+
         self.__produce_video_log(self.mp4parser_path, video_path, log_file)
         time_list = self.__analyze_video_log(log_file)
         time_delay=[]
@@ -146,19 +179,10 @@ class VideoContinous(object):
         error_info_file_name =''.join(txt_name)
         error_info_file_path = os.path.join(error_info_folder,"error_{0}".format(error_info_file_name))
 
-        # print ('////////////////////')
-        # print ('////////////////////')
-        # print ('error_info_folder : {0}'.format(error_info_folder))
-        # print ('error_info_file_path : {0}'.format(error_info_file_path))
-        # print ('////////////////////')
-        # print ('////////////////////')
 
         f = open(error_info_file_path, 'w')
         for i in time_delay_list:
             f.write('******************************************\n')
-            # f.write('start_time:'+str(i[0]) + '\n')
-            # f.write('end_time  :'+str(i[1])+'\n')
-            # f.write('delay_time:'+str(i[2]) + '\n')
             f.write('start_time:'+str(datetime.datetime.fromtimestamp(i[0]))+'\n')
             f.write('end_time  :'+str(datetime.datetime.fromtimestamp(i[1]))+'\n')
             f.write('delay_time:'+str(i[2]) + '\n')
