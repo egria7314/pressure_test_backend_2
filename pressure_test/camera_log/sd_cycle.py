@@ -2,6 +2,7 @@ __author__ = 'steven.hsiao'
 import json
 import re
 from datetime import datetime as dt
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class SDcycle(object):
     def __init__(self, former_locked_file_list, former_unlocked_file_list, new_locked_file_list, new_unlocked_file_list):
@@ -75,6 +76,7 @@ class SDcycle(object):
                 result = "Nothing change!"
                 return result
         except Exception as e:
+            ptl.logging_error('[Exception] get sd cycle error, [Error msg]:{0}'.format(e))
             print("SD Cycle Fail:")
             print(e)
             result = "Fail"

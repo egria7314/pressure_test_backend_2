@@ -39,7 +39,7 @@ from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 120 #120    #112  #108
+TEST_PROJECT_ID = 108 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -163,8 +163,9 @@ def test_camera(request):
 
 def run_cameralog_schedule_by_id(project_id):
     # test_run_camera_thread(1)
-
     from camera_log.libs import monitor
+    ptl.logging_info('[Info] Run camera log schedule by ID.')
+
     task_camera_obj = ProjectSetting.objects.get(id=project_id)
 
     need_log_bool = task_camera_obj.log
@@ -240,6 +241,7 @@ def test_camera_status(request):
 
 def running_status(project_pk):
     from camera_log.libs import monitor
+    ptl.logging_info('[Info] Run camera log schedule by ID.')
 
     INVALID_PROJ_ID = 'invalid project id'
     INVALID_MONITOR_ID = 'invalid monitor id'
@@ -278,6 +280,7 @@ def stop_detect_periodic_logs(project_id):
 
 def module_stop_detect_periodic_logs(project_id):
     from camera_log.libs import monitor
+    ptl.logging_info('[Info] Stop camera log schedule by ID.')
     # get project object
 
     print("Kill project ids:")
@@ -392,6 +395,7 @@ def get_schedule_status(request):
 
 
 def set_camera_log(project_id, start_time):
+    ptl.logging_info('[Info] Set camera log is working ...')
     print("****************************")
     print("Set camera log is working....")
 
@@ -425,6 +429,7 @@ def set_camera_log(project_id, start_time):
     # up time
     my_up_time_json = {}
     try:
+        ptl.logging_info('[Info] Set uptime.')
         my_up_time_json = set_up_time(camera_ip, camera_user, camera_password, timeout)
         camera_log_json.update(my_up_time_json)
     except Exception as e:
@@ -436,6 +441,7 @@ def set_camera_log(project_id, start_time):
 
 
     # # epoch time
+    # ptl.logging_info('[Info] Set epoch time.')
     # camera_epoch_time = Epochtime(camera_ip, camera_user, camera_password)
     # camera_epoch_time_json = camera_epoch_time.get_result()
     # camera_log_json.update(camera_epoch_time_json)
@@ -448,6 +454,7 @@ def set_camera_log(project_id, start_time):
     if sd_support:
         # sd status
         try:
+            ptl.logging_info('[Info] Set sd status.')
             sd_status_json = set_sd_status(camera_ip, camera_user, camera_password, timeout)
             camera_log_json.update(sd_status_json)
         except Exception as e:
@@ -461,6 +468,7 @@ def set_camera_log(project_id, start_time):
         new_sd_locked_file_list = []
         new_sd_unlocked_file_list = []
         try:
+            ptl.logging_info('[Info] Set sd recording files.')
             new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
             new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, timeout)
         except Exception as e:
@@ -475,6 +483,7 @@ def set_camera_log(project_id, start_time):
 
         # check SD cycle #
         try:
+            ptl.logging_info('[Info] Set sd cycle.')
             sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
             camera_log_json.update(sd_cycle_json)
         except Exception as e:
@@ -502,9 +511,11 @@ def set_camera_log(project_id, start_time):
 
     try:
         if medium_or_high.lower() == "high":
+            ptl.logging_info('[Info] Set high pressure storage cycle.')
             new_nas_file_list, nas_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "NAS", NAS_START_DATE)
         # medium (by VAST)
         else:
+            ptl.logging_info('[Info] Set medium pressure storage cycle.')
         # ####################### VAST ################################
         # #check VAST cycle
             new_vast_file_list, vast_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "VAST", start_time)
@@ -596,7 +607,7 @@ def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list,
         former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
 
     except Exception as e:
-        print(ptl.logging_warning('[Exception] Did not find former camera obj of same project id, [Error msg]:{0}'.format(e)))
+        ptl.logging_warning('[Exception] Did not find former camera obj of same project id, [Error msg]:{0}'.format(e))
         former_sd_locked_file_list = []
         former_sd_unlocked_file_list = []
 
@@ -640,6 +651,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
     storage_cycle_result=""
 
     try:
+        ptl.logging_info('[Info] Get former storage object.')
         # get the latest obj of same project id
         former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
         if storage_by == "NAS":
@@ -649,8 +661,8 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
 
         former_storage_file_list = check_list(former_storage_file_list)
     except Exception as e:
-        print(ptl.logging_warning('[Exception] Did not find former camera obj of same project id when getting storage '
-                                  'cycle, [Error msg]:{0}'.format(e)))
+        ptl.logging_warning('[Exception] Did not find former camera obj of same project id when getting storage '
+                                  'cycle, [Error msg]:{0}'.format(e))
         former_storage_file_list=[]
 
     finally:
@@ -713,6 +725,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 storage_cycle_result = cycle_obj.get_result()
 
         except Exception as e:
+            ptl.logging_error('[Exception] NAS/VAST get files Fail! or Timeout, [Error msg]:{0}'.format(e))
             print("NAS/VAST get files Fail! or Timeout")
             print(e)
 
@@ -733,7 +746,8 @@ def check_list(file_list):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_all_camera_log(request, pi=None):
-    ptl.logging_info('hello log')
+    ptl.logging_info('[Info] Get all camera log API.')
+    # ptl.logging_info('hello log')
     project_id = pi
 
     final_camera_log_json = {}

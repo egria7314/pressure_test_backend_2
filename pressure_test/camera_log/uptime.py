@@ -2,6 +2,7 @@ __author__ = 'carlos.hu'
 from camera_log.telnet_module import TelnetModule
 import re
 import json
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class Uptime(object):
     def __init__(self, ip, account, password):
@@ -25,6 +26,7 @@ class Uptime(object):
             camera_uptime = self.__process_camera_uptime(data[0])
             camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
         except Exception as e:
+            ptl.logging_error('[Exception] get uptime result error, [Error msg]:{0}'.format(e))
             print(e)
             camera_uptime = "Fail/Timeout"
             camera_cpuloading_idle = "Fail/Timeout"

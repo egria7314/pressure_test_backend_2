@@ -3,6 +3,7 @@ __author__ = 'steven.hsiao'
 # import json
 import re
 from datetime import datetime as dt
+from libs.pressure_test_logging import PressureTestLogging as ptl
 import time
 # from telnet_module import TelnetModule
 # from telnet_module import URI
@@ -48,8 +49,9 @@ class NasVastCycle():
                 result = "Nothing change!"
                 return result
 
-        except:
+        except Exception as e:
             # other unknown case
+            ptl.logging_error('[Exception] get storage cycle error, [Error msg]:{0}'.format(e))
             result = "Fail"
             return result
 
