@@ -4,6 +4,7 @@ import json
 import re
 from camera_log.telnet_module import TelnetModule
 from camera_log.telnet_module import URI
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 import datetime
 import time
@@ -33,6 +34,7 @@ class Sdrecordingfile(object):
             filename.remove(b"-name \"*.mp4\"")
             # print(filename)
         except Exception as e:
+            ptl.logging_error('[Exception] get ftp all file name error, [Error msg]:{0}'.format(e))
             print(e)
             filename = "Fail/Timeout"
 
