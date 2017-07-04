@@ -34,7 +34,6 @@ def test_button(request):
         input_field = "{0} field may not be blank".format(', '.join(error_string))
     ping_result = ping_camera(ip)
     mount_result = mount_status(path, path_username, path_password)
-
     if broken == 'true':
         test_broken_result = module_pretest_broken_image(camera_host=ip, camera_user=username, camera_password=password, storage_type=type)
         test_result = get_result(ping_result=ping_result, mount_result=mount_result, test_broken_result=test_broken_result, error_string=error_string, input_field=input_field)
@@ -125,8 +124,10 @@ def mount_status(destination, username, password):
     mount_result = ''
     if destination:
         if out:
-            if os.path.join(destination.replace('\\', '/'), '').replace('\\', '/') not in str(out):
-                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(os.path.join(destination.replace('\\', '/'), '').replace('\\', '/'), source, username, password), shell=True)
+            # print(os.path.join(destination, '').replace('\\', '/'))
+            if os.path.join(destination, '').replace('\\', '/') not in str(out):
+                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(os.path.join(destination, '').replace('\\', '/'), source, username, password), shell=True)
+                time.sleep(3)
                 status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
                 out, error = status.communicate()
                 if out:
