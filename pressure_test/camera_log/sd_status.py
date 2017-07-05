@@ -4,6 +4,7 @@ import re
 
 # from pressure_test.camera_log.telnet_module import URI
 from camera_log.telnet_module import URI
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class SDstatus(object):
     def __init__(self, ip, account, password):
@@ -26,13 +27,15 @@ class SDstatus(object):
             data_dict["sdCardStatus"] = SD_status[0]
             data_dict["sdCardUsed"] = str(self.__get_sd_status(timeout)[1])
         except Exception as e:
+
             print("******SD issue:*****")
             print(e)
             if "detached" in str(e):
+                ptl.logging_warning('[warning] sd detached, [Error msg]:{0}'.format(e))
                 data_dict["sdCardStatus"] = "detached"
                 data_dict["sdCardUsed"] = "detached"
             else:
-
+                ptl.logging_error('[Exception] get  error, [Error msg]:{0}'.format(e))
                 data_dict["sdCardStatus"] = "Fail"
                 data_dict["sdCardUsed"] = "Fail"
 

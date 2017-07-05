@@ -3,6 +3,7 @@ __author__ = 'steven.hsiao'
 # import json
 import re
 from datetime import datetime as dt
+from libs.pressure_test_logging import PressureTestLogging as ptl
 import time
 # from telnet_module import TelnetModule
 # from telnet_module import URI
@@ -48,8 +49,9 @@ class NasVastCycle():
                 result = "Nothing change!"
                 return result
 
-        except:
+        except Exception as e:
             # other unknown case
+            ptl.logging_error('[Exception] get storage cycle error, [Error msg]:{0}'.format(e))
             result = "Fail"
             return result
 
@@ -156,8 +158,8 @@ class NasVastCycle():
 
 
         if PREFIX != "":
-            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0]
-            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0]
+            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0][:2]
+            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0][:2]
         else:
             old_file_min = old_re[2].split(".")[0]
             new_file_min = new_re[2].split(".")[0]

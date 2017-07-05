@@ -4,6 +4,7 @@ import base64
 
 import telnetlib
 import urllib.request
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 
 class URI(object):
@@ -36,6 +37,7 @@ class URI(object):
             result = urllib.request.urlopen(req, timeout=timeout)
         except Exception as e:
             # pass
+            ptl.logging_error('[Exception] URI set error, [Error msg]:{0}'.format(e))
             raise e
         else:
             return result

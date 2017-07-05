@@ -1,6 +1,7 @@
 __author__ = "steven.hsiao"
 
 from camera_log.telnet_module import TelnetModule
+from libs.pressure_test_logging import PressureTestLogging as ptl
 import re
 import json
 
@@ -25,6 +26,7 @@ class Epochtime(object):
             data = tn.result()
             camera_epoch_time = self.__process_camera_epoch_time(data[0])
         except Exception as e:
+            ptl.logging_error('[Exception] get epoch time error, [Error msg]:{0}'.format(e))
             print(e)
             camera_epoch_time = "Fail/Timeout"
 
