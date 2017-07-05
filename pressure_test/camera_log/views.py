@@ -39,7 +39,7 @@ from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 108 #120    #112  #108
+TEST_PROJECT_ID = 108# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"

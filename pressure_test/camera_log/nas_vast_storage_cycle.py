@@ -158,8 +158,8 @@ class NasVastCycle():
 
 
         if PREFIX != "":
-            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0]
-            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0]
+            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0][:2]
+            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0][:2]
         else:
             old_file_min = old_re[2].split(".")[0]
             new_file_min = new_re[2].split(".")[0]
