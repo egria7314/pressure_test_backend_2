@@ -64,6 +64,7 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password, stora
     return results
 
 
+
 def module_detect_periodic_videos(project_pk):
     # get project object
     project = ProjectSetting.objects.get(id=project_pk)
@@ -177,9 +178,9 @@ def pretest_broken_image(request):
     # call core module
     results = module_pretest_broken_image(camera_host, camera_user, camera_password, storage_type)
     print( results )
-    return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
+    # return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
+    return Response(results)
     
-
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
