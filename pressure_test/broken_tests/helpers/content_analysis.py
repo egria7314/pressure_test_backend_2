@@ -146,8 +146,8 @@ class ContentAnalysis(object):
         mask = np.zeros(edges.shape[:2], np.uint8)
         height, width = edges.shape[:2]
 
-        indent_height = 2 if height > width else 5
-        indent_width = 5 if height > width else 2
+        indent_height = 4 if height > width else 10
+        indent_width = 10 if height > width else 4
         percentage_of_all_black_area = 1.0
 
         mask[indent_height:height-indent_height, indent_width:width-indent_width] = 255
