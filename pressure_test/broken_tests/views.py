@@ -212,7 +212,7 @@ def detect_broken_image(pk):
     camera = clip.camera_profile
     nas = clip.nas_profile
     # temporary replace without saving
-    nas.location = os.path.dirname(clip.full_path) if nas.project_profile.type == 'medium' else nas.location
+    nas.location = os.path.join(os.path.dirname(clip.full_path), '') if nas.project_profile.type == 'medium' else nas.location
     print("rename nas location= ", nas.location)
     # detect broken
     anly = ContentAnalysis()
