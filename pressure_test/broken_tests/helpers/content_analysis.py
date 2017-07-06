@@ -134,20 +134,20 @@ class ContentAnalysis(object):
 
         # Convert RGB to BGR
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
-        cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/crop.jpg", cv_img)
+        # cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/crop.jpg", cv_img)
 
         # Smooth image
         blur = cv2.GaussianBlur(cv_img, (5, 5), 0)
-        cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/blur.jpg", blur)
+        # cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/blur.jpg", blur)
         edges = cv2.Canny(blur, 100, 200)
-        cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/canny.jpg", edges)
+        # cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/canny.jpg", edges)
 
         # Indent region to Only has black pixel inside mask
         mask = np.zeros(edges.shape[:2], np.uint8)
         height, width = edges.shape[:2]
 
-        indent_height = 2 if height > width else 5
-        indent_width = 5 if height > width else 2
+        indent_height = 4 if height > width else 10
+        indent_width = 10 if height > width else 4
         percentage_of_all_black_area = 1.0
 
         mask[indent_height:height-indent_height, indent_width:width-indent_width] = 255
