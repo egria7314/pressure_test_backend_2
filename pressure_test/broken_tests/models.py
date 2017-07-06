@@ -98,7 +98,7 @@ class ClipInfo(models.Model):
             link_over_web = "ftp://{user}:{password}@{remote_path}".format(
                 user= self.nas_profile.user,
                 password= self.nas_profile.password,
-                remote_path=link_over_web
+                remote_path=remote_frame_folder
             )
             return link_over_web
         else:
