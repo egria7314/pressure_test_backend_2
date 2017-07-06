@@ -30,6 +30,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
     print (type(pressure_test_video_type))
     print (pressure_test_video_type)
     print ('************************')
+
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
         clips = vast.get_video_vast(remote_username, remote_password, sudo_password, remote_path, start_time, end_time)
@@ -37,7 +38,6 @@ def arrange_periodic_task(project_id, start_time, end_time):
     else:
         ns = NasStorage()
         clips = ns.get_video_nas(remote_username, remote_password, sudo_password, remote_path, prefix, start_time, end_time)
-        # clips = order_nas_file(clips, remote_path)
         clips = sorted(clips)
 
 
@@ -54,9 +54,6 @@ def arrange_periodic_task(project_id, start_time, end_time):
             push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type, delay_time)
             time.sleep(5)
 
-    # for file_path in clips:
-    #     push_detect_broken_image_tasks_to_queue.apply_async(args=[remote_username, remote_password, project_id, remote_path, file_path],queue='continous_test_camera{}'.format(str(project_id)))
-    #     time.sleep(5)
 
 def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, project_id, remote_path, file_path, pressure_test_video_type, delay_time):
     from libs.nas_storage import NasStorage
@@ -69,7 +66,6 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     if pressure_test_video_type== 'medium':
         local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
         clippath = os.path.join(local_path, os.path.basename(file_path))
-
         vast = VastStorage()
         vast.mount_folder(remote_username, remote_password, remote_path, '', local_path)
     else:
@@ -77,12 +73,6 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
         ns = NasStorage()
         ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
-    # if pressure_test_video_type == 'medium':
-    #     vast = VastStorage()
-    #     vast.mount_folder(remote_username, remote_password, remote_path, '', local_path)
-    # elif pressure_test_video_type == 'high':
-    #     ns = NasStorage()
-    #     ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
 
     query = RecordingFile.objects.filter(project_id=project_id)
 
@@ -117,6 +107,11 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     else:
         video_path_result = clippath.replace(local_path + "/", "")
 
+    error_txt_link = "ftp://{0}:{1}@{2}/{3}/continous_error".format(remote_username,
+                                                                    remote_password,
+                                                                    remote_path.replace("//",""),
+                                                                    os.path.dirname(video_path_result))
+
     RecordingContinuty.objects.create(
         project_id=project_id,
         creat_at=str(file_modify_time),
@@ -127,12 +122,10 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         error_code=in_result["error_code"],
         start_time=in_result["start_time"],
         end_time=in_result["end_time"],
-        link=in_result["link"],
+        link=error_txt_link,
         count=in_result["count"],
         between_result=between_result["between_result"],
         seconds=between_result["seconds"],
-
-
         )
 
 def order_vast_file(clips):

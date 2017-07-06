@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 # from pressure_test.camera_log.sd_status import SDstatus
 from recording_continous.models import RecordingContinuty
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class VideoContinous(object):
     def __init__(self,video_before, video_now, delay_time):
@@ -71,21 +72,13 @@ class VideoContinous(object):
 
 
     def continuity_in_recording_files(self, camera_id):
-        # Todo : Change video_path from NAS_path
-        # video_path = os.path.join(self.directory_path, self.video_now)
         video_path = self.video_now
-
         framefolder = os.path.join('/home/dqa/data/video_mp4parser_log', 'camera{}'.format(camera_id))
-
-
         log_file = (video_path.replace(".mp4","_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
         log_file = os.path.join(framefolder,log_file)
 
-
         if not os.path.isdir(os.path.dirname(log_file)):
             os.makedirs(os.path.dirname(log_file))
-
-        # log_file = video_path.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
 
         self.__produce_video_log(self.mp4parser_path, video_path, log_file)
         time_list = self.__analyze_video_log(log_file)
@@ -130,7 +123,7 @@ class VideoContinous(object):
                 link="-"
                 count ='-'
 
-        result_dictionary ={"creat_at":"19900603", "video_path":self.video_now, "size":"9487",
+        result_dictionary ={"creat_at":"-", "video_path":self.video_now, "size":"-",
                             "in_result":analyze_result, "error_code":error_code, "start_time":start_time,
                             "end_time":end_time, "link":link, "count":count
                             }
@@ -140,18 +133,18 @@ class VideoContinous(object):
 
     def __produce_video_log(self, mp4parser, video_path, log_file):
         com_array = ["wine {0} -p {1} -t 3 > {2}".format(mp4parser, video_path, log_file)]
-        print (com_array)
         batch_command = ''
         for command in com_array:
             batch_command = batch_command+command+";"
-
-        print ('*******************')
         print ('*******************')
         print (batch_command)
         print ('*******************')
-        print ('*******************')
 
-        os.system(batch_command)
+        try:
+            os.system(batch_command)
+        except Exception as e:
+            ptl.logging_debug('[Debug] '+str(e))
+            ptl.logging_debug('[Debug] os.system can\'t  work  successfully.')
 
 
     def __analyze_video_log(self, video_log_path):
@@ -163,9 +156,9 @@ class VideoContinous(object):
                     time = re.search("Stream:(JPEG|H264|H265)\s+Frame:(I|P)\s+(\d+.\d+)", i).group(3)
                     time_list.append(time)
                 except Exception as e:
-                    # raise Exception("Video decode error: {}".format(video_log_path))
                     pass
         if time_list == []:
+            ptl.logging_debug('[Debug] This video can\'t decode, log : {}'.format(video_log_path) )
             time_list = ["Decode error"]
         return time_list
 

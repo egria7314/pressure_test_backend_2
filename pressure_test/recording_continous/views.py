@@ -25,6 +25,13 @@ import pexpect
 from datetime import timezone
 import pytz
 
+from recording_continous.tasks import arrange_periodic_task
+from recording_continous.monitor import Monitor
+from recording_continous import monitor
+import pexpect
+
+from libs.pressure_test_logging import PressureTestLogging as ptl
+
 
 from libs.vast_storage import VastStorage
 
@@ -69,7 +76,7 @@ def ana_videos(request, project_id):
     # print ("++++++++++++++++")
     #
     # return Response(' : '.join(clips))
-
+    #==============================================================================
     response = analyze_videos(project_id)
     return Response(response)
 
@@ -77,19 +84,12 @@ def ana_videos(request, project_id):
 def analyze_videos(project_id):
     query = ProjectSetting.objects.get(id=project_id)
     if not query.continued:
+        ptl.logging_info('[Info] This pressure test project without continuous_test .')
         return Response({'message': "Not project setting for continuous_test"})
+
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
-    print ('********video_continuous**********')
-    print (start_time)
-    print (end_time)
-    print ('********video_continuous**********')
-
     interval_time = datetime.timedelta(hours=1)
-    from recording_continous.tasks import arrange_periodic_task
-    from recording_continous.monitor import Monitor
-    from recording_continous import monitor
-    import pexpect
     # add consumer for celery
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer continous_test_camera{}".format(
         project_id)
