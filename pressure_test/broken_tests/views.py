@@ -297,7 +297,15 @@ def detect_broken_image(pk):
 
     print( "video_status: ", video_status )
     # copy framefolder's jpgs to clipath folder
-    shutil.copytree(framefolder, os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(framefolder)))
+    remote_framefolder_name = os.path.splitext(os.path.basename(clip.full_path))[0]
+    print( "remote_framefolder_name: ", remote_framefolder_name)
+    mount_point_2_remote_framefolder_path = os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(remote_framefolder_name))
+    print( "mount_point_2_remote_framefolder_path: ", mount_point_2_remote_framefolder_path)
+    if os.path.exists(mount_point_2_remote_framefolder_path):
+        shutil.rmtree(mount_point_2_remote_framefolder_path)
+    shutil.copytree(framefolder, mount_point_2_remote_framefolder_path)
+
+    # shutil.copytree(framefolder, os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(framefolder)))
     # update analysis info
     clip.size = os.path.getsize(clippath)
     clip.is_broken = False if video_status['result'] == 'passed' else True

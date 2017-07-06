@@ -94,10 +94,21 @@ class ClipInfo(models.Model):
         """
         # assume each directory is the same
         if self.count > 0:
-            first_broken_frame = self.broken_frames.values()[0]
-            return os.path.dirname(first_broken_frame['frame_path'])
+            remote_frame_folder = os.path.join(os.path.dirname(self.full_path), 'broken', os.path.splitext(os.path.basename(self.full_path))[0])
+            link_over_web = "ftp://{user}:{password}@{remote_path}".format(
+                user= self.nas_profile.user,
+                password= self.nas_profile.password,
+                remote_path=link_remote_frame_folderfor_web
+            )
+            return link_over_web
         else:
             return ""
+        # if self.count > 0:
+        #     first_broken_frame = self.broken_frames.values()[0]
+        #     local_frame_folder = os.path.dirname(first_broken_frame['frame_path'])
+        #     return local_frame_folder
+        # else:
+        #     return ""
     
     class Meta:
         ordering = ('id',)
