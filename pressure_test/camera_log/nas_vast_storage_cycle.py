@@ -37,7 +37,7 @@ class NasVastCycle():
             # loss file
             if not set(self.former_file_list).issubset(self.new_file_list) and not cycle:
                 loss_locked_file_list = list(set(self.former_file_list) - set(self.new_file_list))
-                result += "Error! Lose file:" + ','.join(loss_locked_file_list) + '\n'
+                result += "[Error] Lose file:" + ','.join(loss_locked_file_list) + '\n'
                 return result
 
             # check adding
@@ -52,7 +52,7 @@ class NasVastCycle():
         except Exception as e:
             # other unknown case
             ptl.logging_error('[Exception] get storage cycle error, [Error msg]:{0}'.format(e))
-            result = "Fail"
+            result = "[Fail]"
             return result
 
 
@@ -185,7 +185,7 @@ class NasVastCycle():
 
         # if differ is more than one hour
         if differ_seconds > 3600:
-            log = "Error! " + new_datetime + "'s file is " + "Surpass one hour!!"
+            log = "[Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
             return True, log
         else:
             return False, log
