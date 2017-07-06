@@ -109,6 +109,11 @@ class NasVastCycle():
         exist = False
         result = ""
 
+        # if former list is empty, no need to check surpassing one hour (remember to update sd cycle)
+        if self.former_file_list == []:
+            return exist, result
+
+
         # first: compare newest added file with former test last file
         added_file_list = list(set(self.new_file_list) - set(self.former_file_list))
         added_file_list = sorted(added_file_list)

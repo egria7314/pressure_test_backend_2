@@ -134,6 +134,10 @@ class SDcycle(object):
         exist = False
         result = ""
 
+        if self.former_unlocked_file_list == [] and self.former_locked_file_list == []:
+            return exist, result
+
+
         # first: compare newest added file with former test last file
         added_file_list = list(set(self.new_unlocked_file_list) - set(self.former_unlocked_file_list))
         added_file_list = sorted(added_file_list)
