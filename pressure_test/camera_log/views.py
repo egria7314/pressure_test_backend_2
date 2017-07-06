@@ -39,7 +39,7 @@ from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 121# 121 #120    #112  #108
+TEST_PROJECT_ID = 108# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -585,16 +585,21 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, time
 
     sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
     sd_recording_file_json = sd_recording_file.get_fw_file_dict(timeout)
+
     new_sd_locked_file_list = [file for file in sd_recording_file_json["sd_locked_file"] if PREFIX in file]
-
-
+    if "No such file or directory" in new_sd_locked_file_list:
+        new_sd_locked_file_list.remove("No such file or directory")
     new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
 
     new_sd_unlocked_file_list = [file for file in sd_recording_file_json["sd_unlocked_file"] if PREFIX in file]
-
-
+    if "No such file or directory" in new_sd_unlocked_file_list:
+        new_sd_unlocked_file_list.remove("No such file or directory")
     new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
-    new_sd_all_file_str = ','.join([file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file])
+
+    new_sd_all_file_list = [file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file]
+    if "No such file or directory" in new_sd_all_file_list:
+        new_sd_all_file_list.remove("No such file or directory")
+    new_sd_all_file_str = ','.join(new_sd_all_file_list)
 
     return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
            new_sd_locked_file_list, new_sd_unlocked_file_list
