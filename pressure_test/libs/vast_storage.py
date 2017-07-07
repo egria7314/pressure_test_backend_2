@@ -6,6 +6,7 @@ import platform
 import time
 import operator
 import datetime
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class VastStorage(object):
     def __init__(self, vast_username=None, vast_password=None, domain='VIVOTEK'):
@@ -21,6 +22,7 @@ class VastStorage(object):
     def get_video_vast(self, remote_username, remote_password, sudo_password, remote_path, time_start, time_end):
         """
         """
+        ptl.logging_info('start get_video_vast({0}, {1}, {2}, {3}, {4}, {5})'.format(remote_username, remote_password, sudo_password, remote_path, time_start, time_end))
         delta = time_end - time_start
         date_list = []
         for i in range(delta.days + 1):
@@ -29,9 +31,12 @@ class VastStorage(object):
             date_list.append(time_end.strftime('%Y-%m-%d'))
         videos = {}
         for date in date_list:
-            print("DATE: ", date)
+            ptl.logging_info('DATE:  = {0}'.format(date))
+            # print("DATE: ", date)
             remote_path = re.sub('\d{4}-\d{2}-\d{2}', '{0}', remote_path).format(date)
             local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_'))
+            ptl.logging_info('remote_path = {0}'.format(remote_path))
+            ptl.logging_info('local_path = {0}'.format(local_path))
             self.mount_folder(
                 remote_username=remote_username,
                 remote_password=remote_password,
@@ -51,6 +56,7 @@ class VastStorage(object):
         """
         by mount command
         """
+        ptl.logging_info('start dump_vast_files({0}, {1}, {2})'.format(search_dir_web, timestamp_start, timestamp_end))
         file_web = {}
         file_local = {}
         file_path_map = {}
@@ -58,6 +64,7 @@ class VastStorage(object):
             search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_'))
         else:
             search_dir = search_dir_web
+        ptl.logging_info('search_dir = {0}'.format(search_dir))
         for root, dirs, files in os.walk(search_dir):
             for f in files:
                 file_path = os.path.join(root,f).replace('\\','/')
@@ -68,7 +75,11 @@ class VastStorage(object):
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
+        ptl.logging_info('file_local = {0}'.format(file_local))
+        ptl.logging_info('file_web = {0}'.format(file_web))
+        ptl.logging_info('file_path_map = {0}'.format(file_path_map))
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
+        ptl.logging_info('sorted_file = {0}'.format(sorted_file))
         if len(sorted_file) != 0:
             last_file_path = sorted_file[-1][0]
             last_file_size_prev = os.stat(last_file_path).st_size
@@ -77,6 +88,7 @@ class VastStorage(object):
             if last_file_size_curr != last_file_size_prev:
                 remove_file_path = file_path_map[last_file_path]
                 del file_web[remove_file_path]
+        ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
     def mount_folder(self, remote_username, remote_password, remote_path, sudo_password, local_path):
@@ -84,11 +96,14 @@ class VastStorage(object):
         """
         if platform.system() == 'Windows': return
 
-        if os.path.ismount(local_path): return
+        if os.path.ismount(local_path):
+            ptl.logging_info('mount status of vast is complete')
+            return
 
         # create the new folder
         cmd = "sudo mkdir {mounted_at}".format(mounted_at=local_path)
         p = pexpect.spawn(cmd)
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -99,6 +114,7 @@ class VastStorage(object):
             remote_path=remote_path, local_path=local_path)
 
         p = pexpect.spawn(cmd)
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -114,6 +130,7 @@ class VastStorage(object):
         # umount
         cmd = "sudo umount {local_path}".format(local_path=local_path)
         p = pexpect.spawn(cmd)
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -123,6 +140,7 @@ class VastStorage(object):
         if not os.path.ismount(local_path):
             cmd = "sudo rm -rf {mounted_at}".format(mounted_at=local_path)
             p = pexpect.spawn(cmd)
+            ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
             # p.expect(': ')
             # p.sendline(sudo_password)
             # p.expect( "\r\n" )

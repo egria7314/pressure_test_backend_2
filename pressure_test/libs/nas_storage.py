@@ -6,7 +6,8 @@ import pexpect
 import platform
 import time
 import operator
-from libs.telnet_module import URI
+from telnet_module import URI
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class NasStorage(object):
     def __init__(self, nas_username=None, nas_password=None, domain='VIVOTEK'):
@@ -49,8 +50,9 @@ class NasStorage(object):
     def get_video_nas(self, remote_username, remote_password, sudo_password, remote_path, prefix, time_start, time_end):
         """
         """
+        ptl.logging_info('start get_video_nas({0}, {1}, {2}, {3}, {4}, {5}, {6})'.format(remote_username, remote_password, sudo_password, remote_path, prefix, time_start, time_end))
         local_path = os.path.join("/mnt", remote_path.replace('//', '').replace('/', '_'))
-
+        ptl.logging_info('mount local path = {0}'.format(local_path))
         # walk through hierarchical
         self.mount_folder(
             remote_username=remote_username,
@@ -71,10 +73,7 @@ class NasStorage(object):
         """
         by mount command
         """
-        print("search_dir_web: ", search_dir_web )
-        print("prefix: ", prefix)
-        print("timestamp_start: ", timestamp_start)
-        print("timestamp_end: ", timestamp_end)
+        ptl.logging_info('start dump_nas_files({0}, {1}, {2}, {3})'.format(search_dir_web, prefix, timestamp_start, timestamp_end))
         # file = []
         file_web = {}
         file_local = {}
@@ -83,6 +82,7 @@ class NasStorage(object):
             search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_'))
         else:
             search_dir = search_dir_web
+        ptl.logging_info('search_dir_web = {0}'.format(search_dir))
         for root, dirs, files in os.walk(search_dir):
             for f in files:
                 file_path = os.path.join(root,f).replace('\\','/')
@@ -93,7 +93,11 @@ class NasStorage(object):
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
+        ptl.logging_info('file_local = {0}'.format(file_local))
+        ptl.logging_info('file_web = {0}'.format(file_web))
+        ptl.logging_info('file_path_map = {0}'.format(file_path_map))
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
+        ptl.logging_info('sorted file_local = {0}'.format(sorted_file))
 
         if len(sorted_file) > 0:
 
@@ -104,7 +108,7 @@ class NasStorage(object):
             if last_file_size_curr != last_file_size_prev:
                 remove_file_path = file_path_map[last_file_path]
                 del file_web[remove_file_path]
-
+        ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
     def mount_folder(self, remote_username, remote_password, remote_path, sudo_password, local_path):
@@ -112,11 +116,14 @@ class NasStorage(object):
         """
         if platform.system() == 'Windows': return
 
-        if os.path.ismount(local_path): return
+        if os.path.ismount(local_path):
+            ptl.logging_info('mount status of nas is complete')
+            return
 
         # create the new folder
         cmd = "sudo mkdir {mounted_at}".format(mounted_at=local_path)
         p = pexpect.spawn(cmd)
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -127,6 +134,7 @@ class NasStorage(object):
             remote_path=remote_path, local_path=local_path)
 
         p = pexpect.spawn(cmd)
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -142,6 +150,7 @@ class NasStorage(object):
         # umount
         cmd = "sudo umount {local_path}".format(local_path=local_path)
         p = pexpect.spawn(cmd)
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -151,6 +160,7 @@ class NasStorage(object):
         if not os.path.ismount(local_path):
             cmd = "sudo rm -rf {mounted_at}".format(mounted_at=local_path)
             p = pexpect.spawn(cmd)
+            ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
             # p.expect(': ')
             # p.sendline(sudo_password)
             # p.expect( "\r\n" )
@@ -158,4 +168,16 @@ class NasStorage(object):
         if os.path.exists(local_path): return False
 
         return True
+
+if __name__ == '__main__':
+    import datetime
+    ns = NasStorage('autotest', 'autotest')
+    timestamp_start = datetime.datetime.strptime('2017-06-28 21:00:00', '%Y-%m-%d %H:%M:%S')
+    print ('timestamp_start = {0}'.format(timestamp_start))
+    timestamp_end = datetime.datetime.strptime('2017-06-30 23:00:00', '%Y-%m-%d %H:%M:%S')
+    print ('timestamp_end = {0}'.format(timestamp_end))
+    # timestamp_start = datetime.datetime.strptime('2017-06-28 21:00:00', '%Y-%m-%d %H:%M:%S')
+    # timestamp_end = datetime.datetime.strptime('2017-06-30 23:00:00', '%Y-%m-%d %H:%M:%S')
+    print(ns.get_video_nas('autotest', 'autotest', 'fftbato', '//172.19.11.189/Public/autotest/steven/', 'high_stress', timestamp_start, timestamp_end))
+
 
