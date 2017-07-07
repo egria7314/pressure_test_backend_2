@@ -43,6 +43,7 @@ class VastStorage(object):
                 remote_path=remote_path,
                 sudo_password=sudo_password,
                 local_path=local_path)
+            ptl.logging_info('self.mount_folder({0}, {1}, {2}, {3}, {4})'.format(remote_username, remote_password, remote_path, sudo_password, local_path))
             timestamp_start = time.mktime(time_start.timetuple())
             timestamp_end = time.mktime(time_end.timetuple())
             video = self.dump_vast_files(remote_path, timestamp_start, timestamp_end)
