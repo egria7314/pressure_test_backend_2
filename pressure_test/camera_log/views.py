@@ -433,11 +433,11 @@ def set_camera_log(project_id, start_time):
         my_up_time_json = set_up_time(camera_ip, camera_user, camera_password, timeout)
         camera_log_json.update(my_up_time_json)
     except Exception as e:
-        ptl.logging_error('[Exception] set uptime error, [Error msg]:{0}'.format(e))
+        ptl.logging_error('[Exception] set uptime fail, [Error msg]:{0}'.format(e))
         print(e)
-        my_up_time_json["uptime"] = "Fail/Timeout"
-        my_up_time_json["loadAverage"] = "Fail/Timeout"
-        my_up_time_json["idle"] = "Fail/Timeout"
+        my_up_time_json["uptime"] = "[Fail]"
+        my_up_time_json["loadAverage"] = "[Fail]"
+        my_up_time_json["idle"] = "[Fail]"
 
 
     # # epoch time
@@ -458,10 +458,10 @@ def set_camera_log(project_id, start_time):
             sd_status_json = set_sd_status(camera_ip, camera_user, camera_password, timeout)
             camera_log_json.update(sd_status_json)
         except Exception as e:
-            ptl.logging_error('[Exception] set sd status error, [Error msg]:{0}'.format(e))
+            ptl.logging_error('[Exception] set sd status fail, [Error msg]:{0}'.format(e))
             print(e)
-            sd_status_json["sdCardStatus"] = "Fail/Timeout"
-            sd_status_json["sdCardUsed"] = "Fail/Timeout"
+            sd_status_json["sdCardStatus"] = "[Fail]"
+            sd_status_json["sdCardUsed"] = "[Fail]"
 
 
         # sd recording file
@@ -521,10 +521,10 @@ def set_camera_log(project_id, start_time):
             new_vast_file_list, vast_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "VAST", start_time)
     except Exception as e:
         ptl.logging_error('[Exception] set storage cycle error, [Error msg]:{0}'.format(e))
-        nas_cycle_result = "Fail/Timeout"
-        vast_cycle_result = "Fail/Timeout"
-        new_nas_file_list.append("Fail/Timeout")
-        new_vast_file_list.append("Fail/Timeout")
+        nas_cycle_result = "[Fail]"
+        vast_cycle_result = "[Fail]"
+        new_nas_file_list.append("[Fail]t")
+        new_vast_file_list.append("[Fail]")
 
 
     ptl.logging_info('Set camera log to DB:')
