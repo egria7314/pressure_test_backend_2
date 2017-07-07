@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 # from pressure_test.camera_log.sd_status import SDstatus
 from recording_continous.models import RecordingContinuty
+from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class VideoContinous(object):
     def __init__(self,video_before, video_now, delay_time):
@@ -18,14 +19,33 @@ class VideoContinous(object):
         self.delay_time = delay_time
 
 
-    def continuity_bwtween_recording_files(self):
+    def continuity_bwtween_recording_files(self, camera_id):
         # video_path_before = os.path.join(self.directory_path, self.video_before)
         # video_path_now = os.path.join(self.directory_path, self.video_now)
         video_path_before = self.video_before
         video_path_now = self.video_now
 
-        log_file_before = video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
-        log_file_now = video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+
+        # log_file_before = video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+        # log_file_now = video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")
+
+
+        framefolder = os.path.join('/home/dqa/data/video_mp4parser_log', 'camera{}'.format(camera_id))
+        if not os.path.isdir(framefolder):
+            os.makedirs(framefolder)
+
+        log_file_before = (video_path_before.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
+        log_file_before = os.path.join(framefolder, log_file_before)
+
+        log_file_now = (video_path_now.replace(".mp4", "_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
+        log_file_now = os.path.join(framefolder, log_file_now)
+
+        if not os.path.isdir(os.path.dirname(log_file_before)):
+            os.makedirs(os.path.dirname(log_file_before))
+
+        if not os.path.isdir(os.path.dirname(log_file_now)):
+            os.makedirs(os.path.dirname(log_file_now))
+
 
         self.__produce_video_log(self.mp4parser_path, video_path_before, log_file_before)
         self.__produce_video_log(self.mp4parser_path, video_path_now, log_file_now)
@@ -49,11 +69,17 @@ class VideoContinous(object):
         return result_dictionary
 
 
-    def continuity_in_recording_files(self):
-        # Todo : Change video_path from NAS_path
-        # video_path = os.path.join(self.directory_path, self.video_now)
+
+
+    def continuity_in_recording_files(self, camera_id):
         video_path = self.video_now
-        log_file = video_path.replace(".mp4","_log.txt").replace(".3gp", "_log.txt")
+        framefolder = os.path.join('/home/dqa/data/video_mp4parser_log', 'camera{}'.format(camera_id))
+        log_file = (video_path.replace(".mp4","_log.txt").replace(".3gp", "_log.txt")).replace("/","_")
+        log_file = os.path.join(framefolder,log_file)
+
+        if not os.path.isdir(os.path.dirname(log_file)):
+            os.makedirs(os.path.dirname(log_file))
+
         self.__produce_video_log(self.mp4parser_path, video_path, log_file)
         time_list = self.__analyze_video_log(log_file)
         time_delay=[]
@@ -97,7 +123,7 @@ class VideoContinous(object):
                 link="-"
                 count ='-'
 
-        result_dictionary ={"creat_at":"19900603", "video_path":self.video_now, "size":"9487",
+        result_dictionary ={"creat_at":"-", "video_path":self.video_now, "size":"-",
                             "in_result":analyze_result, "error_code":error_code, "start_time":start_time,
                             "end_time":end_time, "link":link, "count":count
                             }
@@ -107,18 +133,18 @@ class VideoContinous(object):
 
     def __produce_video_log(self, mp4parser, video_path, log_file):
         com_array = ["wine {0} -p {1} -t 3 > {2}".format(mp4parser, video_path, log_file)]
-        print (com_array)
         batch_command = ''
         for command in com_array:
             batch_command = batch_command+command+";"
-
-        print ('*******************')
         print ('*******************')
         print (batch_command)
         print ('*******************')
-        print ('*******************')
 
-        os.system(batch_command)
+        try:
+            os.system(batch_command)
+        except Exception as e:
+            ptl.logging_debug('[Debug] '+str(e))
+            ptl.logging_debug('[Debug] os.system can\'t  work  successfully.')
 
 
     def __analyze_video_log(self, video_log_path):
@@ -130,9 +156,9 @@ class VideoContinous(object):
                     time = re.search("Stream:(JPEG|H264|H265)\s+Frame:(I|P)\s+(\d+.\d+)", i).group(3)
                     time_list.append(time)
                 except Exception as e:
-                    # raise Exception("Video decode error: {}".format(video_log_path))
                     pass
         if time_list == []:
+            ptl.logging_debug('[Debug] This video can\'t decode, log : {}'.format(video_log_path) )
             time_list = ["Decode error"]
         return time_list
 
@@ -146,19 +172,10 @@ class VideoContinous(object):
         error_info_file_name =''.join(txt_name)
         error_info_file_path = os.path.join(error_info_folder,"error_{0}".format(error_info_file_name))
 
-        # print ('////////////////////')
-        # print ('////////////////////')
-        # print ('error_info_folder : {0}'.format(error_info_folder))
-        # print ('error_info_file_path : {0}'.format(error_info_file_path))
-        # print ('////////////////////')
-        # print ('////////////////////')
 
         f = open(error_info_file_path, 'w')
         for i in time_delay_list:
             f.write('******************************************\n')
-            # f.write('start_time:'+str(i[0]) + '\n')
-            # f.write('end_time  :'+str(i[1])+'\n')
-            # f.write('delay_time:'+str(i[2]) + '\n')
             f.write('start_time:'+str(datetime.datetime.fromtimestamp(i[0]))+'\n')
             f.write('end_time  :'+str(datetime.datetime.fromtimestamp(i[1]))+'\n')
             f.write('delay_time:'+str(i[2]) + '\n')

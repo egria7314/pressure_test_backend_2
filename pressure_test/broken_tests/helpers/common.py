@@ -25,7 +25,7 @@ class Video(object):
 
         # ffmpeg -i input.flv -ss 00:00:14.435 -vframes 1 out.png
         cmd = "ffmpeg -i {} -ss {} -vframes 1 {}".format(self.__filename, timestamp, out_filename)
-
+        print(cmd)
         subprocess.check_output(cmd, shell=True)
 
     def to_multi_frames(self, fps, out_filename):
@@ -41,7 +41,7 @@ class Video(object):
 
         # ffmpeg -i input.flv -vf fps=1 out%d.png
         cmd = "ffmpeg -i {} -vf fps={} {}".format(self.__filename, fps, out_filename)
-
+        print(cmd)
         subprocess.check_output(cmd, shell=True)
 
     def to_all_frames(self, out_filename):
@@ -56,7 +56,7 @@ class Video(object):
 
         # ffmpeg -i input.flv -vsync vfr out%d.png
         cmd = "ffmpeg -i {} -vsync vfr {}".format(self.__filename, out_filename)
-
+        print(cmd)
         subprocess.check_output(cmd, shell=True)
 
     # def to_duration_frames(self, start_at, time_limit, fps, out_filename):
@@ -91,7 +91,7 @@ class Video(object):
 
         #ffmpeg -i medium_stress09.mp4 -an -ss 00:00:55 -r 2 -vframes 20 -y img%d.jpg
         cmd = "ffmpeg -i {} -an -ss {} -r {} -vframes {} -y {}".format(self.__filename, start_at, fps, frame_num, out_filename)
-
+        print(cmd)
         subprocess.call(cmd, shell=True)
 
     def crop(self, out_x, out_y, out_w, out_h, out_filename):
@@ -109,5 +109,5 @@ class Video(object):
 
         #  ffmpeg -i test02.mp4 -filter:v "crop=1000:50:0:0" -c:a copy out.mp4
         cmd = "ffmpeg -i {} -filter:v \"crop={}:{}:{}:{}\" -c:a copy {}".format(self.__filename, out_x, out_y, out_w, out_h, out_filename)
-
+        print(cmd)
         subprocess.check_output(cmd, shell=True)

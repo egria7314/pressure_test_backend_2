@@ -25,6 +25,13 @@ import pexpect
 from datetime import timezone
 import pytz
 
+from recording_continous.tasks import arrange_periodic_task
+from recording_continous.monitor import Monitor
+from recording_continous import monitor
+import pexpect
+
+from libs.pressure_test_logging import PressureTestLogging as ptl
+
 
 from libs.vast_storage import VastStorage
 
@@ -45,20 +52,31 @@ def order_vast_file(clips):
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def ana_videos(request, project_id):
+    # print ("init")
     # query = ProjectSetting.objects.get(id=project_id)
     # start_time = localtime(query.start_time)
     # end_time = localtime(query.end_time)
+    # path = query.path
     #
-    # vs=VastStorage()
-    # clips = vs.get_video_vast('ptest', 'ptest', '', '//172.19.11.189/Ptest/2017-06-23/37-FD816B-HT', start_time, end_time)
-    #
-    # clips = order_vast_file(clips)
+    # # vs=VastStorage()
+    # # clips = vs.get_video_vast('ptest', 'ptest', '', '//172.19.11.189/Ptest/2017-06-23/37-FD816B-HT', start_time, end_time)
     # print ("++++++++++++++++")
+    # print ("go")
+    # ns =NasStorage()
+    # print ("++++++++++++++++")
+    # print ("mount")
+    # print ("++++++++++++++++")
+    # clips = ns.get_video_nas('autotest', 'autotest', '', "//172.19.11.189/Public/autotest/press_test", "medium_stress", start_time, end_time)
+    #
+    #
+    # # clips = order_vast_file(clips)
+    # print ("++++++++++++++++")
+    # print (clips)
     # print (end_time)
     # print ("++++++++++++++++")
     #
     # return Response(' : '.join(clips))
-
+    #==============================================================================
     response = analyze_videos(project_id)
     return Response(response)
 
@@ -66,19 +84,12 @@ def ana_videos(request, project_id):
 def analyze_videos(project_id):
     query = ProjectSetting.objects.get(id=project_id)
     if not query.continued:
+        ptl.logging_info('[Info] This pressure test project without continuous_test .')
         return Response({'message': "Not project setting for continuous_test"})
+
     start_time = localtime(query.start_time)
     end_time = localtime(query.end_time)
-    print ('********video_continuous**********')
-    print (start_time)
-    print (end_time)
-    print ('********video_continuous**********')
-
     interval_time = datetime.timedelta(hours=1)
-    from recording_continous.tasks import arrange_periodic_task
-    from recording_continous.monitor import Monitor
-    from recording_continous import monitor
-    import pexpect
     # add consumer for celery
     cmd = "/home/dqa/code/env/bin/celery -A pressure_test control add_consumer continous_test_camera{}".format(
         project_id)
