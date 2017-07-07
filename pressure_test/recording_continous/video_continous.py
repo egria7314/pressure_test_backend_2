@@ -143,13 +143,17 @@ class VideoContinous(object):
         try:
             os.system(batch_command)
         except Exception as e:
-            ptl.logging_debug('[Debug] '+str(e))
-            ptl.logging_debug('[Debug] os.system can\'t  work  successfully.')
+            ptl.logging_debug('[Video Continuous] '+str(e))
+            ptl.logging_debug('[Video Continuous] os.system can\'t  work  successfully.')
 
 
     def __analyze_video_log(self, video_log_path):
         time_list=[]
-        video_log = open(video_log_path, "r").readlines()
+        try:
+            video_log = open(video_log_path, "r").readlines()
+        except Exception as e:
+            ptl.logging_debug('[Video Continuous] Read log.txt failed :'+str(e))
+
         for i in video_log:
             if "Stream" in i :
                 try:
@@ -158,7 +162,7 @@ class VideoContinous(object):
                 except Exception as e:
                     pass
         if time_list == []:
-            ptl.logging_debug('[Debug] This video can\'t decode, log : {}'.format(video_log_path) )
+            ptl.logging_debug('[Video Continuous] This video can\'t decode, log : {}'.format(video_log_path) )
             time_list = ["Decode error"]
         return time_list
 

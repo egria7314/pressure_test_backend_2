@@ -84,7 +84,7 @@ def ana_videos(request, project_id):
 def analyze_videos(project_id):
     query = ProjectSetting.objects.get(id=project_id)
     if not query.continued:
-        ptl.logging_info('[Info] This pressure test project without continuous_test .')
+        ptl.logging_info('[Video Continuous] This pressure test project without continuous_test .')
         return Response({'message': "Not project setting for continuous_test"})
 
     start_time = localtime(query.start_time)

@@ -26,10 +26,6 @@ def arrange_periodic_task(project_id, start_time, end_time):
     prefix = obj.prefix_name
     pressure_test_video_type = obj.type
     delay_time = obj.delay
-    print ('************************')
-    print (type(pressure_test_video_type))
-    print (pressure_test_video_type)
-    print ('************************')
 
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
@@ -42,6 +38,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
 
 
     for file_path in clips:
+        ptl.logging_debug('[Video Continuous] file_path : {0}'.format(file_path))
         if pressure_test_video_type == 'medium':
             local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
             clippath = os.path.join(local_path, os.path.basename(file_path))
@@ -107,10 +104,13 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     else:
         video_path_result = clippath.replace(local_path + "/", "")
 
-    error_txt_link = "ftp://{0}:{1}@{2}/{3}/continous_error".format(remote_username,
-                                                                    remote_password,
-                                                                    remote_path.replace("//",""),
-                                                                    os.path.dirname(video_path_result))
+    if in_result["in_result"] != "pass":
+        error_txt_link = "ftp://{0}:{1}@{2}/{3}/continous_error".format(remote_username,
+                                                                        remote_password,
+                                                                        remote_path.replace("//",""),
+                                                                        os.path.dirname(video_path_result))
+    else:
+        error_txt_link = ""
 
     RecordingContinuty.objects.create(
         project_id=project_id,
