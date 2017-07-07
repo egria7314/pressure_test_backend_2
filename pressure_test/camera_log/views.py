@@ -27,6 +27,7 @@ import schedule
 import pytz
 from threading import Thread
 import threading
+import socket
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
@@ -448,7 +449,19 @@ def set_camera_log(project_id, start_time):
 
     # sd related
     # first check sd support
-    sd_support = support_sd(camera_user, camera_password, camera_ip, "capability_supportsd", timeout)
+
+    sd_support = True
+    try:
+        sd_support = support_sd(camera_user, camera_password, camera_ip, "capability_supportsd", timeout)
+    except socket.timeout as e:
+        ptl.logging_warning('[Warning] Get SD support CGI timeout, [Error msg]:{0}'.format(e))
+        print(e)
+        pass
+    except Exception as e:
+        ptl.logging_error('[ERROR] Get SD support CGI fail, [Error msg]:{0}'.format(e))
+        print(e)
+        pass
+
     sd_status_json = {}
 
     if sd_support:
@@ -467,10 +480,12 @@ def set_camera_log(project_id, start_time):
         # sd recording file
         new_sd_locked_file_list = []
         new_sd_unlocked_file_list = []
+        sd_cycle_status_tobe = ""
         try:
             ptl.logging_info('[Info] Set sd recording files.')
             new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
-            new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, timeout)
+            new_sd_locked_file_list, new_sd_unlocked_file_list, sd_cycle_status_tobe = \
+                set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, project_id, timeout)
         except Exception as e:
             ptl.logging_error('[Exception] set sd recording file error, [Error msg]:{0}'.format(e))
             print(e)
@@ -481,15 +496,20 @@ def set_camera_log(project_id, start_time):
             new_sd_unlocked_file_list.append("Fail/Timeout")
 
 
-        # check SD cycle #
-        try:
-            ptl.logging_info('[Info] Set sd cycle.')
-            sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
-            camera_log_json.update(sd_cycle_json)
-        except Exception as e:
-            ptl.logging_error('[Exception] set sd cycle error, [Error msg]:{0}'.format(e))
-            print(e)
-            sd_cycle_result = "Fail/Timeout"
+        if sd_cycle_status_tobe == "Timeout":
+            sd_cycle_result = "Timeout"
+        elif sd_cycle_status_tobe == "Fail":
+            sd_cycle_result = "Fail"
+        else:
+            # check normal SD cycle #
+            try:
+                ptl.logging_info('[Info] Set sd cycle.')
+                sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
+                camera_log_json.update(sd_cycle_json)
+            except Exception as e:
+                ptl.logging_error('[Exception] set sd cycle error, [Error msg]:{0}'.format(e))
+                print(e)
+                sd_cycle_result = "Fail/Timeout"
 
 
     else:
@@ -576,7 +596,8 @@ def set_sd_status(camera_ip, camera_user, camera_password, timeout=300):
     return sd_status_json
 
 # @timeout(GLOBAL_TIMEOUT)
-def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, timeout=300):
+def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, project_id, timeout=300):
+    sd_cycle_status_tobe = ""
     new_sd_locked_file_str = ""
     new_sd_unlocked_file_str = ""
     new_sd_all_file_str = ""
@@ -584,25 +605,65 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, time
     new_sd_unlocked_file_list = []
 
     sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
-    sd_recording_file_json = sd_recording_file.get_fw_file_dict(timeout)
+    try:
+        sd_recording_file_json = sd_recording_file.get_fw_file_dict(timeout)
+        new_sd_locked_file_list = [file for file in sd_recording_file_json["sd_locked_file"] if PREFIX in file]
+        if "No such file or directory" in new_sd_locked_file_list:
+            new_sd_locked_file_list.remove("No such file or directory")
+        new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
 
-    new_sd_locked_file_list = [file for file in sd_recording_file_json["sd_locked_file"] if PREFIX in file]
-    if "No such file or directory" in new_sd_locked_file_list:
-        new_sd_locked_file_list.remove("No such file or directory")
-    new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+        new_sd_unlocked_file_list = [file for file in sd_recording_file_json["sd_unlocked_file"] if PREFIX in file]
+        if "No such file or directory" in new_sd_unlocked_file_list:
+            new_sd_unlocked_file_list.remove("No such file or directory")
+        new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
 
-    new_sd_unlocked_file_list = [file for file in sd_recording_file_json["sd_unlocked_file"] if PREFIX in file]
-    if "No such file or directory" in new_sd_unlocked_file_list:
-        new_sd_unlocked_file_list.remove("No such file or directory")
-    new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
+        new_sd_all_file_list = [file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file]
+        if "No such file or directory" in new_sd_all_file_list:
+            new_sd_all_file_list.remove("No such file or directory")
+        new_sd_all_file_str = ','.join(new_sd_all_file_list)
 
-    new_sd_all_file_list = [file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file]
-    if "No such file or directory" in new_sd_all_file_list:
-        new_sd_all_file_list.remove("No such file or directory")
-    new_sd_all_file_str = ','.join(new_sd_all_file_list)
+    # if sd file timeoutm, we put former camera's file in this test, but will set sd cycle to timeout
+    except socket.timeout as e:
+        ptl.logging_error('[Exception] set sd files time out, [Error msg]:{0}'.format(e))
+        sd_cycle_status_tobe = "Timeout"
+        new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+            new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
+
+    except Exception as e:
+        ptl.logging_error('[Exception] set sd files fail, [Error msg]:{0}'.format(e))
+        sd_cycle_status_tobe = "Fail"
+        new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+            new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
+
+
+    return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+           new_sd_locked_file_list, new_sd_unlocked_file_list, sd_cycle_status_tobe
+
+def set_sd_file_when_get_file_exception(project_id):
+    new_sd_locked_file_str = ""
+    new_sd_unlocked_file_str = ""
+    new_sd_all_file_str = ""
+    new_sd_locked_file_list = []
+    new_sd_unlocked_file_list = []
+
+    try:
+        former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
+        new_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
+        new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+        new_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
+        new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
+        new_sd_all_file_list = former_cam_obj.sd_all_file.split(',')
+        new_sd_all_file_str = ','.join(new_sd_all_file_list)
+
+    except Exception as e:
+        ptl.logging_warning('[Exception] Did not find former camera obj of same project id when sd file exception'
+                            ', [Error msg]:{0}'.format(e))
+        pass
 
     return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
            new_sd_locked_file_list, new_sd_unlocked_file_list
+
+
 
 # @timeout(GLOBAL_TIMEOUT)
 def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX):
@@ -618,19 +679,6 @@ def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list,
         ptl.logging_warning('[Exception] Did not find former camera obj of same project id, [Error msg]:{0}'.format(e))
         former_sd_locked_file_list = []
         former_sd_unlocked_file_list = []
-
-
-    # former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
-    #
-    # if former_cam_obj:
-    #     former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
-    #     former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
-    #     former_sd_locked_file_list = check_list(former_sd_locked_file_list)
-    #     former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
-    # else:
-    #     print("***TEST999****")
-    #     former_sd_locked_file_list = []
-    #     former_sd_unlocked_file_list = []
 
     sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
                               former_unlocked_file_list=former_sd_unlocked_file_list,
