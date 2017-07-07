@@ -1,6 +1,7 @@
 __author__ = 'steven.hsiao'
 import json
 import re
+import socket
 
 # from pressure_test.camera_log.telnet_module import URI
 from camera_log.telnet_module import URI
@@ -25,7 +26,12 @@ class SDstatus(object):
         try:
             SD_status = self.__get_sd_status(timeout)
             data_dict["sdCardStatus"] = SD_status[0]
-            data_dict["sdCardUsed"] = str(self.__get_sd_status(timeout)[1])
+            data_dict["sdCardUsed"] = str(self.__get_sd_status(timeout)[1]) + '%'
+        except socket.timeout as e:
+            ptl.logging_error('[Exception] get sd status time out, [Error msg]:{0}'.format(e))
+            data_dict["sdCardStatus"] = "Timeout"
+            data_dict["sdCardUsed"] = "Timeout"
+
         except Exception as e:
 
             print("******SD issue:*****")

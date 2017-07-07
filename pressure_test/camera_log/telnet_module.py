@@ -5,6 +5,7 @@ import base64
 import telnetlib
 import urllib.request
 from libs.pressure_test_logging import PressureTestLogging as ptl
+import socket
 
 
 class URI(object):
@@ -35,6 +36,11 @@ class URI(object):
         try:
             # result = urllib.urlopen(request)
             result = urllib.request.urlopen(req, timeout=timeout)
+
+        except socket.timeout as e:
+            ptl.logging_error('[Exception] URI set timeout, [Error msg]:{0}'.format(e))
+            raise e
+
         except Exception as e:
             # pass
             ptl.logging_error('[Exception] URI set error, [Error msg]:{0}'.format(e))
