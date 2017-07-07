@@ -6,7 +6,7 @@ import pexpect
 import platform
 import time
 import operator
-from telnet_module import URI
+from libs.telnet_module import URI
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
 class NasStorage(object):
