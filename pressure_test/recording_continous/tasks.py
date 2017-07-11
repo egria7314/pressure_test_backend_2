@@ -16,6 +16,8 @@ from recording_continous.models import RecordingContinuty
 from recording_continous.models import RecordingFile
 from recording_continous.models import Config
 from recording_continous.video_continous import VideoContinous
+from libs.pressure_test_logging import PressureTestLogging as ptl
+
 
 def arrange_periodic_task(project_id, start_time, end_time):
     obj = ProjectSetting.objects.get(id=project_id)

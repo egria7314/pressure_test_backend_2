@@ -18,7 +18,6 @@ class VideoContinous(object):
         self.video_now  = video_now
         self.delay_time = delay_time
 
-
     def continuity_bwtween_recording_files(self, camera_id):
         # video_path_before = os.path.join(self.directory_path, self.video_before)
         # video_path_now = os.path.join(self.directory_path, self.video_now)
@@ -145,6 +144,7 @@ class VideoContinous(object):
         except Exception as e:
             ptl.logging_debug('[Video Continuous] '+str(e))
             ptl.logging_debug('[Video Continuous] os.system can\'t  work  successfully.')
+
 
 
     def __analyze_video_log(self, video_log_path):
