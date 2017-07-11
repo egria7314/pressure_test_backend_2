@@ -34,12 +34,6 @@ class SDcycle(object):
 
 
         try:
-            # loss locked file
-            if not set(self.former_locked_file_list).issubset(self.new_all_file):
-                loss_locked_file_list = list(set(self.former_locked_file_list) - set(self.new_all_file))
-                result += "[Error] Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
-                return result
-
             # surpass time
             # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
             exist_surpass, comment = self.__surpass_exist(PREFIX)
@@ -47,23 +41,27 @@ class SDcycle(object):
                 result += comment + '\n'
                 return result
 
+            # check cycle
+            cycle, comment = self.__check_cycle(PREFIX)
+            if cycle:
+                return comment
+
             # loss unlocked file (unlock of 1 is not subset of 2)
             if not set(self.former_unlocked_file_list).issubset(self.new_unlocked_file_list):
                 loss_unlocked_file_list = list(set(self.former_unlocked_file_list) - set(self.new_unlocked_file_list))
                 result += "[Error] Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
                 return result
 
-            # check cycle
-            cycle, comment = self.__check_cycle(PREFIX)
-            if cycle:
-                return comment
-
+            # loss locked file
+            if not set(self.former_locked_file_list).issubset(self.new_all_file):
+                loss_locked_file_list = list(set(self.former_locked_file_list) - set(self.new_all_file))
+                result += "[Error] Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
+                return result
 
             # check adding
             adding, comment = self.__check_adding(PREFIX)
             if adding:
                 return comment
-
             else:
                 result = "Nothing change!"
                 return result
