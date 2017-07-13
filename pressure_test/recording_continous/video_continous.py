@@ -9,6 +9,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 # from pressure_test.camera_log.sd_status import SDstatus
 from recording_continous.models import RecordingContinuty
 from libs.pressure_test_logging import PressureTestLogging as ptl
+import pytz ,time
+from datetime import timedelta
 
 class VideoContinous(object):
     def __init__(self,video_before, video_now, delay_time):
@@ -157,8 +159,12 @@ class VideoContinous(object):
         for i in video_log:
             if "Stream" in i :
                 try:
-                    time = re.search("Stream:(JPEG|H264|H265)\s+Frame:(I|P)\s+(\d+.\d+)", i).group(3)
-                    time_list.append(time)
+                    time_data = re.search("Stream:(JPEG|H264|H265)\s+Frame:(I|P)\s+(\d+.\d+)", i).group(3)
+                    taipei = pytz.timezone('Asia/Taipei')
+                    time_2 = datetime.datetime.fromtimestamp(float(time_data))
+                    time_3 = time_2 - timedelta(hours=8)
+                    tp_time = taipei.localize(time_3)
+                    time_list.append(str(time.mktime(tp_time.timetuple())+1e-6*tp_time.microsecond))
                 except Exception as e:
                     pass
         if time_list == []:

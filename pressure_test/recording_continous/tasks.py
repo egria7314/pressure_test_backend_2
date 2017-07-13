@@ -44,6 +44,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
         if pressure_test_video_type == 'medium':
             local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
             clippath = os.path.join(local_path, os.path.basename(file_path))
+
         else:
             local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
             clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
@@ -108,7 +109,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
 
     if in_result["in_result"] != "pass":
         # error_txt_link = "ftp://{0}:{1}@{2}/{3}/continous_error".format(remote_username,remote_password,remote_path.replace("//",""),os.path.dirname(video_path_result))
-        error_txt_link = "ftp://{0}:{1}@{2}continous_error".format(remote_username, remote_password, os.path.dirname(file_path).replace('//', ''))
+        error_txt_link = "ftp://{0}:{1}@{2}/continous_error".format(remote_username, remote_password, os.path.dirname(file_path).replace('//', ''))
 
     else:
         error_txt_link = ""
