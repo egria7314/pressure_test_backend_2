@@ -57,3 +57,4 @@
         - djangorestframework-jsonapi
         - schedule
         - humanize
+        - pytest-django
