@@ -37,10 +37,11 @@ from config.models import ProjectSetting
 from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
+from camera_log.libs.sd_prefix import SDPrefix
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 108# 121 #120    #112  #108
+TEST_PROJECT_ID = 136# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -177,8 +178,8 @@ def run_cameralog_schedule_by_id(project_id):
         end_time = localtime(task_camera_obj.end_time)
         now_time = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
 
-        # interval_time = datetime.timedelta(hours=1)
-        interval_time = datetime.timedelta(minutes=2)
+        interval_time = datetime.timedelta(hours=1)
+        # interval_time = datetime.timedelta(minutes=2)
 
         periodic_check_points = []
         periodic_time = start_time
@@ -425,7 +426,8 @@ def set_camera_log(project_id, start_time):
     final_camera_log_json = {}
     final_camera_log_json["id"] = project_id    # temp
     all_data_list = []
-    PREFIX = task_camera_obj.prefix_name   # temp
+    # NAS_PREFIX = task_camera_obj.prefix_name   # temp
+
 
     # up time
     my_up_time_json = {}
@@ -465,6 +467,15 @@ def set_camera_log(project_id, start_time):
     sd_status_json = {}
 
     if sd_support:
+        SD_PREFIX = ""
+        try:
+            SD_PREFIX_obj = SDPrefix(camera_ip, camera_user, camera_password)
+            SD_PREFIX = SD_PREFIX_obj.get_recording_prefix()
+            ptl.logging_info('[INFO] get sd prefix:{0}'.format(SD_PREFIX))
+        except Exception as e:
+            ptl.logging_error('[ERROR]: get sd prefix error{0}'.format(SD_PREFIX))
+            print(e)
+
         # sd status
         try:
             ptl.logging_info('[Info] Set sd status.')
@@ -485,7 +496,7 @@ def set_camera_log(project_id, start_time):
             ptl.logging_info('[Info] Set sd recording files.')
             new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
             new_sd_locked_file_list, new_sd_unlocked_file_list, sd_cycle_status_tobe = \
-                set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, project_id, timeout)
+                set_sd_recording_files(camera_ip, camera_user, camera_password, SD_PREFIX, project_id, timeout)
         except Exception as e:
             ptl.logging_error('[Exception] set sd recording file error, [Error msg]:{0}'.format(e))
             print(e)
@@ -504,7 +515,7 @@ def set_camera_log(project_id, start_time):
             # check normal SD cycle #
             try:
                 ptl.logging_info('[Info] Set sd cycle.')
-                sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX)
+                sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, SD_PREFIX)
                 camera_log_json.update(sd_cycle_json)
             except Exception as e:
                 ptl.logging_error('[Exception] set sd cycle error, [Error msg]:{0}'.format(e))
@@ -702,7 +713,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
     storage_path = task_camera_obj.path
     storage_user = task_camera_obj.path_username
     storage_password = task_camera_obj.path_password
-    PREFIX = task_camera_obj.prefix_name
+    NAS_PREFIX = task_camera_obj.prefix_name
     new_storage_file_list = []
     storage_cycle_result=""
 
@@ -734,7 +745,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 test_nas_obj = NasStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
                 storage_files_dict = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
-                                                         PREFIX, timestamp_start, timestamp_end)
+                                                         NAS_PREFIX, timestamp_start, timestamp_end)
 
                 print("*****GET NAS FILE******")
                 print(storage_files_dict)
@@ -756,7 +767,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
 
                 nas_cycle_obj = NasVastCycle(former_file_list=former_storage_file_list,
                                            new_file_list=new_storage_file_list)
-                storage_cycle_result = nas_cycle_obj.get_result(PREFIX)
+                storage_cycle_result = nas_cycle_obj.get_result(NAS_PREFIX)
 
             elif storage_by == "VAST":
                 timestamp_start = start_time
