@@ -13,16 +13,6 @@ services:
     links:
       - db
       - redis
-  web:
-    build: .
-    privileged: true
-    entrypoint: /home/dqa/data/entrypoint.sh
-    volumes:
-      - .:/home/dqa/data
-    depends_on:
-      - db
-    links:
-      - redis
   sut:
     build: .
     privileged: true
@@ -33,4 +23,3 @@ services:
       - db
     links:
       - redis
-      - web
