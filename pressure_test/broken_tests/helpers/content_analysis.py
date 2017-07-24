@@ -274,18 +274,20 @@ class ContentAnalysis(object):
     #         last += avg
 
     
-    def get_actual_privacy_masks_coordinates(self, recDstType):
-        """Return the actual privacy mask coordinates
+    # [DELETE] Not used
+    # def get_actual_privacy_masks_coordinates(self, recDstType):
+    #     """Return the actual privacy mask coordinates
 
-        Keyword arguments:
-        recDstType -- the string of recording destination server type. Now we have 2 available values SD and NAS.
+    #     Keyword arguments:
+    #     recDstType -- the string of recording destination server type. Now we have 2 available values SD and NAS.
 
-        """
-        # transform mask position
-        roi = RoiModule(self.__ref_cam_ip, self.__ref_cam_user, self.__ref_cam_pwd, recDstType)
-        privacy_masks = list(map(self.trans_from_points_to_box, roi.return_mask()))
+    #     """
+    #     # transform mask position
+    #     roi = RoiModule(self.__ref_cam_ip, self.__ref_cam_user, self.__ref_cam_pwd, recDstType)
+    #     print(roi.return_mask())
+    #     privacy_masks = list(map(self.trans_from_points_to_box, roi.return_mask()))
         
-        return privacy_masks
+    #     return privacy_masks
 
 
     # # @save_exception_to('fw_pressure_test.content_analysis', os.path.join(os.path.dirname( __file__ ), 'content_analysis.log'))

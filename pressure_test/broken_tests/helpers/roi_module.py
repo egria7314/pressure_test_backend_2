@@ -116,3 +116,6 @@ class RoiModule(object):
             mask_position.append(re.search(r'=\'(.*)\'', response).groups()[0])
 
         return self.__regulate_mask_position(mask_position)
+
+    # def __get_mask_position_SD(self):
+
