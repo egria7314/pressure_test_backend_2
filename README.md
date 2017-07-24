@@ -82,3 +82,16 @@ root@01739d768e32:/home/dqa/code# source env/bin/activate
 (env) root@01739d768e32:/home/dqa/data# cd pressure_test/
 (env) root@01739d768e32:/home/dqa/data/pressure_test# 
 ```
+
+**Unit test**
+=============
+
+### Build container
+```
+sudo docker-compose -f docker-compose.test.yml build
+```
+
+### Start service
+```
+sudo docker-compose -f docker-compose.test.yml up
+```
