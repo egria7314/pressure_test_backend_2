@@ -153,10 +153,6 @@ def get_sd_recording_file(request):
 #     th.start()
 ##
 
-@api_view(['GET'])
-def test_log(request):
-    ptl.logging_debug('[Info] Run camera log schedule by ID.')
-    return Response({'status: ': 'ok'})
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
