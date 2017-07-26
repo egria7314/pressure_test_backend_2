@@ -135,6 +135,8 @@ class TestContentAnalysis(unittest.TestCase):
         # Copy testing frames to dest
         jpg_files = ['seq1.jpg', 'seq2.jpg', 'seq3.jpg', 'seq4.jpg']
         tested_frames = map(lambda x: os.path.join( settings.BASE_DIR, 'unit_test/broken_tests/test_data', x), jpg_files)
+        if not os.path.isdir(os.path.join( settings.BASE_DIR, 'unit_test/broken_tests/test_data/seq_frames' )):
+            os.makedirs(os.path.join( settings.BASE_DIR, 'unit_test/broken_tests/test_data/seq_frames' ))
         for filename in tested_frames:
             shutil.copy(filename, os.path.join( settings.BASE_DIR, 'unit_test/broken_tests/test_data/seq_frames' ))
         # Start check
