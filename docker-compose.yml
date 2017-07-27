@@ -21,9 +21,23 @@ services:
     entrypoint: /home/dqa/data/entrypoint.sh
     volumes:
       - .:/home/dqa/data
+      - data:/home/dqa/data/pressure_test/log
+      - celdata:/home/dqa/data/pressure_test
     ports:
       - "8000:8000"
     depends_on:
       - db
     links:
       - redis
+  filebeat:
+    build: filebeat
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - "./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - data:/mnt/log:ro
+      - celdata:/mnt/celog:ro 
+volumes:
+  data:
+    driver: "local"
+  celdata:
+    driver: "local"

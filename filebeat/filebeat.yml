@@ -1,0 +1,16 @@
+filebeat.prospectors:
+- input_type: log
+  paths:
+    - /mnt/log/*.log
+    - /mnt/celog/*.log
+
+processors:
+- add_cloud_metadata:
+
+# output.logstash:
+#   hosts: [ "logstash:5044" ]
+output.redis:
+  hosts: [ "172.19.16.104:6379" ]
+  key: "filebeat"
+  db: 0
+  timeout: 5
