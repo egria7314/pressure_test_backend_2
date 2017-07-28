@@ -57,16 +57,17 @@ def get_result(ping_result, mount_result, error_string, input_field, test_broken
                 }
             }
     else:
+        # print(test_broken_result)
         if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == []:
             test_result = {
                 "testCheck": True, "info": {
-                    "action": "pretest", "status": "success", "comment": "{0}, {1}".format(ping_result, mount_result)
+                    "action": "pretest", "status": "success", "comment": "{0}, {1}, Broken test: {2}".format(ping_result, mount_result, test_broken_result)
                 }
             }
         else:
             test_result = {
                 "testCheck": False, "info": {
-                    "action": "pretest", "status": "failed", "comment": "{0}, {1}, Field check: {2}".format(ping_result, mount_result, input_field)
+                    "action": "pretest", "status": "failed", "comment": "{0}, {1}, Broken test: {2}, Field check: {3}".format(ping_result, mount_result, test_broken_result, input_field)
                 }
             }
     return test_result
