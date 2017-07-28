@@ -39,6 +39,15 @@ git checkout develop
 sudo docker-compose run -d web
 ```
 
+### Add .env file
+* 如果要串連壓力測試container與ＥＬＫ(log system)平台,　請注意此步驟.
+* 與docker-compose檔案同一層的目錄, 新增一個檔案並命名為.env, 然後貼上下面的內容： 
+
+```
+DOCK_HOST=172.19.16.51 　# 自己電腦的ＩＰ
+ELK_HOST=172.19.16.104   # log system的ＩＰ
+```
+
 ### Rebuild dockerfile 
 * If you change a Dockerfile or the contents of its build directory, run to rebuild it.
 
