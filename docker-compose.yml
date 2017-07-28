@@ -25,6 +25,8 @@ services:
       - celdata:/home/dqa/data/pressure_test
     ports:
       - "8000:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       - db
     links:
