@@ -31,7 +31,7 @@ services:
       - redis
   filebeat:
     build: filebeat
-    command: filebeat -e -strict.perms=false
+    command: filebeat -e -strict.perms=false -E local_host=${LOCAL_HOST} -E elk_host=${ELK_HOST}
     volumes:
       - "./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
       - data:/mnt/log:ro

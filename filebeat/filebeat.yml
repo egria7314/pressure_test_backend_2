@@ -3,6 +3,8 @@ filebeat.prospectors:
   paths:
     - /mnt/log/*.log
     - /mnt/celog/*.log
+  fields:
+    ip_from: '${local_host}'
 
 processors:
 - add_cloud_metadata:
@@ -10,7 +12,7 @@ processors:
 # output.logstash:
 #   hosts: [ "logstash:5044" ]
 output.redis:
-  hosts: [ "172.19.16.104:6379" ]
+  hosts: [ "${elk_host}:6379" ]
   key: "filebeat"
   db: 0
   timeout: 5
