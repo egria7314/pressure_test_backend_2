@@ -12,6 +12,8 @@ services:
       - .:/home/dqa/data
     ports:
       - "5555:5555"
+    environment:
+      - NODE_ENV=${NODE_ENV}
     links:
       - db
       - redis
