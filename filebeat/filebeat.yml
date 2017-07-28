@@ -4,7 +4,7 @@ filebeat.prospectors:
     - /mnt/log/*.log
     - /mnt/celog/*.log
   fields:
-    ip_from: '${local_host}'
+    ip_from: '${dock_host}'
 
 processors:
 - add_cloud_metadata:
