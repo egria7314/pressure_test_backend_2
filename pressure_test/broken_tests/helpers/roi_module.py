@@ -25,7 +25,17 @@ class RoiModule(object):
         """ Get five privacy mask position"""
         mask_position_dict = {}
         timestamp_mask_position_dict = {}
-        mask_position_list = self.__get_mask_position()
+
+        command = 'http://'+self.ip+'/cgi-bin/admin/getparam.cgi?system_info_modelname'
+        url = URI.set(command, self.account, self.password)
+        resp = url.read().decode('utf-8')
+        modelname = re.search('=\'(.*)\'', resp).groups()[0]
+        print("MODEL: ", modelname)
+        
+        if 'SD' in modelname:
+            mask_position_list = self.__get_mask_position_form_3D_mask()
+        else:
+            mask_position_list = self.__get_mask_position()
 
         for i in range(len(mask_position_list)):
             if len(mask_position_list[i]) == 8:
@@ -47,7 +57,7 @@ class RoiModule(object):
 
         # self.mask_position_dict = mask_position_dict
         # self.timestamp_mask_position_dict = timestamp_mask_position_dict
-
+    
     def return_mask(self):
         """ Return row and column privacy mask"""
         #print json.dumps(self.mask_position_dict, ensure_ascii=False)
@@ -86,8 +96,12 @@ class RoiModule(object):
         command = 'http://'+self.ip+'/cgi-bin/admin/getparam.cgi?videoin_c0_s'+recording_source+'_resolution'
         url = URI.set(command, self.account, self.password)
         resolution = url.read().decode('utf-8')
-        width_ratio = float(re.search('=\'(.*)x(.*)\'',resolution).groups()[0])/320
-        hight_ratio = float(re.search('=\'(.*)x(.*)\'',resolution).groups()[1])/240
+        width = re.search('=\'(.*)x(.*)\'',resolution).groups()[0]
+        height = re.search('=\'(.*)x(.*)\'',resolution).groups()[1]
+        w = 320
+        h = 240 if round(float(width)/float(height),2) == 1.33 else 180
+        width_ratio = float(width)/w
+        hight_ratio = float(height)/h
         return width_ratio,hight_ratio
 
     def __regulate_mask_position(self,mask_position):
@@ -117,5 +131,25 @@ class RoiModule(object):
 
         return self.__regulate_mask_position(mask_position)
 
-    # def __get_mask_position_SD(self):
+    def __get_mask_position_form_3D_mask(self):
+        """ Get 2 privacy masks info.
+        Retrun 2 privacy mask represented by 4-coord.
 
+        The 2 privacy masks must be located like cross on the centre of snapshot.
+        
+        """
+        # Max plugin size 320x180
+        PM_16_to_9 = ['150,0,170,0,170,180,150,180', '0,80,320,80,320,100,0,100']
+        # Max plugin size 320x240
+        PM_4_to_3 = ['150,0,170,0,170,240,150,240', '0,110,320,110,320,130,0,130']
+        
+        recording_source = self.__get_recording_source()
+        command = 'http://'+self.ip+'/cgi-bin/admin/getparam.cgi?videoin_c0_s'+recording_source+'_resolution'
+        url = URI.set(command, self.account, self.password)
+        resolution = url.read().decode('utf-8')
+        width = re.search('=\'(.*)x(.*)\'',resolution).groups()[0]
+        height = re.search('=\'(.*)x(.*)\'',resolution).groups()[1]
+        mask_position = PM_4_to_3 if round(float(width)/float(height),2) == 1.33 else PM_16_to_9
+        
+        return self.__regulate_mask_position(mask_position)
+       
