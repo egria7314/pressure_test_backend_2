@@ -1,5 +1,6 @@
 __author__ = 'carlos.hu'
 from camera_log.telnet_module import TelnetModule
+from camera_log.models import CameraLog
 import re
 import json
 from libs.pressure_test_logging import PressureTestLogging as ptl
@@ -17,15 +18,23 @@ class Uptime(object):
         self.account = account
         self.password = password
 
-    def get_result(self, timeout=300):
+    def get_result(self, project_id, timeout=300):
         """Get the dictionary consist of camera_uptime,camera_cpuloading_idle and camera_cpuloading_average"""
         data_dict = {}
 
         try:
+            former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
+            before_uptime = self.__get_up_time_content(former_cam_obj.camera_uptime)
+
             tn = TelnetModule(self.ip,self.account,self.password, timeout).login().send_command('uptime').send_command('top -n 1')
             data = tn.result()
             camera_uptime = self.__process_camera_uptime(data[0])
             camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
+
+            after_uptime = self.__get_up_time_content(camera_uptime)
+            if  not self.__up_time_is_grater_than_before(before_uptime, after_uptime):
+                camera_uptime = "[red]{0}".format(camera_uptime)
+
 
         except socket.timeout as e:
             ptl.logging_error('[Exception] get uptime result timeout, [Error msg]:{0}'.format(e))
@@ -76,6 +85,28 @@ class Uptime(object):
         camera_load_average = re.search(b"Load average:\s(\d*.\d*)\s",data)
         camera_load_average = camera_load_average.groups()[0].decode()
         return camera_cpuloading_idle, camera_load_average
+
+    def __get_up_time_content(self, text):
+        pattern = "\s*(\d+)\s+days\s+(\d+):(\d+)"
+        if re.search(pattern, text):
+            day = re.search(pattern, text).group(1)
+            hour = re.search(pattern, text).group(2)
+            min = re.search(pattern, text).group(3)
+        else:
+            raise Exception("[Exception] Up time format error!")
+
+        return int(day), int(hour), int(min)
+
+    def __up_time_is_grater_than_before(self, before, after):
+        b_day, b_hour, b_min = before
+        a_day, a_hour, a_min = after
+
+        b_total_sec = b_day * 86400 + b_hour * 3600 + b_min * 60
+        a_total_sec = a_day * 86400 + a_hour * 3600 + a_min * 60
+        if a_total_sec > b_total_sec:
+            return True
+        else:
+            return False
 
 
 # if __name__ == "__main__":
