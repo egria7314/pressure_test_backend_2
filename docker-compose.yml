@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   db:
     image: postgres
@@ -7,11 +7,13 @@ services:
   celery:
     build: .
     privileged: true
-    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info -f %n-%i.log"
+    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info -f ./log/%n-%i.log"
     volumes:
       - .:/home/dqa/data
     ports:
       - "5555:5555"
+    environment:
+      - NODE_ENV=${NODE_ENV}
     links:
       - db
       - redis
@@ -23,7 +25,15 @@ services:
       - .:/home/dqa/data
     ports:
       - "8000:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       - db
     links:
       - redis
+  filebeat:
+    build: filebeat
+    command: filebeat -e -strict.perms=false -E dock_host=${DOCK_HOST} -E elk_host=${ELK_HOST}
+    volumes:
+      - "./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - ./pressure_test/log:/mnt/log:ro

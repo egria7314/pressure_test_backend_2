@@ -34,7 +34,6 @@ def test_button(request):
         input_field = "{0} field may not be blank".format(', '.join(error_string))
     ping_result = ping_camera(ip)
     mount_result = mount_status(path, path_username, path_password)
-
     if broken == 'true':
         test_broken_result = module_pretest_broken_image(camera_host=ip, camera_user=username, camera_password=password, storage_type=type)
         test_result = get_result(ping_result=ping_result, mount_result=mount_result, test_broken_result=test_broken_result, error_string=error_string, input_field=input_field)
@@ -58,16 +57,17 @@ def get_result(ping_result, mount_result, error_string, input_field, test_broken
                 }
             }
     else:
+        # print(test_broken_result)
         if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == []:
             test_result = {
                 "testCheck": True, "info": {
-                    "action": "pretest", "status": "success", "comment": "{0}, {1}".format(ping_result, mount_result)
+                    "action": "pretest", "status": "success", "comment": "{0}, {1}, Broken test: {2}".format(ping_result, mount_result, test_broken_result)
                 }
             }
         else:
             test_result = {
                 "testCheck": False, "info": {
-                    "action": "pretest", "status": "failed", "comment": "{0}, {1}, Field check: {2}".format(ping_result, mount_result, input_field)
+                    "action": "pretest", "status": "failed", "comment": "{0}, {1}, Broken test: {2}, Field check: {3}".format(ping_result, mount_result, test_broken_result, input_field)
                 }
             }
     return test_result
@@ -124,10 +124,11 @@ def mount_status(destination, username, password):
     out, error = check_status.communicate()
     mount_result = ''
     if destination:
-        destination.replace('\\', '/')
         if out:
-            if destination.replace('\\', '/') not in str(out):
-                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(destination.replace('\\', '/'), source, username, password), shell=True)
+            # print(os.path.join(destination, '').replace('\\', '/'))
+            if os.path.join(destination, '').replace('\\', '/') not in str(out):
+                subprocess.Popen("sudo mount -t cifs {0} {1} -o username={2},password={3}".format(os.path.join(destination, '').replace('\\', '/'), source, username, password), shell=True)
+                time.sleep(3)
                 status = subprocess.Popen(["df"], stdout=subprocess.PIPE)
                 out, error = status.communicate()
                 if out:

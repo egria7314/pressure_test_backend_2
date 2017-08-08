@@ -18,7 +18,8 @@ from camera_log.models import CameraLog
 from camera_log.sd_cycle import SDcycle
 # from datetime import datetime
 import datetime
-from libs.timeout import timeout
+from camera_log.libs.timeout import timeout
+
 from threading import Thread
 import re
 import time
@@ -26,6 +27,7 @@ import schedule
 import pytz
 from threading import Thread
 import threading
+import socket
 
 from libs.vast_storage import VastStorage
 from libs.nas_storage import NasStorage
@@ -35,10 +37,11 @@ from config.models import ProjectSetting
 from django.utils.timezone import localtime
 from camera_log.libs.monitor import Monitor
 from camera_log.nas_vast_storage_cycle import trans_vast_file_to_nas_style
+from camera_log.libs.sd_prefix import SDPrefix
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 112  #108
+TEST_PROJECT_ID = 136# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -48,7 +51,9 @@ NAS_START_DATE = datetime.datetime(2000, 6, 3, 0, 0, 0)
 
 VAST_TEST_STARTDATE = datetime.datetime(2017, 6, 25, 0, 0, 0)
 
-#
+GLOBAL_TIMEOUT = 3000   # default timeout
+
+
 # def job():
 #     print("I'm working...")
 #     # req = urllib.request.Request('http://172.19.16.133:8000/camera_log/')
@@ -57,10 +62,10 @@ VAST_TEST_STARTDATE = datetime.datetime(2017, 6, 25, 0, 0, 0)
 
 
 # check sd support
-def support_sd(username, password, ip, cgi_command):
+def support_sd(username, password, ip, cgi_command, timeout=300):
     support = True
     # sd_support_cgi_result = CGI().get_cgi("root", "12345678z", "172.19.16.119", "capability_supportsd")    # sd support
-    sd_support_cgi_result = CGI().get_cgi(username, password, ip, cgi_command)    # sd not support
+    sd_support_cgi_result = CGI().get_cgi(username, password, ip, cgi_command, timeout=timeout)    # sd not support
 
 
     m = re.match(r"(.*)=\'(.*)\'", sd_support_cgi_result)
@@ -160,8 +165,9 @@ def test_camera(request):
 
 def run_cameralog_schedule_by_id(project_id):
     # test_run_camera_thread(1)
-
     from camera_log.libs import monitor
+    ptl.logging_info('[Info] Run camera log schedule by ID.')
+
     task_camera_obj = ProjectSetting.objects.get(id=project_id)
 
     need_log_bool = task_camera_obj.log
@@ -180,22 +186,11 @@ def run_cameralog_schedule_by_id(project_id):
 
         if (end_time < now_time):
             print("End < NOW ")
-
-
             end_time = now_time
             periodic_time = now_time
         elif (start_time < now_time):
             print("START < NOW")
             periodic_time = now_time
-
-
-        print("Schedule START TIME")
-        print(start_time)
-        print("Schedule End TIME")
-        print(end_time)
-        print("Schedule Periodic TIME")
-        print(periodic_time)
-
 
         while periodic_time < end_time:
             periodic_check_points.append(periodic_time)
@@ -221,8 +216,6 @@ def run_cameralog_schedule_by_id(project_id):
         # m = Monitor()
         # # start_time_periodic_check_points = periodic_check_points[:-1]
         # # end_time_periodic_check_points = periodic_check_points[1:]
-        #
-        #
         #
         # for checkpoint in periodic_check_points:
         #     m.add_periodic_jobs(
@@ -250,6 +243,7 @@ def test_camera_status(request):
 
 def running_status(project_pk):
     from camera_log.libs import monitor
+    ptl.logging_info('[Info] Run camera log schedule by ID.')
 
     INVALID_PROJ_ID = 'invalid project id'
     INVALID_MONITOR_ID = 'invalid monitor id'
@@ -288,6 +282,7 @@ def stop_detect_periodic_logs(project_id):
 
 def module_stop_detect_periodic_logs(project_id):
     from camera_log.libs import monitor
+    ptl.logging_info('[Info] Stop camera log schedule by ID.')
     # get project object
 
     print("Kill project ids:")
@@ -354,9 +349,14 @@ def test_set_camera_api(request):
     ##### test of carlos ####
 
 
-    ###### TIMEOUT TEST  ##########
+    ###### TIMEOUT TEST  #########
     # try:
+    #
     #     # print(mytest())
+    #     global TIMEOUT
+    #     TIMEOUT = 1
+    #
+    #
     #     test = mytest()
     #     print(test)
     # except Exception as e:
@@ -366,20 +366,24 @@ def test_set_camera_api(request):
 
     return Response({'status:': 'OK'})
 
+# def glob(new_time):
+#     global TIMEOUT
+#     TIMEOUT = new_time
+#     return True
 
-@timeout(1)
+# @timeout(TIMEOUT)
 def mytest():
-    print("Start!!!")
-    # for i in range(1,10):
-    #     time.sleep(1)
-    #     print("%d seconds have passed" % i)
+
+    mytest = timeout(GLOBAL_TIMEOUT)
+
+    print("Start!!!!")
+
     num = 0
     num_add = num + 1
 
-    time.sleep(2)
+    time.sleep(5)
 
-    return str(threading.current_thread()) + ": " + str(num) + str(num_add)
-
+    return str(threading.current_thread()) + ": " + str(num) + str(GLOBAL_TIMEOUT)
 
 
 @api_view(['GET'])
@@ -393,9 +397,9 @@ def get_schedule_status(request):
 
 
 def set_camera_log(project_id, start_time):
-    print("***************************")
+    ptl.logging_info('[Info] Set camera log is working ...')
+    print("****************************")
     print("Set camera log is working....")
-    print(schedule.jobs)
 
     ###########
     camera_log_json = {}
@@ -404,7 +408,10 @@ def set_camera_log(project_id, start_time):
 
     # get camera info by id ()
     task_camera_obj = ProjectSetting.objects.get(id=project_id)         # id now is temp, will get POST from Leo
-    print("*****")
+    global GLOBAL_TIMEOUT
+    GLOBAL_TIMEOUT = task_camera_obj.cgi
+    timeout = task_camera_obj.cgi
+    print("****")
     print(task_camera_obj.prefix_name)
     print("*****")
 
@@ -419,56 +426,103 @@ def set_camera_log(project_id, start_time):
     final_camera_log_json = {}
     final_camera_log_json["id"] = project_id    # temp
     all_data_list = []
-    PREFIX = task_camera_obj.prefix_name   # temp
+    # NAS_PREFIX = task_camera_obj.prefix_name   # temp
+
 
     # up time
-    my_up_time_json = set_up_time(camera_ip, camera_user, camera_password)
-    camera_log_json.update(my_up_time_json)
+    my_up_time_json = {}
+    try:
+        ptl.logging_info('[Info] Set uptime.')
+        my_up_time_json = set_up_time(camera_ip, camera_user, camera_password, timeout)
+        camera_log_json.update(my_up_time_json)
+    except Exception as e:
+        ptl.logging_error('[Exception] set uptime fail, [Error msg]:{0}'.format(e))
+        print(e)
+        my_up_time_json["uptime"] = "[Fail]"
+        my_up_time_json["loadAverage"] = "[Fail]"
+        my_up_time_json["idle"] = "[Fail]"
 
 
-    # epoch time
-    camera_epoch_time = Epochtime(camera_ip, camera_user, camera_password)
-    camera_epoch_time_json = camera_epoch_time.get_result()
-    camera_log_json.update(camera_epoch_time_json)
+    # # epoch time
+    # ptl.logging_info('[Info] Set epoch time.')
+    # camera_epoch_time = Epochtime(camera_ip, camera_user, camera_password)
+    # camera_epoch_time_json = camera_epoch_time.get_result()
+    # camera_log_json.update(camera_epoch_time_json)
 
     # sd related
     # first check sd support
-    sd_support = support_sd(camera_user, camera_password, camera_ip, "capability_supportsd")
+
+    sd_support = True
+    try:
+        sd_support = support_sd(camera_user, camera_password, camera_ip, "capability_supportsd", timeout)
+    except socket.timeout as e:
+        ptl.logging_warning('[Warning] Get SD support CGI timeout, [Error msg]:{0}'.format(e))
+        print(e)
+        pass
+    except Exception as e:
+        ptl.logging_error('[ERROR] Get SD support CGI fail, [Error msg]:{0}'.format(e))
+        print(e)
+        pass
+
     sd_status_json = {}
 
     if sd_support:
+        SD_PREFIX = ""
+        try:
+            SD_PREFIX_obj = SDPrefix(camera_ip, camera_user, camera_password)
+            SD_PREFIX = SD_PREFIX_obj.get_recording_prefix()
+            ptl.logging_info('[INFO] get sd prefix:{0}'.format(SD_PREFIX))
+        except Exception as e:
+            ptl.logging_error('[ERROR]: get sd prefix error{0}'.format(SD_PREFIX))
+            print(e)
+
         # sd status
-        sd_status_json = set_sd_status(camera_ip, camera_user, camera_password)
-        camera_log_json.update(sd_status_json)
+        try:
+            ptl.logging_info('[Info] Set sd status.')
+            sd_status_json = set_sd_status(camera_ip, camera_user, camera_password, timeout)
+            camera_log_json.update(sd_status_json)
+        except Exception as e:
+            ptl.logging_error('[Exception] set sd status fail, [Error msg]:{0}'.format(e))
+            print(e)
+            sd_status_json["sdCardStatus"] = "[Fail]"
+            sd_status_json["sdCardUsed"] = "[Fail]"
+
 
         # sd recording file
-        new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
-        new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX)
+        new_sd_locked_file_list = []
+        new_sd_unlocked_file_list = []
+        sd_cycle_status_tobe = ""
+        try:
+            ptl.logging_info('[Info] Set sd recording files.')
+            new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+            new_sd_locked_file_list, new_sd_unlocked_file_list, sd_cycle_status_tobe = \
+                set_sd_recording_files(camera_ip, camera_user, camera_password, SD_PREFIX, project_id, timeout)
+        except Exception as e:
+            ptl.logging_error('[Exception] set sd recording file error, [Error msg]:{0}'.format(e))
+            print(e)
+            new_sd_locked_file_str = "Fail/Timeout"
+            new_sd_unlocked_file_str = "Fail/Timeout"
+            new_sd_all_file_str = "Fail/Timeout"
+            new_sd_locked_file_list.append("Fail/Timeout")
+            new_sd_unlocked_file_list.append("Fail/Timeout")
 
 
-        # check SD cycle #
-        former_cam_obj = CameraLog.objects.last()
-
-        if former_cam_obj:
-            former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
-            former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
-            former_sd_locked_file_list = check_list(former_sd_locked_file_list)
-            former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
+        if sd_cycle_status_tobe == "Timeout":
+            sd_cycle_result = "Timeout"
+        elif sd_cycle_status_tobe == "Fail":
+            sd_cycle_result = "Fail"
         else:
-            former_sd_locked_file_list = []
-            former_sd_unlocked_file_list = []
+            # check normal SD cycle #
+            try:
+                ptl.logging_info('[Info] Set sd cycle.')
+                sd_cycle_result, sd_cycle_json = set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, SD_PREFIX)
+                camera_log_json.update(sd_cycle_json)
+            except Exception as e:
+                ptl.logging_error('[Exception] set sd cycle error, [Error msg]:{0}'.format(e))
+                print(e)
+                sd_cycle_result = "Fail/Timeout"
 
-        sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
-                                  former_unlocked_file_list=former_sd_unlocked_file_list,
-                                  new_locked_file_list=new_sd_locked_file_list,
-                                  new_unlocked_file_list=new_sd_unlocked_file_list)
 
-        sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
-        print("sd_cycle_result:")
-        print(sd_cycle_result)
-        sd_cycle_json = {}
-        sd_cycle_json["sdCardCycling"] = sd_cycle_result
-        camera_log_json.update(sd_cycle_json)
     else:
         comment = "Not Support"
         sd_status_json["sdCardStatus"] = comment
@@ -485,26 +539,38 @@ def set_camera_log(project_id, start_time):
     nas_cycle_result=""
     vast_cycle_result=""
     medium_or_high = task_camera_obj.type
-    if medium_or_high.lower() == "high":
-        new_nas_file_list, nas_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "NAS", NAS_START_DATE)
-    # medium (by VAST)
-    else:
-    # ####################### VAST ################################
-    # #check VAST cycle
-        new_vast_file_list, vast_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "VAST", start_time)
 
+    try:
+        if medium_or_high.lower() == "high":
+            ptl.logging_info('[Info] Set high pressure storage cycle.')
+            new_nas_file_list, nas_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "NAS", NAS_START_DATE)
+        # medium (by VAST)
+        else:
+            ptl.logging_info('[Info] Set medium pressure storage cycle.')
+        # ####################### VAST ################################
+        # #check VAST cycle
+            new_vast_file_list, vast_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "VAST", start_time)
+    except Exception as e:
+        ptl.logging_error('[Exception] set storage cycle error, [Error msg]:{0}'.format(e))
+        nas_cycle_result = "[Fail]"
+        vast_cycle_result = "[Fail]"
+        new_nas_file_list.append("[Fail]t")
+        new_vast_file_list.append("[Fail]")
+
+
+    ptl.logging_info('Set camera log to DB:')
     print("create DB:")
     # write db
     CameraLog.objects.create(
         project_id=project_id,
         create_at=time_now,
-        camera_ip=CAMERA_IP,
+        camera_ip=camera_ip,
         sd_status=sd_status_json["sdCardStatus"],
         sd_used_percent=sd_status_json["sdCardUsed"],
         camera_uptime=my_up_time_json["uptime"],
         camera_cpuloading_average=my_up_time_json["loadAverage"],
         camera_cpuloading_idle=my_up_time_json["idle"],
-        camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
+        # camera_epoch_time=camera_epoch_time_json["camera_epoch_time"],
         sd_locked_file=new_sd_locked_file_str,
         sd_unlocked_file=new_sd_unlocked_file_str,
         sd_all_file=new_sd_all_file_str,
@@ -517,25 +583,32 @@ def set_camera_log(project_id, start_time):
         vast_cycling=vast_cycle_result,
     )
 
+    ptl.logging_info('Set camera log finish.')
+
     all_data_list.append(camera_log_json)
     final_camera_log_json["data"] = all_data_list
 
-
-def set_up_time(camera_ip, camera_user, camera_password):
+# @timeout(GLOBAL_TIMEOUT)
+def set_up_time(camera_ip, camera_user, camera_password, timeout=300):
     my_up_time = Uptime(camera_ip, camera_user, camera_password)
-    my_up_time_json = my_up_time.get_result()
+    my_up_time_json = my_up_time.get_result(timeout)
 
     return my_up_time_json
 
+# @timeout(GLOBAL_TIMEOUT)
+def set_sd_status(camera_ip, camera_user, camera_password, timeout=300):
+    print("***TEST TIMEOUT***")
+    print(GLOBAL_TIMEOUT)
 
-def set_sd_status(camera_ip, camera_user, camera_password):
+
     my_sd_status = SDstatus(camera_ip, camera_user, camera_password)
-    sd_status_json = my_sd_status.get_result()
+    sd_status_json = my_sd_status.get_result(timeout)
 
     return sd_status_json
 
-
-def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX):
+# @timeout(GLOBAL_TIMEOUT)
+def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, project_id, timeout=300):
+    sd_cycle_status_tobe = ""
     new_sd_locked_file_str = ""
     new_sd_unlocked_file_str = ""
     new_sd_all_file_str = ""
@@ -543,48 +616,120 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX):
     new_sd_unlocked_file_list = []
 
     sd_recording_file = Sdrecordingfile(camera_ip, camera_user, camera_password)
-    sd_recording_file_json = sd_recording_file.get_fw_file_dict()
-    new_sd_locked_file_list = [file for file in sd_recording_file_json["sd_locked_file"] if PREFIX in file]
+    try:
+        sd_recording_file_json = sd_recording_file.get_fw_file_dict(timeout)
+        new_sd_locked_file_list = [file for file in sd_recording_file_json["sd_locked_file"] if PREFIX in file]
+        if "No such file or directory" in new_sd_locked_file_list:
+            new_sd_locked_file_list.remove("No such file or directory")
+        new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+
+        new_sd_unlocked_file_list = [file for file in sd_recording_file_json["sd_unlocked_file"] if PREFIX in file]
+        if "No such file or directory" in new_sd_unlocked_file_list:
+            new_sd_unlocked_file_list.remove("No such file or directory")
+        new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
+
+        new_sd_all_file_list = [file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file]
+        if "No such file or directory" in new_sd_all_file_list:
+            new_sd_all_file_list.remove("No such file or directory")
+        new_sd_all_file_str = ','.join(new_sd_all_file_list)
+
+    # if sd file timeoutm, we put former camera's file in this test, but will set sd cycle to timeout
+    except socket.timeout as e:
+        ptl.logging_error('[Exception] set sd files time out, [Error msg]:{0}'.format(e))
+        sd_cycle_status_tobe = "Timeout"
+        new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+            new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
+
+    except Exception as e:
+        ptl.logging_error('[Exception] set sd files fail, [Error msg]:{0}'.format(e))
+        sd_cycle_status_tobe = "Fail"
+        new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+            new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
 
 
-    new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+    return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+           new_sd_locked_file_list, new_sd_unlocked_file_list, sd_cycle_status_tobe
 
-    new_sd_unlocked_file_list = [file for file in sd_recording_file_json["sd_unlocked_file"] if PREFIX in file]
+def set_sd_file_when_get_file_exception(project_id):
+    new_sd_locked_file_str = ""
+    new_sd_unlocked_file_str = ""
+    new_sd_all_file_str = ""
+    new_sd_locked_file_list = []
+    new_sd_unlocked_file_list = []
 
+    try:
+        former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
+        new_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
+        new_sd_locked_file_str = ','.join(new_sd_locked_file_list)
+        new_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
+        new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
+        new_sd_all_file_list = former_cam_obj.sd_all_file.split(',')
+        new_sd_all_file_str = ','.join(new_sd_all_file_list)
 
-    new_sd_unlocked_file_str = ','.join(new_sd_unlocked_file_list)
-    new_sd_all_file_str = ','.join([file for file in sd_recording_file_json["sd_all_file"] if PREFIX in file])
+    except Exception as e:
+        ptl.logging_warning('[Exception] Did not find former camera obj of same project id when sd file exception'
+                            ', [Error msg]:{0}'.format(e))
+        pass
 
     return new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
            new_sd_locked_file_list, new_sd_unlocked_file_list
 
 
-# def set_sd_cycle():
+
+# @timeout(GLOBAL_TIMEOUT)
+def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list, PREFIX):
+
+    try:
+        former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
+        former_sd_locked_file_list = former_cam_obj.sd_locked_file.split(',')
+        former_sd_unlocked_file_list = former_cam_obj.sd_unlocked_file.split(',')
+        former_sd_locked_file_list = check_list(former_sd_locked_file_list)
+        former_sd_unlocked_file_list = check_list(former_sd_unlocked_file_list)
+
+    except Exception as e:
+        ptl.logging_warning('[Exception] Did not find former camera obj of same project id, [Error msg]:{0}'.format(e))
+        former_sd_locked_file_list = []
+        former_sd_unlocked_file_list = []
+
+    sd_cycle_obj = SDcycle(former_locked_file_list=former_sd_locked_file_list,
+                              former_unlocked_file_list=former_sd_unlocked_file_list,
+                              new_locked_file_list=new_sd_locked_file_list,
+                              new_unlocked_file_list=new_sd_unlocked_file_list)
+
+    sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
+    print("sd_cycle_result:")
+    print(sd_cycle_result)
+    sd_cycle_json = {}
+    sd_cycle_json["sdCardCycling"] = sd_cycle_result
+
+    return sd_cycle_result, sd_cycle_json
 
 
 
-
+# @timeout(GLOBAL_TIMEOUT)
 def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_time):
 ######################## NAS #################################
     # check NAS cycle
     storage_path = task_camera_obj.path
     storage_user = task_camera_obj.path_username
     storage_password = task_camera_obj.path_password
-    PREFIX = task_camera_obj.prefix_name
+    NAS_PREFIX = task_camera_obj.prefix_name
     new_storage_file_list = []
     storage_cycle_result=""
 
     try:
+        ptl.logging_info('[Info] Get former storage object.')
         # get the latest obj of same project id
         former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
-        if former_cam_obj:
-            if storage_by == "NAS":
-                former_storage_file_list = former_cam_obj.nas_file.split(',')
-            elif storage_by == "VAST":
-                former_storage_file_list = former_cam_obj.vast_file.split(',')
+        if storage_by == "NAS":
+            former_storage_file_list = former_cam_obj.nas_file.split(',')
+        elif storage_by == "VAST":
+            former_storage_file_list = former_cam_obj.vast_file.split(',')
 
-            former_storage_file_list = check_list(former_storage_file_list)
-    except:
+        former_storage_file_list = check_list(former_storage_file_list)
+    except Exception as e:
+        ptl.logging_warning('[Exception] Did not find former camera obj of same project id when getting storage '
+                                  'cycle, [Error msg]:{0}'.format(e))
         former_storage_file_list=[]
 
     finally:
@@ -600,18 +745,29 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 test_nas_obj = NasStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
                 storage_files_dict = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
-                                                         PREFIX, timestamp_start, timestamp_end)
+                                                         NAS_PREFIX, timestamp_start, timestamp_end)
+
+                print("*****GET NAS FILE******")
+                print(storage_files_dict)
 
 
                 storage_files_list = list(storage_files_dict.keys())
                 new_storage_file_list = []
                 for nas_file in storage_files_list:
-                    end_index = nas_file.find(storage_path) + len(storage_path) + 1
+                    print("NAS FILE*")
+                    print(nas_file)
+                    print("storage PATH")
+                    print(storage_path)
+
+                    if storage_path.endswith('/'):
+                        end_index = nas_file.find(storage_path) + len(storage_path)
+                    else:
+                        end_index = nas_file.find(storage_path) + len(storage_path) + 1
                     new_storage_file_list.append(nas_file[end_index:])
 
                 nas_cycle_obj = NasVastCycle(former_file_list=former_storage_file_list,
                                            new_file_list=new_storage_file_list)
-                storage_cycle_result = nas_cycle_obj.get_result(PREFIX)
+                storage_cycle_result = nas_cycle_obj.get_result(NAS_PREFIX)
 
             elif storage_by == "VAST":
                 timestamp_start = start_time
@@ -636,6 +792,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 storage_cycle_result = cycle_obj.get_result()
 
         except Exception as e:
+            ptl.logging_error('[Exception] NAS/VAST get files Fail! or Timeout, [Error msg]:{0}'.format(e))
             print("NAS/VAST get files Fail! or Timeout")
             print(e)
 
@@ -656,7 +813,8 @@ def check_list(file_list):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_all_camera_log(request, pi=None):
-    ptl.logging_error('hello log')
+    ptl.logging_info('[Info] Get all camera log API.')
+    # ptl.logging_info('hello log')
     project_id = pi
 
     final_camera_log_json = {}

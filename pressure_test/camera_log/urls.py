@@ -22,7 +22,8 @@ urlpatterns = [
     url(r'^camera_log_status/$', views.test_camera_status),
 
 
-    url(r'^logs/(?P<pi>[0-9]+)/$', views.get_all_camera_log)
+    url(r'^logs/(?P<pi>[0-9]+)/$', views.get_all_camera_log),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

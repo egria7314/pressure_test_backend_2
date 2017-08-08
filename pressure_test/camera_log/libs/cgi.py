@@ -17,7 +17,7 @@ import re
 
 class CGI():
     """using cgi to get or set the parameter of camera"""
-    def get_cgi(self, username, password, host, cgi_command, cgi_type='getparam.cgi'):
+    def get_cgi(self, username, password, host, cgi_command, cgi_type='getparam.cgi', timeout=300):
         """using cgi to get the parameter of camera
         Args:
             username (str): Camera user name
@@ -41,7 +41,7 @@ class CGI():
 
         req = urllib.request.Request('http://' + host + '/cgi-bin/admin/{0}?'.format(cgi_type) + cgi_command)
         req.add_header("Authorization", "Basic " + encode_str.decode())
-        response = urllib.request.urlopen(req)
+        response = urllib.request.urlopen(req, timeout=timeout)
         cgi = re.split(b"\\r\\n", response.read())
 
         return cgi[0].decode("utf-8")

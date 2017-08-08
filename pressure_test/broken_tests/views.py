@@ -64,6 +64,7 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password, stora
     return results
 
 
+
 def module_detect_periodic_videos(project_pk):
     # get project object
     project = ProjectSetting.objects.get(id=project_pk)
@@ -177,9 +178,9 @@ def pretest_broken_image(request):
     # call core module
     results = module_pretest_broken_image(camera_host, camera_user, camera_password, storage_type)
     print( results )
-    return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
+    # return Response({'results': results['result'], 'error_boxes': results['error_boxes']})
+    return Response(results)
     
-
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny, ))
@@ -211,7 +212,7 @@ def detect_broken_image(pk):
     camera = clip.camera_profile
     nas = clip.nas_profile
     # temporary replace without saving
-    nas.location = os.path.dirname(clip.full_path) if nas.project_profile.type == 'medium' else nas.location
+    nas.location = os.path.join(os.path.dirname(clip.full_path), '') if nas.project_profile.type == 'medium' else nas.location
     print("rename nas location= ", nas.location)
     # detect broken
     anly = ContentAnalysis()
@@ -296,7 +297,15 @@ def detect_broken_image(pk):
 
     print( "video_status: ", video_status )
     # copy framefolder's jpgs to clipath folder
-    shutil.copytree(framefolder, os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(framefolder)))
+    remote_framefolder_name = os.path.splitext(os.path.basename(clip.full_path))[0]
+    print( "remote_framefolder_name: ", remote_framefolder_name)
+    mount_point_2_remote_framefolder_path = os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(remote_framefolder_name))
+    print( "mount_point_2_remote_framefolder_path: ", mount_point_2_remote_framefolder_path)
+    if os.path.exists(mount_point_2_remote_framefolder_path):
+        shutil.rmtree(mount_point_2_remote_framefolder_path)
+    shutil.copytree(framefolder, mount_point_2_remote_framefolder_path)
+
+    # shutil.copytree(framefolder, os.path.join(os.path.dirname(clippath), 'broken', os.path.basename(framefolder)))
     # update analysis info
     clip.size = os.path.getsize(clippath)
     clip.is_broken = False if video_status['result'] == 'passed' else True

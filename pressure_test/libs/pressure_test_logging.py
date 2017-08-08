@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import os
+import inspect
 
 
 class PressureTestLogging(object):
@@ -16,26 +17,38 @@ class PressureTestLogging(object):
     print (LOGGER_FILENAME)
     logging.config.fileConfig(LOGGER_FILENAME)
     logger = logging.getLogger(LOGGER_NAME)
+    projectName = "PressureTest"
+
+    @staticmethod
+    def getmodule():
+        frame = inspect.stack()[2]
+        module = inspect.getmodule(frame[0])
+        return module.__name__
 
     @staticmethod
     def logging_debug(debug):
-        PressureTestLogging.logger.debug(debug)
+        caller = PressureTestLogging.getmodule()
+        PressureTestLogging.logger.debug("[{0}][{1}][{2}]".format(PressureTestLogging.projectName, caller, debug))
 
     @staticmethod
     def logging_info(info):
-        PressureTestLogging.logger.info(info)
+        caller = PressureTestLogging.getmodule()
+        PressureTestLogging.logger.info("[{0}][{1}][{2}]".format(PressureTestLogging.projectName, caller, info))
 
     @staticmethod
     def logging_warning(warning):
-        PressureTestLogging.logger.warning(warning)
+        caller = PressureTestLogging.getmodule()
+        PressureTestLogging.logger.warning("[{0}][{1}][{2}]".format(PressureTestLogging.projectName, caller, warning))
 
     @staticmethod
     def logging_error(error):
-        PressureTestLogging.logger.error(error)
+        caller = PressureTestLogging.getmodule()
+        PressureTestLogging.logger.error("[{0}][{1}][{2}]".format(PressureTestLogging.projectName, caller, error))
 
     @staticmethod
     def logging_critical(critical):
-        PressureTestLogging.logger.critical(critical)
+        caller = PressureTestLogging.getmodule()
+        PressureTestLogging.logger.critical("[{0}][{1}][{2}]".format(PressureTestLogging.projectName, caller, critical))
 
 
 def main():

@@ -55,9 +55,9 @@ class ContentAnalysis(object):
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
 
         blur = cv2.GaussianBlur(cv_img, (5, 5), 0)
-        # cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/blur.jpg", blur)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/blur.jpg", blur)
         edges = cv2.Canny(blur, 5, 10)
-        # cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/canny.jpg", edges)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/canny.jpg", edges)
 
         minLineLength = int(box.lower*0.3) if box.lower > box.right else int(box.right*0.3)
         lines = cv2.HoughLines(edges, 1, np.pi/180, minLineLength)
@@ -88,7 +88,7 @@ class ContentAnalysis(object):
 
         listOfRhoAndTheta = detected_lines.flatten()
         listOfTheta = map(lambda theta: round(theta, 2), listOfRhoAndTheta[1::2].tolist())
-
+        # print("h:", len(detected_lines), box)
         return bool(detected_lines.size) and (lineCount <= len(detected_lines)) \
             and (list(listOfTheta).count(HORIZONTAL_ANGEL) >= lineCount) 
     
@@ -115,7 +115,7 @@ class ContentAnalysis(object):
 
         listOfRhoAndTheta = detected_lines.flatten()
         listOfTheta = map(lambda theta: round(theta, 2), listOfRhoAndTheta[1::2].tolist())
-
+        # print("v:", len(detected_lines), box)
         return bool(detected_lines.size) and (lineCount <= len(detected_lines)) \
             and (list(listOfTheta).count(VERTICAL_ANGEL) >= lineCount)
     
@@ -134,20 +134,20 @@ class ContentAnalysis(object):
 
         # Convert RGB to BGR
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
-        cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/crop.jpg", cv_img)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/crop.jpg", cv_img)
 
         # Smooth image
         blur = cv2.GaussianBlur(cv_img, (5, 5), 0)
-        cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/blur.jpg", blur)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/blur.jpg", blur)
         edges = cv2.Canny(blur, 100, 200)
-        cv2.imwrite("/home/dqa/data/pressure_test/clips/helpers/canny.jpg", edges)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/canny.jpg", edges)
 
         # Indent region to Only has black pixel inside mask
         mask = np.zeros(edges.shape[:2], np.uint8)
         height, width = edges.shape[:2]
 
-        indent_height = 2 if height > width else 5
-        indent_width = 5 if height > width else 2
+        indent_height = 4 if height > width else 10
+        indent_width = 10 if height > width else 4
         percentage_of_all_black_area = 1.0
 
         mask[indent_height:height-indent_height, indent_width:width-indent_width] = 255
@@ -155,6 +155,13 @@ class ContentAnalysis(object):
         hist = cv2.calcHist([edges], [0], mask, [256], [0, 256])
 
         return hist[0] >= (width-2*indent_width) * (height-2*indent_height) * percentage_of_all_black_area
+
+
+    def check_lines(self, mask, count, img):
+        if mask.right - mask.left > mask.lower - mask.upper:
+            return self.count_horizontal_lines(mask, count, img)
+        else:
+            return self.count_vertical_lines(mask, count, img)
 
 
     def cut_to_frames(self, clipPath, dstFolder):
@@ -217,8 +224,8 @@ class ContentAnalysis(object):
         img = Image.open(imgPath)
         print("READDDD succ: ", imgPath)
         for i, mask in enumerate(privacy_masks):
-            # normal_frame = self.check_no_broken_pixel(mask, img) and self.check_lines(mask, 2, img)
-            normal_frame = self.check_no_broken_pixel(mask, img)
+            normal_frame = self.check_no_broken_pixel(mask, img) and self.check_lines(mask, 2, img)
+            # normal_frame = self.check_no_broken_pixel(mask, img)
             # print mask, normal_frame
             if not normal_frame:
                  ret['result'] = 'failed'
@@ -267,18 +274,20 @@ class ContentAnalysis(object):
     #         last += avg
 
     
-    def get_actual_privacy_masks_coordinates(self, recDstType):
-        """Return the actual privacy mask coordinates
+    # [DELETE] Not used
+    # def get_actual_privacy_masks_coordinates(self, recDstType):
+    #     """Return the actual privacy mask coordinates
 
-        Keyword arguments:
-        recDstType -- the string of recording destination server type. Now we have 2 available values SD and NAS.
+    #     Keyword arguments:
+    #     recDstType -- the string of recording destination server type. Now we have 2 available values SD and NAS.
 
-        """
-        # transform mask position
-        roi = RoiModule(self.__ref_cam_ip, self.__ref_cam_user, self.__ref_cam_pwd, recDstType)
-        privacy_masks = list(map(self.trans_from_points_to_box, roi.return_mask()))
+    #     """
+    #     # transform mask position
+    #     roi = RoiModule(self.__ref_cam_ip, self.__ref_cam_user, self.__ref_cam_pwd, recDstType)
+    #     print(roi.return_mask())
+    #     privacy_masks = list(map(self.trans_from_points_to_box, roi.return_mask()))
         
-        return privacy_masks
+    #     return privacy_masks
 
 
     # # @save_exception_to('fw_pressure_test.content_analysis', os.path.join(os.path.dirname( __file__ ), 'content_analysis.log'))

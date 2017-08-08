@@ -3,6 +3,7 @@ __author__ = 'steven.hsiao'
 # import json
 import re
 from datetime import datetime as dt
+from libs.pressure_test_logging import PressureTestLogging as ptl
 import time
 # from telnet_module import TelnetModule
 # from telnet_module import URI
@@ -36,7 +37,7 @@ class NasVastCycle():
             # loss file
             if not set(self.former_file_list).issubset(self.new_file_list) and not cycle:
                 loss_locked_file_list = list(set(self.former_file_list) - set(self.new_file_list))
-                result += "Error! Lose file:" + ','.join(loss_locked_file_list) + '\n'
+                result += "[Error] Lose file:" + ','.join(loss_locked_file_list) + '\n'
                 return result
 
             # check adding
@@ -48,9 +49,10 @@ class NasVastCycle():
                 result = "Nothing change!"
                 return result
 
-        except:
+        except Exception as e:
             # other unknown case
-            result = "Fail"
+            ptl.logging_error('[Exception] get storage cycle error, [Error msg]:{0}'.format(e))
+            result = "[Fail]"
             return result
 
 
@@ -107,6 +109,11 @@ class NasVastCycle():
         exist = False
         result = ""
 
+        # if former list is empty, no need to check surpassing one hour (remember to update sd cycle)
+        if self.former_file_list == []:
+            return exist, result
+
+
         # first: compare newest added file with former test last file
         added_file_list = list(set(self.new_file_list) - set(self.former_file_list))
         added_file_list = sorted(added_file_list)
@@ -156,8 +163,8 @@ class NasVastCycle():
 
 
         if PREFIX != "":
-            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0]
-            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0]
+            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0][:2]
+            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0][:2]
         else:
             old_file_min = old_re[2].split(".")[0]
             new_file_min = new_re[2].split(".")[0]
@@ -178,7 +185,7 @@ class NasVastCycle():
 
         # if differ is more than one hour
         if differ_seconds > 3600:
-            log = "Error! " + new_datetime + "'s file is " + "Surpass one hour!!"
+            log = "[Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
             return True, log
         else:
             return False, log
