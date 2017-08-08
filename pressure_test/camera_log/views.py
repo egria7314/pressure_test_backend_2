@@ -500,17 +500,17 @@ def set_camera_log(project_id, start_time):
         except Exception as e:
             ptl.logging_error('[Exception] set sd recording file error, [Error msg]:{0}'.format(e))
             print(e)
-            new_sd_locked_file_str = "Fail/Timeout"
-            new_sd_unlocked_file_str = "Fail/Timeout"
-            new_sd_all_file_str = "Fail/Timeout"
-            new_sd_locked_file_list.append("Fail/Timeout")
-            new_sd_unlocked_file_list.append("Fail/Timeout")
+            new_sd_locked_file_str = "[red]Fail/Timeout"
+            new_sd_unlocked_file_str = "[red]Fail/Timeout"
+            new_sd_all_file_str = "[red]Fail/Timeout"
+            new_sd_locked_file_list.append("[red]Fail/Timeout")
+            new_sd_unlocked_file_list.append("[red]Fail/Timeout")
 
 
-        if sd_cycle_status_tobe == "Timeout":
-            sd_cycle_result = "Timeout"
-        elif sd_cycle_status_tobe == "Fail":
-            sd_cycle_result = "Fail"
+        if sd_cycle_status_tobe == "[red]Timeout":
+            sd_cycle_result = "[red]Timeout"
+        elif sd_cycle_status_tobe == "[red]Fail":
+            sd_cycle_result = "[red]Fail"
         else:
             # check normal SD cycle #
             try:
@@ -520,7 +520,7 @@ def set_camera_log(project_id, start_time):
             except Exception as e:
                 ptl.logging_error('[Exception] set sd cycle error, [Error msg]:{0}'.format(e))
                 print(e)
-                sd_cycle_result = "Fail/Timeout"
+                sd_cycle_result = "[red]Fail/Timeout"
 
 
     else:
@@ -636,7 +636,7 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, proj
     # if sd file timeoutm, we put former camera's file in this test, but will set sd cycle to timeout
     except socket.timeout as e:
         ptl.logging_error('[Exception] set sd files time out, [Error msg]:{0}'.format(e))
-        sd_cycle_status_tobe = "Timeout"
+        sd_cycle_status_tobe = "[red]Timeout"
         new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
             new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
 

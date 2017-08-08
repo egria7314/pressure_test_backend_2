@@ -30,16 +30,16 @@ class Uptime(object):
         except socket.timeout as e:
             ptl.logging_error('[Exception] get uptime result timeout, [Error msg]:{0}'.format(e))
             print(e)
-            camera_uptime = "Timeout"
-            camera_cpuloading_idle = "Timeout"
-            camera_load_average = "Timeout"
+            camera_uptime = "[red]Timeout"
+            camera_cpuloading_idle = "[red]Timeout"
+            camera_load_average = "[red]Timeout"
 
         except Exception as e:
             ptl.logging_error('[Exception] get uptime result fail, [Error msg]:{0}'.format(e))
             print(e)
-            camera_uptime = "[Fail]"
-            camera_cpuloading_idle = "[Fail]"
-            camera_load_average = "[Fail]"
+            camera_uptime = "[red][Fail]"
+            camera_cpuloading_idle = "[red][Fail]"
+            camera_load_average = "[red][Fail]"
 
 
         data_dict["uptime"] = camera_uptime

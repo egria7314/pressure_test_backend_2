@@ -29,11 +29,11 @@ class Epochtime(object):
         except socket.timeout as e:
             ptl.logging_error('[Exception] get epoch time time out, [Error msg]:{0}'.format(e))
             print(e)
-            camera_epoch_time = "Timeout"
+            camera_epoch_time = "[red]Timeout"
         except Exception as e:
             ptl.logging_error('[Exception] get epoch time error, [Error msg]:{0}'.format(e))
             print(e)
-            camera_epoch_time = "[Fail]"
+            camera_epoch_time = "[red][Fail]"
 
         data_dict["camera_epoch_time"] = camera_epoch_time
         print(json.dumps(data_dict, ensure_ascii=False))
