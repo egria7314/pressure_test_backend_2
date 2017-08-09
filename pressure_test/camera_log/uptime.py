@@ -37,7 +37,7 @@ class Uptime(object):
                     camera_uptime = "[red]{0}".format(camera_uptime)
             except Exception as e:
                 ptl.logging_warning(
-                    '[Exception] Did not find former camera obj of same project id when sd file exception'
+                    '[Exception] Did not find former camera obj of same project id when sd file exception.'
                     ', [Error msg]:{0}'.format(e))
 
         except socket.timeout as e:
@@ -92,11 +92,22 @@ class Uptime(object):
         return camera_cpuloading_idle, camera_load_average
 
     def __get_up_time_content(self, text):
-        pattern = "\s*(\d+)\s+days\s+(\d+):(\d+)"
-        if re.search(pattern, text):
-            day = re.search(pattern, text).group(1)
-            hour = re.search(pattern, text).group(2)
-            min = re.search(pattern, text).group(3)
+        day_pattern = "\s*(\d+)\s+days\s+(\d+):(\d+)"
+        min_pattern = "\s*(\d+)\s+min\s+\d\s+users"
+        hour_pattren = "\s*(\d+):(\d+)\s+\d\s+users"
+
+        if re.search(day_pattern, text):
+            day = re.search(day_pattern, text).group(1)
+            hour = re.search(day_pattern, text).group(2)
+            min = re.search(day_pattern, text).group(3)
+        elif re.search(hour_pattren, text):
+            day = 0
+            hour = re.search(hour_pattren, text).group(1)
+            min = re.search(hour_pattren, text).group(2)
+        elif re.search(min_pattern, text):
+            day = 0
+            hour = 0
+            min = re.search(min_pattern, text).group(1)
         else:
             raise Exception("[Exception] Up time format error!")
 
