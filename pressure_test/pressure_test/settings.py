@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'recording_continous',
     'broken_tests',
+    'version',
 ]
 
 MIDDLEWARE = [
