@@ -32,7 +32,7 @@ class SDstatus(object):
         try:
             SD_status, SD_used = self.__get_sd_status(timeout)
             data_dict["sdCardStatus"] = self.change_sd_status_prefix(SD_status)
-            data_dict["sdCardUsed"] = self.change_sd_status_prefix(str(SD_used) + '%')
+            data_dict["sdCardUsed"] = self.change_sd_status_prefix(SD_used)
         except socket.timeout as e:
             ptl.logging_error('[Exception] get sd status time out, [Error msg]:{0}'.format(e))
             data_dict["sdCardStatus"] = "[red]Timeout"
@@ -76,11 +76,12 @@ class SDstatus(object):
         sd_status_usedspace = re.search("usedspace='(.*)'",data).groups()[0]
         try:
             sd_used_percent = (float(sd_status_usedspace)/float(sd_status_totalsize))*100
+            sd_used_percent = str(round(sd_used_percent, 2)) + "%"
         except Exception as e:
             ptl.logging_warning('[Warning] sd used percent calculate error. [Error msg]:{0}'.format(e))
             sd_used_percent = sd_status
 
-        return sd_status,(round(sd_used_percent, 2))
+        return sd_status, sd_used_percent
 
 
 # if __name__ == "__main__":
