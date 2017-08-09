@@ -41,7 +41,7 @@ from camera_log.libs.sd_prefix import SDPrefix
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 136# 121 #120    #112  #108
+TEST_PROJECT_ID = 21# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -249,7 +249,6 @@ def test_camera_status(request):
 
 def running_status(project_pk):
     from camera_log.libs import monitor
-    ptl.logging_info('[Info] Run camera log schedule by ID.')
 
     INVALID_PROJ_ID = 'invalid project id'
     INVALID_MONITOR_ID = 'invalid monitor id'
@@ -506,11 +505,11 @@ def set_camera_log(project_id, start_time):
         except Exception as e:
             ptl.logging_error('[Exception] set sd recording file error, [Error msg]:{0}'.format(e))
             print(e)
-            new_sd_locked_file_str = "[red]Fail/Timeout"
-            new_sd_unlocked_file_str = "[red]Fail/Timeout"
-            new_sd_all_file_str = "[red]Fail/Timeout"
-            new_sd_locked_file_list.append("[red]Fail/Timeout")
-            new_sd_unlocked_file_list.append("[red]Fail/Timeout")
+            new_sd_locked_file_str = "Fail/Timeout"
+            new_sd_unlocked_file_str = "Fail/Timeout"
+            new_sd_all_file_str = "Fail/Timeout"
+            new_sd_locked_file_list.append("Fail/Timeout")
+            new_sd_unlocked_file_list.append("Fail/Timeout")
 
 
         if sd_cycle_status_tobe == "[red]Timeout":
@@ -560,8 +559,8 @@ def set_camera_log(project_id, start_time):
         ptl.logging_error('[Exception] set storage cycle error, [Error msg]:{0}'.format(e))
         nas_cycle_result = "[red][Fail]"
         vast_cycle_result = "[red][Fail]"
-        new_nas_file_list.append("[red][Fail]")
-        new_vast_file_list.append("[red][Fail]")
+        new_nas_file_list.append("[Fail]")
+        new_vast_file_list.append("[Fail]")
 
 
     ptl.logging_info('Set camera log to DB:')

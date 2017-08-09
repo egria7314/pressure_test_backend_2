@@ -23,18 +23,22 @@ class Uptime(object):
         data_dict = {}
 
         try:
-            former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
-            before_uptime = self.__get_up_time_content(former_cam_obj.camera_uptime)
-
-            tn = TelnetModule(self.ip,self.account,self.password, timeout).login().send_command('uptime').send_command('top -n 1')
+            tn = TelnetModule(self.ip, self.account, self.password, timeout).login().send_command(
+                'uptime').send_command('top -n 1')
             data = tn.result()
             camera_uptime = self.__process_camera_uptime(data[0])
             camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
 
-            after_uptime = self.__get_up_time_content(camera_uptime)
-            if  not self.__up_time_is_grater_than_before(before_uptime, after_uptime):
-                camera_uptime = "[red]{0}".format(camera_uptime)
-
+            try:
+                former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
+                before_uptime = self.__get_up_time_content(former_cam_obj.camera_uptime)
+                after_uptime = self.__get_up_time_content(camera_uptime)
+                if not self.__up_time_is_grater_than_before(before_uptime, after_uptime):
+                    camera_uptime = "[red]{0}".format(camera_uptime)
+            except Exception as e:
+                ptl.logging_warning(
+                    '[Exception] Did not find former camera obj of same project id when sd file exception'
+                    ', [Error msg]:{0}'.format(e))
 
         except socket.timeout as e:
             ptl.logging_error('[Exception] get uptime result timeout, [Error msg]:{0}'.format(e))
@@ -49,6 +53,7 @@ class Uptime(object):
             camera_uptime = "[red][Fail]"
             camera_cpuloading_idle = "[red][Fail]"
             camera_load_average = "[red][Fail]"
+
 
 
         data_dict["uptime"] = camera_uptime
