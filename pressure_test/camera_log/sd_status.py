@@ -20,7 +20,7 @@ class SDstatus(object):
         self.password = password
 
     def change_sd_status_prefix(self, status):
-        if 'ready' in status: # In this case, status will not be "not support".
+        if 'ready' in status or "%" in status: # In this case, status will not be "not support".
             return status
         else:
             return '[red]{0}'.format(status)

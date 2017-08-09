@@ -18,6 +18,13 @@ class Uptime(object):
         self.account = account
         self.password = password
 
+    def find_last_valid_uptime(self, project_id):
+        former_cam_objs = CameraLog.objects.filter(project_id=project_id).order_by('-id')
+        for o in former_cam_objs:
+            if self.__get_up_time_content(o.camera_uptime):
+                return self.__get_up_time_content(o.camera_uptime)
+        raise Exception("[Exception] Did not find former camera obj of same project id when sd file exception.")
+
     def get_result(self, project_id, timeout=300):
         """Get the dictionary consist of camera_uptime,camera_cpuloading_idle and camera_cpuloading_average"""
         data_dict = {}
@@ -30,15 +37,12 @@ class Uptime(object):
             camera_cpuloading_idle, camera_load_average = self.__process_camera_cpuloading(data[1])
 
             try:
-                former_cam_obj = CameraLog.objects.filter(project_id=project_id).order_by('-id')[0]
-                before_uptime = self.__get_up_time_content(former_cam_obj.camera_uptime)
+                before_uptime = self.find_last_valid_uptime(project_id)
                 after_uptime = self.__get_up_time_content(camera_uptime)
                 if not self.__up_time_is_grater_than_before(before_uptime, after_uptime):
                     camera_uptime = "[red]{0}".format(camera_uptime)
             except Exception as e:
-                ptl.logging_warning(
-                    '[Exception] Did not find former camera obj of same project id when sd file exception.'
-                    ', [Error msg]:{0}'.format(e))
+                ptl.logging_warning('[Exception] Decide up time grater than before error. , [Error msg]:{0}'.format(e))
 
         except socket.timeout as e:
             ptl.logging_error('[Exception] get uptime result timeout, [Error msg]:{0}'.format(e))
