@@ -16,7 +16,7 @@ from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
 from camera_log.views import run_cameralog_schedule_by_id
 from broken_tests.views import module_detect_periodic_videos
-
+from django.db.models import Q
 from broken_tests import views as broken_views
 from recording_continous import views as continue_views
 from camera_log import views as log_views
@@ -24,7 +24,7 @@ from camera_log import views as log_views
 from recording_continous.views import continuous_running_status
 from broken_tests.views import module_running_status
 from camera_log.views import running_status
-
+from django.http import HttpResponse
 import re, collections
 from threading import Thread
 import time,datetime
@@ -189,7 +189,9 @@ def return_project_setting(requests, pk=None):
         return_json['logStatus'] = running_status(project_pk=pk)['status']
         return_json['brokenStatus'] = return_json.pop('broken_status')
         return_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
-
+        ProjectSetting.objects.filter(id=pk).update(continuity_status=return_json['continuityStatus'],
+                                                    log_status=return_json['logStatus'],
+                                                    broken_status=return_json['brokenStatus'])
     else:
         query_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
                                                      "path_username", "continued", "username", "type", "broken", "owner",
@@ -209,7 +211,25 @@ def return_project_setting(requests, pk=None):
             item_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
             item_json['logStatus'] = item_json.pop('log_status')
             item_json['logStatus'] = running_status(project_pk=pk)['status']
+            ProjectSetting.objects.filter(id=pk).update(continuity_status=item_json['continuityStatus'],
+                                                    log_status=item_json['logStatus'],
+                                                    broken_status=item_json['brokenStatus'])
     return Response(return_json)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def project_counting(requests):
+    total_cam = len(list(ProjectSetting.objects.all()))
+    print('total camera:', total_cam)
+    # process_cam = 0
+    process_cam = ProjectSetting.objects.filter(Q(continuity_status='processing') | Q(log_status='processing') |
+                                                Q(broken_status='processing')).count()
+    # for i in ProjectSetting.objects.filter():
+    #     if i.continuity_status == 'processing' or i.log_status == 'processing' or i.broken_status == 'processing':
+    #         process_cam += 1
+
+    return Response({"processingNum":process_cam, 'totalCam':4})
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
