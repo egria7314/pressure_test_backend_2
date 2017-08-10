@@ -24,7 +24,6 @@ from camera_log import views as log_views
 from recording_continous.views import continuous_running_status
 from broken_tests.views import module_running_status
 from camera_log.views import running_status
-from django.http import HttpResponse
 import re, collections
 from threading import Thread
 import time,datetime
@@ -50,17 +49,20 @@ def post(request):
     prefix_name = get_recording_prefix(camera_ip, camera_user, camera_password)
     request.data['prefix_name'] = prefix_name
     request.data['path'] = request.data['path'].replace('\\', '/')
-    # print('path=', request.data['path'])
     if serializer.is_valid():
         a = serializer.save()
         project_id = a.id
         analyze_videos(project_id=project_id)
         run_cameralog_schedule_by_id(project_id=project_id)
         module_detect_periodic_videos(project_pk=project_id)
+        ProjectSetting.objects.filter(id=project_id).update(continuity_status=continuous_running_status(project_pk=project_id)['status'],
+                                                    log_status=running_status(project_pk=project_id)['status'],
+                                                    broken_status=module_running_status(project_pk=project_id)[0])
         result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
         return Response(result, status=status.HTTP_201_CREATED)
 
     result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}
+
     return Response(result)
 
 def get_recording_type(camera_ip, camera_name, camera_password):
