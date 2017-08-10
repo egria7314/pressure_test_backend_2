@@ -42,7 +42,7 @@ def module_pretest_broken_image(camera_host, camera_user, camera_password, stora
         pretest_dir = time.time()
         anly(camera_host, camera_user, camera_password).save_snapshot_to_dir(
             '/home/dqa/data/pretests/{}'.format(pretest_dir),
-            stream_id
+            int(stream_id)
         )
         #   2. get privacy mask
         roi = RoiModule(camera_host, camera_user, camera_password, video_destination)

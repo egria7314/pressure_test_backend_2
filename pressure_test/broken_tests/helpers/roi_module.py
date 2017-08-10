@@ -34,6 +34,8 @@ class RoiModule(object):
         
         if 'SD' in modelname:
             mask_position_list = self.__get_mask_position_form_3D_mask()
+        elif 'MS' in modelname or 'MA' in modelname:
+            mask_position_list = self.__get_mask_position_from_rect()
         else:
             mask_position_list = self.__get_mask_position()
 
@@ -90,16 +92,33 @@ class RoiModule(object):
         """Get recording recording files source"""
         return self.__get_recording_source()
 
+    def __get_modelname(self):
+        """Get camera modelname"""
+        command = 'http://'+self.ip+'/cgi-bin/admin/getparam.cgi?system_info_modelname'
+        url = URI.set(command, self.account, self.password)
+        resp = url.read().decode('utf-8')
+        modelname = re.search('=\'(.*)\'', resp).groups()[0]
+        print("MODEL: ", modelname)
+        return modelname
+
     def __get_resulotion(self):
         """ Get ratio of privacy mask setting to recording file resolution """
+        modelname = self.__get_modelname()
         recording_source = self.__get_recording_source()
         command = 'http://'+self.ip+'/cgi-bin/admin/getparam.cgi?videoin_c0_s'+recording_source+'_resolution'
         url = URI.set(command, self.account, self.password)
         resolution = url.read().decode('utf-8')
         width = re.search('=\'(.*)x(.*)\'',resolution).groups()[0]
         height = re.search('=\'(.*)x(.*)\'',resolution).groups()[1]
-        w = 320
-        h = 240 if round(float(width)/float(height),2) == 1.33 else 180
+        if 'MS' in modelname or 'MA' in modelname:
+            w, h = 9999, 9999
+        elif 'SD' in modelname:
+            w = 320
+            h = 240 if round(float(width)/float(height),2) == 1.33 else 180
+        else:
+            w, h = 320, 240
+        print("w: ", w, "h: ", h)
+
         width_ratio = float(width)/w
         hight_ratio = float(height)/h
         return width_ratio,hight_ratio
@@ -152,4 +171,25 @@ class RoiModule(object):
         mask_position = PM_4_to_3 if round(float(width)/float(height),2) == 1.33 else PM_16_to_9
         
         return self.__regulate_mask_position(mask_position)
-       
+
+    def __get_mask_position_from_rect(self):
+        """
+
+        """
+        mask_position = []
+        for i in range(5):
+            command = 'http://'+self.ip+'/cgi-bin/admin/getparam.cgi?privacymask_c0_win_i'+str(i)+'_rectanglestd'
+            url = URI.set(command, self.account, self.password)
+            response = url.read().decode('utf-8')
+            left, top, width, height = re.search(r'=\'(.*)\'', response).groups()[0].split(',')
+            left, top, width, height = int(left), int(top), int(width), int(height)
+            print("left: ", left, "top: ", top, "width: ", width, "height: ", height)
+            if (left+top+width+height) > 0:
+                mask_position.append('{x1},{y1},{x2},{y2},{x3},{y3},{x4},{y4}'.format(
+                    x1=left, y1=top,
+                    x2=left+width, y2=top,
+                    x3=left+width, y3=top+height,
+                    x4=left, y4=top+height
+                ))
+        print("mask_postion: ", mask_position)
+        return self.__regulate_mask_position(mask_position)

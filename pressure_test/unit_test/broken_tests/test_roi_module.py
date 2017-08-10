@@ -6,7 +6,7 @@ from broken_tests import views
 
 class TestRoiModule(unittest.TestCase):
     def setUp(self):
-        self.ip = '172.19.16.74'
+        self.ip = '172.19.1.50'
         self.account = 'root'
         self.password = '12345678z'
         self.destination = 'NAS'
