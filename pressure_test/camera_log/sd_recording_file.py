@@ -36,7 +36,7 @@ class Sdrecordingfile(object):
         except Exception as e:
             ptl.logging_error('[Exception] get ftp all file name error, [Error msg]:{0}'.format(e))
             print(e)
-            filename = "Fail/Timeout"
+            filename = "[red]Fail/Timeout"
 
 
         return filename

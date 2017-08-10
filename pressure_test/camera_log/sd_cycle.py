@@ -49,13 +49,13 @@ class SDcycle(object):
             # loss unlocked file (unlock of 1 is not subset of 2)
             if not set(self.former_unlocked_file_list).issubset(self.new_unlocked_file_list):
                 loss_unlocked_file_list = list(set(self.former_unlocked_file_list) - set(self.new_unlocked_file_list))
-                result += "[Error] Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
+                result += "[red][Error] Lose file (unlocked file loss!):" + ','.join(loss_unlocked_file_list) + '\n'
                 return result
 
             # loss locked file
             if not set(self.former_locked_file_list).issubset(self.new_all_file):
                 loss_locked_file_list = list(set(self.former_locked_file_list) - set(self.new_all_file))
-                result += "[Error] Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
+                result += "[red][Error] Lose file (locked file loss!):" + ','.join(loss_locked_file_list) + '\n'
                 return result
 
             # check adding
@@ -63,13 +63,13 @@ class SDcycle(object):
             if adding:
                 return comment
             else:
-                result = "Nothing change!"
+                result = "[red]No file created"
                 return result
         except Exception as e:
             ptl.logging_error('[Exception] get sd cycle error, [Error msg]:{0}'.format(e))
             print("SD Cycle Fail:")
             print(e)
-            result = "[Fail]"
+            result = "[red][Fail]"
             return result
 
 
@@ -207,9 +207,10 @@ class SDcycle(object):
 
         differ_seconds = (new_date_obj - old_date_obj).total_seconds()
 
-        # if differ is more than one hour
-        if differ_seconds > 3600:
-            log = "[Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
+        # if differ is more than or less one hour , difference value +-1
+        seconds_of_one_hour = 3600
+        if differ_seconds > seconds_of_one_hour + 1 or differ_seconds < seconds_of_one_hour - 1:
+            log = "[red][Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
             return True, log
         else:
             return False, log

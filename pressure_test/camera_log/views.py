@@ -41,7 +41,7 @@ from camera_log.libs.sd_prefix import SDPrefix
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 136# 121 #120    #112  #108
+TEST_PROJECT_ID = 21# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -104,12 +104,18 @@ def get_sd_status(requests):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def get_up_time(requests):
+    """
+    for test
+    :param requests: 
+    :return: 
+    """
+
     # camera_ip = "172.19.16.119"
     # camera_user = "root"
     # camera_pwd = "12345678z"
 
     my_up_time = Uptime(CAMERA_IP, CAMERA_USER, CAMERA_PWD)
-    my_up_time_json = my_up_time.get_result()
+    my_up_time_json = my_up_time.get_result('1')
 
     UpTime.objects.create(
         camera_uptime=my_up_time_json["uptime"],
@@ -243,7 +249,6 @@ def test_camera_status(request):
 
 def running_status(project_pk):
     from camera_log.libs import monitor
-    ptl.logging_info('[Info] Run camera log schedule by ID.')
 
     INVALID_PROJ_ID = 'invalid project id'
     INVALID_MONITOR_ID = 'invalid monitor id'
@@ -433,14 +438,14 @@ def set_camera_log(project_id, start_time):
     my_up_time_json = {}
     try:
         ptl.logging_info('[Info] Set uptime.')
-        my_up_time_json = set_up_time(camera_ip, camera_user, camera_password, timeout)
+        my_up_time_json = set_up_time(camera_ip, camera_user, camera_password, project_id, timeout)
         camera_log_json.update(my_up_time_json)
     except Exception as e:
         ptl.logging_error('[Exception] set uptime fail, [Error msg]:{0}'.format(e))
         print(e)
-        my_up_time_json["uptime"] = "[Fail]"
-        my_up_time_json["loadAverage"] = "[Fail]"
-        my_up_time_json["idle"] = "[Fail]"
+        my_up_time_json["uptime"] = "[red][Fail]"
+        my_up_time_json["loadAverage"] = "[red][Fail]"
+        my_up_time_json["idle"] = "[red][Fail]"
 
 
     # # epoch time
@@ -484,8 +489,8 @@ def set_camera_log(project_id, start_time):
         except Exception as e:
             ptl.logging_error('[Exception] set sd status fail, [Error msg]:{0}'.format(e))
             print(e)
-            sd_status_json["sdCardStatus"] = "[Fail]"
-            sd_status_json["sdCardUsed"] = "[Fail]"
+            sd_status_json["sdCardStatus"] = "[red][Fail]"
+            sd_status_json["sdCardUsed"] = "[red][Fail]"
 
 
         # sd recording file
@@ -507,10 +512,10 @@ def set_camera_log(project_id, start_time):
             new_sd_unlocked_file_list.append("Fail/Timeout")
 
 
-        if sd_cycle_status_tobe == "Timeout":
-            sd_cycle_result = "Timeout"
-        elif sd_cycle_status_tobe == "Fail":
-            sd_cycle_result = "Fail"
+        if sd_cycle_status_tobe == "[red]Timeout":
+            sd_cycle_result = "[red]Timeout"
+        elif sd_cycle_status_tobe == "[red]Fail":
+            sd_cycle_result = "[red]Fail"
         else:
             # check normal SD cycle #
             try:
@@ -520,7 +525,7 @@ def set_camera_log(project_id, start_time):
             except Exception as e:
                 ptl.logging_error('[Exception] set sd cycle error, [Error msg]:{0}'.format(e))
                 print(e)
-                sd_cycle_result = "Fail/Timeout"
+                sd_cycle_result = "[red]Fail/Timeout"
 
 
     else:
@@ -552,9 +557,9 @@ def set_camera_log(project_id, start_time):
             new_vast_file_list, vast_cycle_result = get_storagefile_and_cycle(project_id, task_camera_obj, "VAST", start_time)
     except Exception as e:
         ptl.logging_error('[Exception] set storage cycle error, [Error msg]:{0}'.format(e))
-        nas_cycle_result = "[Fail]"
-        vast_cycle_result = "[Fail]"
-        new_nas_file_list.append("[Fail]t")
+        nas_cycle_result = "[red][Fail]"
+        vast_cycle_result = "[red][Fail]"
+        new_nas_file_list.append("[Fail]")
         new_vast_file_list.append("[Fail]")
 
 
@@ -589,9 +594,9 @@ def set_camera_log(project_id, start_time):
     final_camera_log_json["data"] = all_data_list
 
 # @timeout(GLOBAL_TIMEOUT)
-def set_up_time(camera_ip, camera_user, camera_password, timeout=300):
+def set_up_time(camera_ip, camera_user, camera_password, project_id, timeout=300):
     my_up_time = Uptime(camera_ip, camera_user, camera_password)
-    my_up_time_json = my_up_time.get_result(timeout)
+    my_up_time_json = my_up_time.get_result(project_id, timeout)
 
     return my_up_time_json
 
@@ -636,7 +641,7 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, proj
     # if sd file timeoutm, we put former camera's file in this test, but will set sd cycle to timeout
     except socket.timeout as e:
         ptl.logging_error('[Exception] set sd files time out, [Error msg]:{0}'.format(e))
-        sd_cycle_status_tobe = "Timeout"
+        sd_cycle_status_tobe = "[red]Timeout"
         new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
             new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
 
