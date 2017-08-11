@@ -236,11 +236,27 @@ def project_counting(requests):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def stop_running_test(requests, pk):
+    continue_status, log_status, broken_status = continuous_running_status(project_pk=pk)['status'], running_status(project_pk=pk)['status'], module_running_status(project_pk=pk)[0]
     broken_views.module_stop_detect_periodic_videos(pk)
     continue_views.stop_continuous_test(pk)
     log_views.module_stop_detect_periodic_logs(pk)
+    while continue_status == 'processing':
+        continue_status = continuous_running_status(project_pk=pk)['status']
+        # time.sleep(1)
+        print('continue_status stop start')
+    while log_status == 'processing':
+        log_status = running_status(project_pk=pk)['status']
+        # time.sleep(1)
+        print('log_status stop start')
+    while broken_status == 'processing':
+        broken_status = module_running_status(project_pk=pk)[0]
+        # time.sleep(1)
+        print('broken_status stop start')
+    ProjectSetting.objects.filter(id=pk).update(continuity_status=continue_status,
+                                                    log_status=log_status,
+                                                    broken_status=broken_status)
+    print('stop test')
     return Response({"comment": 'Stop current running test'})
-
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
