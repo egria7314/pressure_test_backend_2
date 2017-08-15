@@ -209,8 +209,11 @@ class SDcycle(object):
 
         # if differ is more than or less one hour , difference value +-1
         seconds_of_one_hour = 3600
-        if differ_seconds > seconds_of_one_hour + 1 or differ_seconds < seconds_of_one_hour - 1:
+        if differ_seconds > seconds_of_one_hour + 1:
             log = "[red][Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
+            return True, log
+        elif differ_seconds < seconds_of_one_hour - 1:
+            log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
             return True, log
         else:
             return False, log
