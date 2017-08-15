@@ -221,17 +221,18 @@ def return_project_setting(requests, pk=None):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def project_counting(requests):
-    total_cam = len(list(ProjectSetting.objects.all()))
-    print('total camera:', total_cam)
-    # process_cam = 0
-    process_cam = ProjectSetting.objects.filter(Q(continuity_status='processing') | Q(log_status='processing') |
-                                                Q(broken_status='processing')).count()
-    # for i in ProjectSetting.objects.filter():
-    #     if i.continuity_status == 'processing' or i.log_status == 'processing' or i.broken_status == 'processing':
-    #         process_cam += 1
-
-    return Response({"processingNum":process_cam, 'totalCam':4})
-
+    # total_cam = len(list(ProjectSetting.objects.all()))
+    # print('total camera:', total_cam)
+    process_id_list = []
+    process_list = ProjectSetting.objects.filter(Q(continuity_status='processing') | Q(log_status='processing') |
+                                                Q(broken_status='processing'))
+    process_cam = process_list.count()
+    # print(process_cam)
+    for i in process_list:
+        process_id_list.append(str(i.id))
+    # print(process_id_list)
+    process_id = ', '.join(process_id_list)
+    return Response({"processingNum":process_cam, 'totalCam':4, 'processingID':process_id})
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
