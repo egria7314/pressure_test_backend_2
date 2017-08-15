@@ -134,13 +134,13 @@ class ContentAnalysis(object):
 
         # Convert RGB to BGR
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
-        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/crop.jpg", cv_img)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/crop{}.jpg".format(str(box)), cv_img)
 
         # Smooth image
         blur = cv2.GaussianBlur(cv_img, (5, 5), 0)
-        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/blur.jpg", blur)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/blur{}.jpg".format(str(box)), blur)
         edges = cv2.Canny(blur, 100, 200)
-        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/canny.jpg", edges)
+        # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/canny{}.jpg".format(str(box)), edges)
 
         # Indent region to Only has black pixel inside mask
         mask = np.zeros(edges.shape[:2], np.uint8)
@@ -224,8 +224,8 @@ class ContentAnalysis(object):
         img = Image.open(imgPath)
         print("READDDD succ: ", imgPath)
         for i, mask in enumerate(privacy_masks):
-            normal_frame = self.check_no_broken_pixel(mask, img) and self.check_lines(mask, 2, img)
-            # normal_frame = self.check_no_broken_pixel(mask, img)
+            # normal_frame = self.check_no_broken_pixel(mask, img) and self.check_lines(mask, 2, img)
+            normal_frame = self.check_no_broken_pixel(mask, img)
             # print mask, normal_frame
             if not normal_frame:
                  ret['result'] = 'failed'

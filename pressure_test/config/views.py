@@ -16,7 +16,7 @@ from libs.telnet_module import URI
 from recording_continous.views import analyze_videos
 from camera_log.views import run_cameralog_schedule_by_id
 from broken_tests.views import module_detect_periodic_videos
-
+from django.db.models import Q
 from broken_tests import views as broken_views
 from recording_continous import views as continue_views
 from camera_log import views as log_views
@@ -24,7 +24,6 @@ from camera_log import views as log_views
 from recording_continous.views import continuous_running_status
 from broken_tests.views import module_running_status
 from camera_log.views import running_status
-
 import re, collections
 from threading import Thread
 import time,datetime
@@ -50,17 +49,20 @@ def post(request):
     prefix_name = get_recording_prefix(camera_ip, camera_user, camera_password)
     request.data['prefix_name'] = prefix_name
     request.data['path'] = request.data['path'].replace('\\', '/')
-    # print('path=', request.data['path'])
     if serializer.is_valid():
         a = serializer.save()
         project_id = a.id
         analyze_videos(project_id=project_id)
         run_cameralog_schedule_by_id(project_id=project_id)
         module_detect_periodic_videos(project_pk=project_id)
+        ProjectSetting.objects.filter(id=project_id).update(continuity_status=continuous_running_status(project_pk=project_id)['status'],
+                                                    log_status=running_status(project_pk=project_id)['status'],
+                                                    broken_status=module_running_status(project_pk=project_id)[0])
         result = {'createCheck':True, "status":status.HTTP_201_CREATED, "action":"create data", "data":serializer.data, "comment":"create success"}
         return Response(result, status=status.HTTP_201_CREATED)
 
     result = {'createCheck':False, "status":status.HTTP_400_BAD_REQUEST, "action":"create data", "data":serializer.data, "comment":str(serializer.errors)}
+
     return Response(result)
 
 def get_recording_type(camera_ip, camera_name, camera_password):
@@ -189,7 +191,9 @@ def return_project_setting(requests, pk=None):
         return_json['logStatus'] = running_status(project_pk=pk)['status']
         return_json['brokenStatus'] = return_json.pop('broken_status')
         return_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
-
+        ProjectSetting.objects.filter(id=pk).update(continuity_status=return_json['continuityStatus'],
+                                                    log_status=return_json['logStatus'],
+                                                    broken_status=return_json['brokenStatus'])
     else:
         query_set = ProjectSetting.objects.all().values("id", "path", "project_name", "start_time", "log", "delay", "end_time",
                                                      "path_username", "continued", "username", "type", "broken", "owner",
@@ -209,16 +213,51 @@ def return_project_setting(requests, pk=None):
             item_json['brokenStatus'] = module_running_status(project_pk=pk)[0]
             item_json['logStatus'] = item_json.pop('log_status')
             item_json['logStatus'] = running_status(project_pk=pk)['status']
+            ProjectSetting.objects.filter(id=pk).update(continuity_status=item_json['continuityStatus'],
+                                                    log_status=item_json['logStatus'],
+                                                    broken_status=item_json['brokenStatus'])
     return Response(return_json)
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
+def project_counting(requests):
+    # total_cam = len(list(ProjectSetting.objects.all()))
+    # print('total camera:', total_cam)
+    process_id_list = []
+    process_list = ProjectSetting.objects.filter(Q(continuity_status='processing') | Q(log_status='processing') |
+                                                Q(broken_status='processing'))
+    process_cam = process_list.count()
+    # print(process_cam)
+    for i in process_list:
+        process_id_list.append(str(i.id))
+    # print(process_id_list)
+    process_id = ', '.join(process_id_list)
+    return Response({"processingNum":process_cam, 'totalCam':4, 'processingID':process_id})
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
 def stop_running_test(requests, pk):
+    continue_status, log_status, broken_status = continuous_running_status(project_pk=pk)['status'], running_status(project_pk=pk)['status'], module_running_status(project_pk=pk)[0]
     broken_views.module_stop_detect_periodic_videos(pk)
     continue_views.stop_continuous_test(pk)
     log_views.module_stop_detect_periodic_logs(pk)
+    while continue_status == 'processing':
+        continue_status = continuous_running_status(project_pk=pk)['status']
+        # time.sleep(1)
+        print('continue_status stop start')
+    while log_status == 'processing':
+        log_status = running_status(project_pk=pk)['status']
+        # time.sleep(1)
+        print('log_status stop start')
+    while broken_status == 'processing':
+        broken_status = module_running_status(project_pk=pk)[0]
+        # time.sleep(1)
+        print('broken_status stop start')
+    ProjectSetting.objects.filter(id=pk).update(continuity_status=continue_status,
+                                                    log_status=log_status,
+                                                    broken_status=broken_status)
+    print('stop test')
     return Response({"comment": 'Stop current running test'})
-
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
