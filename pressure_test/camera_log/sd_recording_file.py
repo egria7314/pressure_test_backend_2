@@ -28,6 +28,8 @@ class Sdrecordingfile(object):
         try:
             tn = TelnetModule(self.ip, self.account, self.password, timeout).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
             filename =  re.findall(b"NCMF\D(.*)",tn.result()[0])
+            ptl.logging_debug('[DEBUG] get filename, [filename]:{0}'.format(filename))
+
             for i in range(len(filename)):
                 filename[i] = filename[i].strip()
             # filename.remove("-name \"*medium_stress*.mp4\"")
@@ -36,8 +38,7 @@ class Sdrecordingfile(object):
         except Exception as e:
             ptl.logging_error('[Exception] get ftp all file name error, [Error msg]:{0}'.format(e))
             print(e)
-            filename = "[red]Fail/Timeout"
-
+            filename = [b"get ftp all file name error"]
 
         return filename
 
@@ -141,10 +142,10 @@ class Sdrecordingfile(object):
         data = url.read()
         locked_file = re.findall(b"NCMF\D\D(.*)<",data)
 
-        #remove event recording
-        for file_name in ftp_all_filename:
-            if b'event'in file_name:
-                ftp_all_filename.remove(file_name)
+        # #remove event recording
+        # for file_name in ftp_all_filename:
+        #     if b'event'in file_name:
+        #         ftp_all_filename.remove(file_name)
 
         #compare ftp_all_filename,remove FW fake recording (FW-Bug)
         for file_name in locked_file:
@@ -182,10 +183,10 @@ class Sdrecordingfile(object):
         locked_file = self.__get_locked_filename(ui_all_filename, continuous_filename_time)
         unlocked_file =[]
 
-        #remove event recording
-        for file_name in ftp_all_filename:
-            if b'event'in file_name:
-                ftp_all_filename.remove(file_name)
+        # #remove event recording
+        # for file_name in ftp_all_filename:
+        #     if b'event'in file_name:
+        #         ftp_all_filename.remove(file_name)
 
         #compare ftp_all_filename,remove FW fake recording (FW-Bug)
         for file_name in locked_file:
