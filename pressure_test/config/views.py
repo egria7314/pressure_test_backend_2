@@ -27,6 +27,7 @@ from camera_log.views import running_status
 import re, collections
 from threading import Thread
 import time,datetime
+from django.db import connection
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -103,6 +104,8 @@ def get_recording_prefix(camera_ip, camera_name, camera_password):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def init_default_setting(requests):
+    DefaultSetting.objects.all().delete()
+    connection.cursor().execute('''SELECT setval('{0}', 1, false)'''.format('config_defaultsetting_id_seq'))
     default_json = [
         {
             'default_type': 'medium',
@@ -112,7 +115,7 @@ def init_default_setting(requests):
             'broken_image': True,
             'cont_inner_serial_timstamp': True,
             'cont_outer_serial_timstamp': True,
-            'delay': 2,
+            'delay': 1,
             'cgi': 180
         },
         {
@@ -123,8 +126,8 @@ def init_default_setting(requests):
             'broken_image': True,
             'cont_inner_serial_timstamp': False,
             'cont_outer_serial_timstamp': False,
-            'delay': 5,
-            'cgi': 300
+            'delay': 1,
+            'cgi': 180
         }
     ]
     for default in default_json:

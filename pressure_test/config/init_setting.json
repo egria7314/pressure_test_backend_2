@@ -1,0 +1,33 @@
+[
+        {
+          "model": "config.defaultsetting",
+          "pk": 1,
+          "fields":{
+            "default_type": "medium",
+            "log_sd_card_status": true,
+            "log_cyclic_recording": true,
+            "log_nas_recording": true,
+            "broken_image": true,
+            "cont_inner_serial_timstamp": true,
+            "cont_outer_serial_timstamp": true,
+            "delay": 1,
+            "cgi": 180
+          }
+            
+        },
+        {
+          "model": "config.defaultsetting",
+          "pk": 2,
+          "fields": {
+            "default_type": "high",
+            "log_sd_card_status": true,
+            "log_cyclic_recording": true,
+            "log_nas_recording": true,
+            "broken_image": true,
+            "cont_inner_serial_timstamp": false,
+            "cont_outer_serial_timstamp": false,
+            "delay": 1,
+            "cgi": 180
+          }
+        }
+    ]
