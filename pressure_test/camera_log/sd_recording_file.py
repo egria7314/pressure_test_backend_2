@@ -28,6 +28,7 @@ class Sdrecordingfile(object):
         try:
             tn = TelnetModule(self.ip, self.account, self.password, timeout).login().send_command('find /mnt/auto/CF/NCMF -name "*.mp4"')
             filename =  re.findall(b"NCMF\D(.*)",tn.result()[0])
+            ptl.logging_debug('[DEBUG] get filename, [tn.result()[0]]:{0}'.format(tn.result()[0]))
             ptl.logging_debug('[DEBUG] get filename, [filename]:{0}'.format(filename))
 
             for i in range(len(filename)):
