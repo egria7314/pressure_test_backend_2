@@ -93,7 +93,7 @@ class TelnetModule(object):
         """
         tn = self.tn
         tn.write(str(commands).encode(encoding="utf-8") + b"\n")
-        self.data.append(tn.read_until(b"~ #", 3000))           # wait very long     # TODO
+        self.data.append(tn.read_until(b"~ #", 3000))
         return self
 
     def result(self):
