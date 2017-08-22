@@ -14,6 +14,9 @@
     - name: Run migrate on the application
       django_manage: command=migrate app_path={{ django_dir }} virtualenv={{ virtualenv_dir }}
 
+    - name: Providing initail data for defaultsetting
+      django_manage: command="loaddata config/init_setting.json" app_path={{ django_dir }} virtualenv={{ virtualenv_dir }}
+
     - name: super user existed?
       shell: echo "from django.contrib.auth import get_user_model; User = get_user_model(); print(User.objects.filter(username='{{admin_user}}').count()>0)" | {{ virtualenv_dir }}/bin/python ./manage.py shell
       args:

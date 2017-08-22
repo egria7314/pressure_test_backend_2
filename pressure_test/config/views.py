@@ -26,7 +26,8 @@ from broken_tests.views import module_running_status
 from camera_log.views import running_status
 import re, collections
 from threading import Thread
-import time,datetime
+import time,datetime, json
+from django.db import connection
 
 
 class ProjectSettingDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -103,41 +104,24 @@ def get_recording_prefix(camera_ip, camera_name, camera_password):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 def init_default_setting(requests):
-    default_json = [
-        {
-            'default_type': 'medium',
-            'log_sd_card_status': True,
-            'log_cyclic_recording': True,
-            'log_nas_recording': True,
-            'broken_image': True,
-            'cont_inner_serial_timstamp': True,
-            'cont_outer_serial_timstamp': True,
-            'delay': 2,
-            'cgi': 180
-        },
-        {
-            'default_type': 'high',
-            'log_sd_card_status': True,
-            'log_cyclic_recording': True,
-            'log_nas_recording': True,
-            'broken_image': True,
-            'cont_inner_serial_timstamp': False,
-            'cont_outer_serial_timstamp': False,
-            'delay': 5,
-            'cgi': 300
-        }
-    ]
+    # for init default setting
+    DefaultSetting.objects.all().delete()
+    connection.cursor().execute('''SELECT setval('{0}', 1, false)'''.format('config_defaultsetting_id_seq'))
+
+    with open('config/init_setting.json') as data_file:
+        default_json = json.load(data_file)
+
     for default in default_json:
         DefaultSetting.objects.create(
-                default_type = default['default_type'],
-                log_sd_card_status = default['log_sd_card_status'],
-                log_cyclic_recording = default['log_cyclic_recording'],
-                log_nas_recording = default['log_nas_recording'],
-                broken_image = default['broken_image'],
-                cont_inner_serial_timstamp = default['cont_inner_serial_timstamp'],
-                cont_outer_serial_timstamp = default['cont_outer_serial_timstamp'],
-                delay = default['delay'],
-                cgi = default['cgi']
+                default_type = default["fields"]['default_type'],
+                log_sd_card_status = default["fields"]['log_sd_card_status'],
+                log_cyclic_recording = default["fields"]['log_cyclic_recording'],
+                log_nas_recording = default["fields"]['log_nas_recording'],
+                broken_image = default["fields"]['broken_image'],
+                cont_inner_serial_timstamp = default["fields"]['cont_inner_serial_timstamp'],
+                cont_outer_serial_timstamp = default["fields"]['cont_outer_serial_timstamp'],
+                delay = default["fields"]['delay'],
+                cgi = default["fields"]['cgi']
             )
     A = {'result': 'pass'}
     return Response(A)
