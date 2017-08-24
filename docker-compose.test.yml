@@ -1,36 +1,11 @@
 version: '3'
 services:
-  db:
-    image: postgres
-  redis:
-    image: "redis:alpine"
-  celery:
-    build: .
-    privileged: true
-    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info -f %n-%i.log"
-    volumes:
-      - .:/home/dqa/data
-    links:
-      - db
-      - redis
   web:
-    build: .
     privileged: true
-    entrypoint: /home/dqa/data/entrypoint.sh
+    entrypoint: /home/dqa/data/entrypoint.test.sh
     volumes:
       - .:/home/dqa/data
-    depends_on:
-      - db
-    links:
-      - redis
-  sut:
-    build: .
-    privileged: true
-    entrypoint: /home/dqa/data/test.sh
-    volumes:
-      - .:/home/dqa/data
-    depends_on:
-      - db
-    links:
-      - redis
-      - web
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV}

@@ -62,6 +62,10 @@ sudo docker-compose up
 sudo docker-compose stop 
 sudo docker-compose rm 
 ``` 
+or
+```
+sudo docker-compose down
+```
 
 **Work inside container**
 =============
@@ -90,12 +94,7 @@ root@01739d768e32:/home/dqa/code# source env/bin/activate
 **Unit test**
 =============
 
-### Build container
+### Run unittest inside container
 ```
-sudo docker-compose -f docker-compose.test.yml build
-```
-
-### Start service
-```
-sudo docker-compose -f docker-compose.test.yml up
+sudo docker-compose -f docker-compose.yml -f docker-compose.test.yml up
 ```

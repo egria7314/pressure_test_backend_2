@@ -1,0 +1,28 @@
+version: '3'
+services:
+  celery:
+    privileged: true
+    command: "/home/dqa/code/env/bin/celery -A pressure_test worker -l info -f ./log/%n-%i.log"
+    volumes:
+      - .:/home/dqa/data
+    ports:
+      - "5555:5555"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+    links:
+      - db
+      - redis
+  web:
+    privileged: true
+    entrypoint: /home/dqa/data/entrypoint.sh
+    volumes:
+      - .:/home/dqa/data
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+  filebeat:
+    command: filebeat -e -strict.perms=false -E dock_host=${DOCK_HOST} -E elk_host=${ELK_HOST}
+    volumes:
+      - "./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - ./pressure_test/log:/mnt/log:ro
