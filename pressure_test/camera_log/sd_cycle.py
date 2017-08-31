@@ -238,7 +238,7 @@ class SDcycle(object):
                     return True, log
 
             except Exception as e:
-                ptl.logging_error('[Exception] check less than one hour error, [Error msg]:{0}'.format(e))
+                ptl.logging_error('[ERROR] check less than one hour error, [Error msg]:{0}'.format(e))
                 return False, log
 
         else:
