@@ -3,6 +3,11 @@ import json
 import re
 from datetime import datetime as dt
 from libs.pressure_test_logging import PressureTestLogging as ptl
+from config.models import ProjectSetting
+from camera_log.telnet_module import TelnetModule
+from camera_log.telnet_module import URI
+from camera_log.libs.cgi import CGI
+
 
 class SDcycle(object):
     def __init__(self, former_locked_file_list, former_unlocked_file_list, new_locked_file_list, new_unlocked_file_list):
@@ -20,7 +25,7 @@ class SDcycle(object):
         self.new_all_file = new_locked_file_list + new_unlocked_file_list
 
 
-    def get_result(self, PREFIX):
+    def get_result(self, PREFIX, project_id):
         result = ""
         # print("******set(self.former_locked_file_list)**********")
         # print(set(self.former_locked_file_list))
@@ -36,7 +41,7 @@ class SDcycle(object):
         try:
             # surpass time
             # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
-            exist_surpass, comment = self.__surpass_exist(PREFIX)
+            exist_surpass, comment = self.__surpass_exist(PREFIX, project_id)
             if exist_surpass:
                 result += comment + '\n'
                 return result
@@ -128,7 +133,7 @@ class SDcycle(object):
 
 
 
-    def __surpass_exist(self, PREFIX):
+    def __surpass_exist(self, PREFIX, project_id):
         exist = False
         result = ""
 
@@ -149,7 +154,7 @@ class SDcycle(object):
             # if former list is empty then only compare new list
             if len(former_unlocked) > 0:
                 oldest_former_date = max(former_unlocked)
-                surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
+                surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX, project_id)
                 if surpass_hour:
                     result = comment + '\n'
                     exist = True
@@ -162,7 +167,7 @@ class SDcycle(object):
                 else:
                     index = added_file_list.index(added_file)
                     if index >= 1:
-                        surpass_hour, comment = self.__surpass_one_hour(added_file_list[index - 1], added_file_list[index], PREFIX)
+                        surpass_hour, comment = self.__surpass_one_hour(added_file_list[index - 1], added_file_list[index], PREFIX, project_id)
                         if surpass_hour:
                             result += comment + "\n"
                             exist = True
@@ -171,7 +176,10 @@ class SDcycle(object):
 
 
     # compare two date if surpass one hour
-    def __surpass_one_hour(self, former_date, newer_date, PREFIX):
+    def __surpass_one_hour(self, former_date, newer_date, PREFIX, project_id):
+        ptl.logging_warning('[TEST!!!] former_date, [TEST!!! msg]:{0}'.format(former_date))
+        ptl.logging_warning('[TEST!!!] newer_date, [TEST!!! msg]:{0}'.format(newer_date))
+
         log = ""
         # print("oldest former:" + former_date)
         # print("newest added:" + newer_date)
@@ -213,8 +221,84 @@ class SDcycle(object):
             log = "[red][Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
             return True, log
         elif differ_seconds < seconds_of_one_hour - 1:
-            log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
-            return True, log
+            try:
+                task_camera_obj = ProjectSetting.objects.get(id=project_id)
+                camera_ip = task_camera_obj.ip
+                camera_user = task_camera_obj.username
+                camera_password = task_camera_obj.password
+
+                sd_file_size_mb = self.__check_sd_filesize(project_id, newer_date, camera_ip, camera_user, camera_password)
+                cgi_sd_max_file_size_mb = self.__get_cgi_sd_max_recording_file_size(camera_ip, camera_user, camera_password)
+
+                # ex: iif cgi is 2000M, then 1999~2001M pass
+                if (sd_file_size_mb <= cgi_sd_max_file_size_mb + 1 and sd_file_size_mb >= cgi_sd_max_file_size_mb - 1):
+                    return False, log
+                else:
+                    log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
+                    return True, log
+
+            except Exception as e:
+                ptl.logging_error('[Exception] check less than one hour error, [Error msg]:{0}'.format(e))
+                return False, log
+
         else:
             return False, log
+
+
+    def __check_sd_filesize(self, project_id, file_info, camera_ip, camera_user, camera_password):
+        illegal_bool = True
+
+        # task_camera_obj = ProjectSetting.objects.get(id=project_id)
+        # camera_ip = task_camera_obj.ip
+        # camera_user = task_camera_obj.username
+        # camera_password = task_camera_obj.password
+
+        get_file_size_dir = '/mnt/auto/CF/NCMF/' + file_info    #20170830/16/medium_stress36.mp4'
+        tn = TelnetModule(camera_ip, camera_user, camera_password).login().send_command('du ' + get_file_size_dir)
+
+        result = tn.result()[0]
+        split_list = result.split(get_file_size_dir.encode())
+        split_list = [element.decode() for element in split_list]
+        print(split_list)
+        kb_size_list = re.findall(r'\d+', split_list[1])
+        mb_size_int = int(kb_size_list[0]) / 1024    # KB to MB
+        ptl.logging_warning('[Warning] check file MB size when check less than one hour:, [Error msg]:{0}'.format(mb_size_int))
+        mb_size = mb_size_int
+
+        return mb_size
+
+
+    # by MB unit
+    def __get_cgi_sd_max_recording_file_size(self, camera_ip, camera_user, camera_password):
+        sd_recording_index = self.__get_sd_recording_index(camera_ip, camera_user, camera_password)
+
+        cgi_max_filesize = 'recording_i' + str(sd_recording_index) + '_maxsize'
+
+        cgi_sd_max_file_size = CGI().get_cgi(username=camera_user, password=camera_password, host=camera_ip, cgi_command=cgi_max_filesize, cgi_type='getparam.cgi')
+        print(cgi_sd_max_file_size)
+        cgi_sd_max_file_size_list = re.findall(r'\d+', cgi_sd_max_file_size.split('=')[1])
+        cgi_sd_max_file_size_int = int(cgi_sd_max_file_size_list[0])
+
+        return cgi_sd_max_file_size_int
+
+
+
+    def __get_sd_recording_index(self, camera_ip, camera_user, camera_password):
+        """Get nas location from camera by cgi"""
+        type_code = None
+        for index in range(2):
+            command = 'http://'+camera_ip+'/cgi-bin/admin/getparam.cgi?recording_i{0}_dest'.format(index)
+            try:
+                url = URI.set(command, camera_user, camera_password)
+                url = url.read().decode('utf-8').split("\r\n")
+                result = url[0].replace('recording_i{0}_dest'.format(index), '').replace("'", "").replace("=", "")
+                if result != 'cf':
+                    continue
+                else:
+                    type_code = index
+                    break
+            except:
+                type_code = 'get sd recording index error'
+
+        return type_code
 

@@ -41,7 +41,8 @@ from camera_log.libs.sd_prefix import SDPrefix
 
 from libs.pressure_test_logging import PressureTestLogging as ptl
 
-TEST_PROJECT_ID = 21# 121 #120    #112  #108
+
+TEST_PROJECT_ID = 1# 121 #120    #112  #108
 CAMERA_IP = "172.19.16.119"  # support SD
 # CAMERA_IP = "172.19.1.39"     # not support SD
 CAMERA_USER = "root"
@@ -701,7 +702,7 @@ def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list,
                               new_locked_file_list=new_sd_locked_file_list,
                               new_unlocked_file_list=new_sd_unlocked_file_list)
 
-    sd_cycle_result = sd_cycle_obj.get_result(PREFIX)
+    sd_cycle_result = sd_cycle_obj.get_result(PREFIX, project_id)
     print("sd_cycle_result:")
     print(sd_cycle_result)
     sd_cycle_json = {}
