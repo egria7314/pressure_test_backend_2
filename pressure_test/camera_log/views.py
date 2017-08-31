@@ -515,6 +515,8 @@ def set_camera_log(project_id, start_time):
 
         if sd_cycle_status_tobe == "[red]Timeout":
             sd_cycle_result = "[red]Timeout"
+        elif sd_cycle_status_tobe == "[red]Login Timeout":
+            sd_cycle_result = "[red]Login Timeout"
         elif sd_cycle_status_tobe == "[red]Fail":
             sd_cycle_result = "[red]Fail"
         else:
@@ -638,6 +640,13 @@ def set_sd_recording_files(camera_ip, camera_user, camera_password, PREFIX, proj
         if "No such file or directory" in new_sd_all_file_list:
             new_sd_all_file_list.remove("No such file or directory")
         new_sd_all_file_str = ','.join(new_sd_all_file_list)
+
+        if "Login timed out" in new_sd_all_file_list:
+            ptl.logging_error('[Exception] set sd all files login time out')
+            sd_cycle_status_tobe = "[red]Login Timeout"
+            new_sd_locked_file_str, new_sd_unlocked_file_str, new_sd_all_file_str, \
+                new_sd_locked_file_list, new_sd_unlocked_file_list = set_sd_file_when_get_file_exception(project_id)
+
 
     # if sd file timeoutm, we put former camera's file in this test, but will set sd cycle to timeout
     except socket.timeout as e:

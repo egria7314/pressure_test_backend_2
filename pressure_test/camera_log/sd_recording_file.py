@@ -31,6 +31,10 @@ class Sdrecordingfile(object):
             ptl.logging_debug('[DEBUG] get filename, [tn.result()[0]]:{0}'.format(tn.result()[0]))
             ptl.logging_debug('[DEBUG] get filename, [filename]:{0}'.format(filename))
 
+            if any(b'Login timed out' in element for element in tn.result()[0]):
+                filename = [b"Login timed out"]
+                return filename
+
             for i in range(len(filename)):
                 filename[i] = filename[i].strip()
             # filename.remove("-name \"*medium_stress*.mp4\"")
@@ -137,6 +141,9 @@ class Sdrecordingfile(object):
         file_dict={}
         unlocked_file =[]
         ftp_all_filename = self.get_ftp_all_filename(timeout)
+        # if camera login timeout than doing again one time
+        if any(b'Login timed out' in element for element in ftp_all_filename):
+            ftp_all_filename = self.get_ftp_all_filename(timeout)
 
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrl.cgi?cmd=search&isLocked=1'
         url = URI.set(command, self.account, self.password, timeout)
@@ -174,6 +181,10 @@ class Sdrecordingfile(object):
         """
         file_dict={}
         ftp_all_filename = self.get_ftp_all_filename(timeout)
+
+        # if camera login timeout than doing again one time
+        if any(b'Login timed out' in element for element in ftp_all_filename):
+            ftp_all_filename = self.get_ftp_all_filename(timeout)
 
         ui_all_filename =self.get_ui_all_filename(timeout)
         while 1:
