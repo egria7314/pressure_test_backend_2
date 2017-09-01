@@ -142,7 +142,7 @@ class Sdrecordingfile(object):
         unlocked_file =[]
         ftp_all_filename = self.get_ftp_all_filename(timeout)
         # if camera login timeout than doing again one time
-        if any(b'Login timed out' in element for element in ftp_all_filename):
+        if b'Login timed out' in ftp_all_filename:
             ftp_all_filename = self.get_ftp_all_filename(timeout)
 
         command = 'http://'+self.ip+'/cgi-bin/admin/lsctrl.cgi?cmd=search&isLocked=1'
@@ -181,9 +181,8 @@ class Sdrecordingfile(object):
         """
         file_dict={}
         ftp_all_filename = self.get_ftp_all_filename(timeout)
-
         # if camera login timeout than doing again one time
-        if any(b'Login timed out' in element for element in ftp_all_filename):
+        if b'Login timed out' in ftp_all_filename:
             ftp_all_filename = self.get_ftp_all_filename(timeout)
 
         ui_all_filename =self.get_ui_all_filename(timeout)
