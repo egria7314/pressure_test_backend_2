@@ -54,9 +54,9 @@ class Uptime(object):
         except Exception as e:
             ptl.logging_error('[Exception] get uptime result fail, [Error msg]:{0}'.format(e))
             print(e)
-            camera_uptime = "[red][Fail]"
-            camera_cpuloading_idle = "[red][Fail]"
-            camera_load_average = "[red][Fail]"
+            camera_uptime = "[red][Fail]:{0}".format(e)
+            camera_cpuloading_idle = "[red][Fail]:{0}".format(e)
+            camera_load_average = "[red][Fail]:{0}".format(e)
 
 
 

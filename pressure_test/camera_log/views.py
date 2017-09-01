@@ -514,11 +514,11 @@ def set_camera_log(project_id, start_time):
 
 
         if sd_cycle_status_tobe == "[red]Timeout":
-            sd_cycle_result = "[red]Timeout"
+            sd_cycle_result = sd_cycle_status_tobe
         elif sd_cycle_status_tobe == "[red]Login Timeout":
-            sd_cycle_result = "[red]Login Timeout"
+            sd_cycle_result = sd_cycle_status_tobe
         elif sd_cycle_status_tobe == "[red]Fail":
-            sd_cycle_result = "[red]Fail"
+            sd_cycle_result = sd_cycle_status_tobe
         else:
             # check normal SD cycle #
             try:
