@@ -74,7 +74,7 @@ class SDcycle(object):
             ptl.logging_error('[Exception] get sd cycle error, [Error msg]:{0}'.format(e))
             print("SD Cycle Fail:")
             print(e)
-            result = "[red][Fail]"
+            result = "[red][Fail]:{0}".format(e)
             return result
 
 

@@ -52,7 +52,7 @@ class NasVastCycle():
         except Exception as e:
             # other unknown case
             ptl.logging_error('[Exception] get storage cycle error, [Error msg]:{0}'.format(e))
-            result = "[red][Fail]"
+            result = "[red][Fail]:{0}".format(e)
             return result
 
 
