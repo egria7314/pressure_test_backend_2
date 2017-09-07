@@ -13,4 +13,4 @@ import os
 def get_version(requests):
     print(os.environ.get('PATH'))
     print(os.environ.get('CLASSPATH'))
-    return Response({"version":"v1.0.3"})
+    return Response({"version":"v1.0.4"})
