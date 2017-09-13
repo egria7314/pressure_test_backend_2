@@ -48,8 +48,8 @@ class SDstatus(object):
                 data_dict["sdCardUsed"] = "[red]detached"
             else:
                 ptl.logging_error('[Exception] get  error, [Error msg]:{0}'.format(e))
-                data_dict["sdCardStatus"] = "[red][Fail]"
-                data_dict["sdCardUsed"] = "[red][Fail]"
+                data_dict["sdCardStatus"] = "[red][Fail]:{0}".format(e)
+                data_dict["sdCardUsed"] = "[red][Fail]:{0}".format(e)
 
             # if e == "disk_i0_cond=detached":
             #
