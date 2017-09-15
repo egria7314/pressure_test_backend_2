@@ -11,7 +11,7 @@ class RecordingContinuty(models.Model):
     error_code = models.CharField(null=True, blank=True, max_length=100)
     start_time = models.CharField(null=True, blank=True, max_length=100)
     end_time = models.CharField(null=True, blank=True, max_length=100)
-    link = models.CharField(null=True, blank=True, max_length=100)
+    link = models.CharField(null=True, blank=True, max_length=500)
     count = models.CharField(null=True, blank=True, max_length=100)
     between_result = models.CharField(null=True, blank=True, max_length=100)
     seconds = models.CharField(null=True, blank=True, max_length=100)

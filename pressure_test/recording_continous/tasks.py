@@ -32,7 +32,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
     if pressure_test_video_type == 'medium':
         vast = VastStorage()
         clips = vast.get_video_vast(remote_username, remote_password, sudo_password, remote_path, start_time, end_time)
-        clips = order_vast_file(clips)
+        clips = order_vast_file(remote_path, clips)
     else:
         ns = NasStorage()
         clips = ns.get_video_nas(remote_username, remote_password, sudo_password, remote_path, prefix, start_time, end_time)
@@ -42,8 +42,12 @@ def arrange_periodic_task(project_id, start_time, end_time):
     for file_path in clips:
         ptl.logging_debug('[Video Continuous] file_path : {0}'.format(file_path))
         if pressure_test_video_type == 'medium':
-            local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+            remote_path_after = remote_path.replace('//', '').replace('/', '_')
+            local_path = os.path.join("/mnt/", remote_path_after, os.path.dirname(file_path)[len(remote_path) + 1:])
             clippath = os.path.join(local_path, os.path.basename(file_path))
+
+            # local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+            # clippath = os.path.join(local_path, os.path.basename(file_path))
 
         else:
             local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
@@ -51,28 +55,38 @@ def arrange_periodic_task(project_id, start_time, end_time):
 
         recording_file_obj = RecordingFile.objects.filter(project_id =project_id,path=clippath)
         if len(recording_file_obj) <= 0:
-            push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type, delay_time)
+            push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type, delay_time, local_path, clippath)
             time.sleep(5)
 
 
-def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, project_id, remote_path, file_path, pressure_test_video_type, delay_time):
+def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, project_id, remote_path, file_path, pressure_test_video_type, delay_time, local_path, clippath):
     from libs.nas_storage import NasStorage
     from libs.vast_storage import VastStorage
     from recording_continous.models import Config
     from recording_continous.video_continous import VideoContinous
     from recording_continous.models import RecordingFile
     import os
+    local_path =local_path
+    clippath = clippath
 
-    if pressure_test_video_type== 'medium':
-        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
-        clippath = os.path.join(local_path, os.path.basename(file_path))
-        vast = VastStorage()
-        vast.mount_folder(remote_username, remote_password, remote_path, '', local_path)
-    else:
-        local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
-        clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
-        ns = NasStorage()
-        ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
+    # if pressure_test_video_type== 'medium':
+    #     # remote_path_after = remote_path.replace('//', '').replace('/', '_')
+    #     # local_path = os.path.join("/mnt/", remote_path_after, os.path.dirname(file_path)[len(remote_path) + 1:])
+    #     # clippath = os.path.join(local_path, os.path.basename(file_path))
+    #     clippath = file_path
+    #     ptl.logging_debug('[Video Continuous] *****push queue***** : {0}'.format(clippath))
+    #
+    #
+    #     # local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+    #     # clippath = os.path.join(local_path, os.path.basename(file_path))
+    #     # vast = VastStorage()
+    #     # vast.mount_folder(remote_username, remote_password, remote_path, '', local_path)
+    #
+    # else:
+    #     local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
+    #     clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
+    #     ns = NasStorage()
+    #     ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
 
     query = RecordingFile.objects.filter(project_id=project_id)
 
@@ -110,7 +124,6 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     if in_result["in_result"] != "pass":
         # error_txt_link = "ftp://{0}:{1}@{2}/{3}/continous_error".format(remote_username,remote_password,remote_path.replace("//",""),os.path.dirname(video_path_result))
         error_txt_link = "ftp://{0}:{1}@{2}/continous_error".format(remote_username, remote_password, os.path.dirname(file_path).replace('//', ''))
-
     else:
         error_txt_link = ""
 
@@ -130,26 +143,34 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         seconds=between_result["seconds"],
         )
 
-def order_vast_file(clips):
+def order_vast_file(remote_path, clips):
     clips_timelist = []
     sorted_filelist = []
-
+    ptl.logging_debug('[Video Continuous] file_path : start order_vast_file')
     for file_path in clips:
-        local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+        ptl.logging_debug('[Video Continuous] file_path : {0}'.format(file_path))
+
+        # local_path = os.path.join("/mnt/", os.path.dirname(file_path).replace('//', '').replace('/', '_'))
+        remote_path_after = remote_path.replace('//', '').replace('/', '_')
+        local_path = os.path.join("/mnt/", remote_path_after, os.path.dirname(file_path)[len(remote_path)+1:])
         clippath = os.path.join(local_path, os.path.basename(file_path))
 
+        ptl.logging_debug('[Video Continuous] file_path : {0}'.format(clippath))
         clip_modify_time = os.stat(clippath).st_mtime
         # clips_dictionary[file_path] = datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
         clips_timelist.append([clip_modify_time, file_path])
 
+
     for i in sorted(clips_timelist):
         sorted_filelist.append(i[1])
+    ptl.logging_debug('[Video Continuous] file_path : finish order_vast_file')
+
     return sorted_filelist
 
 def order_nas_file(clips, remote_path):
     clips_timelist = []
     sorted_filelist = []
-
+    ptl.logging_debug('[Video Continuous] file_path : start order_nas_file')
     for file_path in clips:
         local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
         clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
@@ -160,4 +181,5 @@ def order_nas_file(clips, remote_path):
 
     for i in sorted(clips_timelist):
         sorted_filelist.append(i[1])
+    ptl.logging_debug('[Video Continuous] file_path : finish order_nas_file')
     return sorted_filelist
