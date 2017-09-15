@@ -31,7 +31,7 @@ class Sdrecordingfile(object):
             ptl.logging_debug('[DEBUG] get filename, [tn.result()[0]]:{0}'.format(tn.result()[0]))
             ptl.logging_debug('[DEBUG] get filename, [filename]:{0}'.format(filename))
 
-            if any(b'Login timed out' in element for element in tn.result()[0]):
+            if b'Login timed out' in tn.result()[0]:
                 filename = [b"Login timed out"]
                 return filename
 
