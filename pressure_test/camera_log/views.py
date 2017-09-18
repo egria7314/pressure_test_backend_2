@@ -781,7 +781,8 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                     new_storage_file_list.append(nas_file[end_index:])
 
                 nas_cycle_obj = NasVastCycle(former_file_list=former_storage_file_list,
-                                           new_file_list=new_storage_file_list)
+                                           new_file_list=new_storage_file_list,
+                                             project_id=project_id)
                 storage_cycle_result = nas_cycle_obj.get_result(NAS_PREFIX)
 
             elif storage_by == "VAST":
@@ -802,7 +803,8 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
 
                 new_storage_file_list = trans_vast_file_to_nas_style(new_storage_file_list)
                 cycle_obj = NasVastCycle(former_file_list=former_storage_file_list,
-                                           new_file_list=new_storage_file_list)
+                                           new_file_list=new_storage_file_list,
+                                         project_id=project_id)
 
                 storage_cycle_result = cycle_obj.get_result()
 

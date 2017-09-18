@@ -4,6 +4,7 @@ __author__ = 'steven.hsiao'
 import re
 from datetime import datetime as dt
 from libs.pressure_test_logging import PressureTestLogging as ptl
+from config.models import ProjectSetting
 import time
 # from telnet_module import TelnetModule
 # from telnet_module import URI
@@ -13,21 +14,38 @@ import time
 # VAST 1_2017-06-14_110030.3gp    2_2017-06-14_110251.3gp
 # NAS "20170608/09/" + PREFIX +  "05.mp4",
 class NasVastCycle():
-    def __init__(self, former_file_list, new_file_list):
+    def __init__(self, former_file_list, new_file_list, project_id):
         self.former_file_list = former_file_list
         self.new_file_list = new_file_list
+        self.project_id = project_id
 
     def get_result(self, PREFIX=""):
         result = ""
 
-
         try:
             # surpass time
             # compare newest added unlocked file with former latest unlocked file & loop every added unlocked file
-            exist_surpass, comment = self.__surpass_exist(PREFIX)
-            if exist_surpass:
-                result += comment + '\n'
-                return result
+            try:
+                task_camera_obj = ProjectSetting.objects.get(id=self.project_id)
+                test_type = (task_camera_obj.type).lower()
+                ptl.logging_error('[Debug] check surpass_one_hour project type:{0}'.format(test_type))
+                if test_type == "high":
+                    exist_surpass, comment = self.__surpass_exist(PREFIX)
+                    if exist_surpass:
+                        result += comment + '\n'
+                        return result
+
+            except Exception as e:
+                ptl.logging_error('[Exception] __surpass_one_hour get result error, [Error msg]:{0}'.format(e))
+                comment = e
+                return comment
+
+
+            # exist_surpass, comment = self.__surpass_exist(PREFIX)
+            # if exist_surpass:
+            #     result += comment + '\n'
+            #     return result
+
 
             # check cycle
             cycle, comment = self.__check_cycle(PREFIX)
@@ -188,9 +206,30 @@ class NasVastCycle():
         if differ_seconds > seconds_of_one_hour + 1:
             log = "[red][Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
             return True, log
+
         elif differ_seconds < seconds_of_one_hour - 1:
             log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
             return True, log
+
+            # try:
+            #     task_camera_obj = ProjectSetting.objects.get(id=self.project_id)
+            #     test_type = (task_camera_obj.type).lower()
+            #     ptl.logging_error('[Debug] __surpass_one_hour type:{0}'.format(test_type))
+            #     if test_type == "medium":
+            #         return False, log
+            #     else:
+            #         log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
+            #         return True, log
+            #
+            #
+            #     # log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
+            #     # return True, log
+            # except Exception as e:
+            #     ptl.logging_error('[Exception] __surpass_one_hour error, [Error msg]:{0}'.format(e))
+            #     log = e
+            #     return True, log
+
+
         else:
             return False, log
 
