@@ -123,7 +123,7 @@ class NasStorage(object):
         # create the new folder
         cmd = "sudo mkdir {mounted_at}".format(mounted_at=local_path)
         p = pexpect.spawn(cmd)
-        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.read()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -134,7 +134,7 @@ class NasStorage(object):
             remote_path=remote_path, local_path=local_path)
 
         p = pexpect.spawn(cmd)
-        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.read()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -150,7 +150,7 @@ class NasStorage(object):
         # umount
         cmd = "sudo umount {local_path}".format(local_path=local_path)
         p = pexpect.spawn(cmd)
-        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
+        ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.read()))
         # p.expect(': ')
         # p.sendline(sudo_password)
         # p.expect( "\r\n" )
@@ -160,7 +160,7 @@ class NasStorage(object):
         if not os.path.ismount(local_path):
             cmd = "sudo rm -rf {mounted_at}".format(mounted_at=local_path)
             p = pexpect.spawn(cmd)
-            ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.readline()))
+            ptl.logging_info('cmd = {0}, console message is {1}'.format(cmd, p.read()))
             # p.expect(': ')
             # p.sendline(sudo_password)
             # p.expect( "\r\n" )
