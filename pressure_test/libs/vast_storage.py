@@ -19,7 +19,7 @@ class VastStorage(object):
         self.vast_password = vast_password
         self.domain = domain
 
-    def get_video_vast(self, remote_username, remote_password, sudo_password, remote_path, time_start, time_end):
+    def get_video_vast(self, remote_username, remote_password, sudo_password, remote_path, time_start, time_end, camera_log_tag=None):
         """
         """
         ptl.logging_info('start get_video_vast({0}, {1}, {2}, {3}, {4}, {5})'.format(remote_username, remote_password, sudo_password, remote_path, time_start, time_end))
@@ -46,7 +46,7 @@ class VastStorage(object):
             ptl.logging_info('self.mount_folder({0}, {1}, {2}, {3}, {4})'.format(remote_username, remote_password, remote_path, sudo_password, local_path))
             timestamp_start = time.mktime(time_start.timetuple())
             timestamp_end = time.mktime(time_end.timetuple())
-            video = self.dump_vast_files(remote_path, timestamp_start, timestamp_end)
+            video = self.dump_vast_files(remote_path, timestamp_start, timestamp_end, camera_log_tag)
             videos.update(video)
             # # unmount
             # self.unmount_folder(local_path, sudo_password)

@@ -47,7 +47,7 @@ class NasStorage(object):
             return nas_info
 
 
-    def get_video_nas(self, remote_username, remote_password, sudo_password, remote_path, prefix, time_start, time_end):
+    def get_video_nas(self, remote_username, remote_password, sudo_password, remote_path, prefix, time_start, time_end, camera_log_tag=None):
         """
         """
         ptl.logging_info('start get_video_nas({0}, {1}, {2}, {3}, {4}, {5}, {6})'.format(remote_username, remote_password, sudo_password, remote_path, prefix, time_start, time_end))
@@ -62,7 +62,7 @@ class NasStorage(object):
             local_path=local_path)
         timestamp_start = time.mktime(time_start.timetuple())
         timestamp_end = time.mktime(time_end.timetuple())
-        videos = self.dump_nas_files(remote_path, prefix, timestamp_start, timestamp_end)
+        videos = self.dump_nas_files(remote_path, prefix, timestamp_start, timestamp_end, camera_log_tag)
         # # unmount
 
         # self.unmount_folder(local_path, sudo_password)
