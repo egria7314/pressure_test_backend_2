@@ -57,6 +57,7 @@ class VastStorage(object):
         """
         by mount command
         """
+        self.first_recording = False
         ptl.logging_info('start dump_vast_files({0}, {1}, {2})'.format(search_dir_web, timestamp_start, timestamp_end))
         file_web = {}
         file_local = {}
@@ -90,6 +91,8 @@ class VastStorage(object):
                 remove_file_path = file_path_map[last_file_path]
                 del file_web[remove_file_path]
                 ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+                if file_web == {}:
+                    self.first_recording = True
         ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 

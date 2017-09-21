@@ -73,6 +73,7 @@ class NasStorage(object):
         """
         by mount command
         """
+        self.first_recording = False
         ptl.logging_info('start dump_nas_files({0}, {1}, {2}, {3})'.format(search_dir_web, prefix, timestamp_start, timestamp_end))
         # file = []
         file_web = {}
@@ -109,6 +110,8 @@ class NasStorage(object):
                 remove_file_path = file_path_map[last_file_path]
                 del file_web[remove_file_path]
                 ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+                if file_web == {}:
+                    self.first_recording = True
         ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
