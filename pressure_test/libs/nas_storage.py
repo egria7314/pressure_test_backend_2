@@ -108,6 +108,7 @@ class NasStorage(object):
             if last_file_size_curr != last_file_size_prev:
                 remove_file_path = file_path_map[last_file_path]
                 del file_web[remove_file_path]
+                ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
         ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
