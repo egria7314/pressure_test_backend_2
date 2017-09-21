@@ -53,11 +53,10 @@ class VastStorage(object):
 
         return videos
 
-    def dump_vast_files(self, search_dir_web, timestamp_start, timestamp_end):
+    def dump_vast_files(self, search_dir_web, timestamp_start, timestamp_end, camera_log_tag=None):
         """
         by mount command
         """
-        self.first_recording = False
         ptl.logging_info('start dump_vast_files({0}, {1}, {2})'.format(search_dir_web, timestamp_start, timestamp_end))
         file_web = {}
         file_local = {}
@@ -82,17 +81,20 @@ class VastStorage(object):
         ptl.logging_info('file_path_map = {0}'.format(file_path_map))
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
         ptl.logging_info('sorted_file = {0}'.format(sorted_file))
-        if len(sorted_file) != 0:
-            last_file_path = sorted_file[-1][0]
-            last_file_size_prev = os.stat(last_file_path).st_size
-            time.sleep(3)
-            last_file_size_curr = os.stat(last_file_path).st_size
-            if last_file_size_curr != last_file_size_prev:
-                remove_file_path = file_path_map[last_file_path]
-                del file_web[remove_file_path]
-                ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
-                if file_web == {}:
-                    self.first_recording = True
+
+        if camera_log_tag == None:
+            if len(sorted_file) != 0:
+                last_file_path = sorted_file[-1][0]
+                last_file_size_prev = os.stat(last_file_path).st_size
+                time.sleep(3)
+                last_file_size_curr = os.stat(last_file_path).st_size
+                if last_file_size_curr != last_file_size_prev:
+                    remove_file_path = file_path_map[last_file_path]
+                    del file_web[remove_file_path]
+                    ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+        else:
+            ptl.logging_info('this is for camera_log check')
+
         ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
