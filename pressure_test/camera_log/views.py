@@ -760,7 +760,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 test_nas_obj = NasStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
                 storage_files_dict = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
-                                                         NAS_PREFIX, timestamp_start, timestamp_end)
+                                                         NAS_PREFIX, timestamp_start, timestamp_end, camera_log_tag=True)
 
                 print("*****GET NAS FILE******")
                 print(storage_files_dict)
@@ -789,7 +789,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 timestamp_start = start_time
                 test_vast_obj = VastStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
-                storage_files_dict = test_vast_obj.get_video_vast(storage_user, storage_password, '', storage_path, timestamp_start, timestamp_end)
+                storage_files_dict = test_vast_obj.get_video_vast(storage_user, storage_password, '', storage_path, timestamp_start, timestamp_end, camera_log_tag=True)
 
                 # print("****VAST FILE:****")
                 # print(storage_files_dict)
