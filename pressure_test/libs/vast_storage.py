@@ -79,6 +79,10 @@ class VastStorage(object):
                 if possible_file and file_mod_time > timestamp_start and file_mod_time < timestamp_end:
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
+
+                    ptl.logging_info('file_web_fuck = {0}'.format(file_web))
+
+
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
                 else:
                     ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
