@@ -44,8 +44,6 @@ class VastStorage(object):
                 sudo_password=sudo_password,
                 local_path=local_path)
 
-            time.sleep(120)
-
             ptl.logging_info('self.mount_folder({0}, {1}, {2}, {3}, {4})'.format(remote_username, remote_password, remote_path, sudo_password, local_path))
             timestamp_start = time.mktime(time_start.timetuple())
             timestamp_end = time.mktime(time_end.timetuple())
