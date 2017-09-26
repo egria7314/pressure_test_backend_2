@@ -65,8 +65,9 @@ class VastStorage(object):
             search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_'))
         else:
             search_dir = search_dir_web
-        ptl.logging_info('search_dir = {0}'.format(search_dir))
+
         for root, dirs, files in os.walk(search_dir):
+            ptl.logging_info('search_dir = {0}, root = {1}, dirs = {2}, files = {3}'.format(search_dir, root, dirs, files))
             for f in files:
                 file_path = os.path.join(root,f).replace('\\','/')
                 file_mod_time = os.stat(file_path).st_mtime
@@ -76,6 +77,10 @@ class VastStorage(object):
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
+                else:
+                    ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
+                                     .format(f, file_path, possible_file, timestamp_start, file_mod_time, timestamp_end))
+
         ptl.logging_info('file_local = {0}'.format(file_local))
         ptl.logging_info('file_web = {0}'.format(file_web))
         ptl.logging_info('file_path_map = {0}'.format(file_path_map))
