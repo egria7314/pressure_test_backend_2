@@ -44,8 +44,6 @@ class VastStorage(object):
                 sudo_password=sudo_password,
                 local_path=local_path)
 
-            time.sleep(120)
-
             ptl.logging_info('self.mount_folder({0}, {1}, {2}, {3}, {4})'.format(remote_username, remote_password, remote_path, sudo_password, local_path))
             timestamp_start = time.mktime(time_start.timetuple())
             timestamp_end = time.mktime(time_end.timetuple())
@@ -79,6 +77,10 @@ class VastStorage(object):
                 if possible_file and file_mod_time > timestamp_start and file_mod_time < timestamp_end:
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
+
+                    ptl.logging_info('file_web_fuck = {0}'.format(file_web))
+
+
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
                 else:
                     ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'

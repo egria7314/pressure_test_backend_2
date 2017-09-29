@@ -750,7 +750,8 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
     finally:
 
         try:
-            timestamp_end = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
+            # datetime.timedelta(0,3600) is for avoiding file modified time is larger than end time
+            timestamp_end = datetime.datetime.now(pytz.timezone('Asia/Taipei')) + datetime.timedelta(0,3600)
 
             sudo_password = 'fftbato'
             storage_files_dict = []
