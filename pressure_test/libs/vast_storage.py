@@ -93,13 +93,15 @@ class VastStorage(object):
         if camera_log_tag == None:
             if len(sorted_file) != 0:
                 last_file_path = sorted_file[-1][0]
-                last_file_size_prev = os.stat(last_file_path).st_size
-                time.sleep(3)
-                last_file_size_curr = os.stat(last_file_path).st_size
-                if last_file_size_curr != last_file_size_prev:
-                    remove_file_path = file_path_map[last_file_path]
-                    del file_web[remove_file_path]
-                    ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+                # last_file_size_prev = os.stat(last_file_path).st_size
+                # time.sleep(10)
+                # last_file_size_curr = os.stat(last_file_path).st_size
+                # if last_file_size_curr != last_file_size_prev:
+                #     remove_file_path = file_path_map[last_file_path]
+                #     del file_web[remove_file_path]
+                #     ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+                remove_file_path = file_path_map[last_file_path]
+                del file_web[remove_file_path]
         else:
             ptl.logging_info('this is for camera_log check, without delete editing file, file_web = {0}'.format(file_web))
 
