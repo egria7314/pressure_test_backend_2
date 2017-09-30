@@ -43,6 +43,7 @@ class VastStorage(object):
                 remote_path=remote_path,
                 sudo_password=sudo_password,
                 local_path=local_path)
+
             ptl.logging_info('self.mount_folder({0}, {1}, {2}, {3}, {4})'.format(remote_username, remote_password, remote_path, sudo_password, local_path))
             timestamp_start = time.mktime(time_start.timetuple())
             timestamp_end = time.mktime(time_end.timetuple())
@@ -65,8 +66,9 @@ class VastStorage(object):
             search_dir = os.path.join("/mnt", search_dir_web.replace('//', '').replace('/', '_'))
         else:
             search_dir = search_dir_web
-        ptl.logging_info('search_dir = {0}'.format(search_dir))
+
         for root, dirs, files in os.walk(search_dir):
+            ptl.logging_info('search_dir = {0}, root = {1}, dirs = {2}, files = {3}'.format(search_dir, root, dirs, files))
             for f in files:
                 file_path = os.path.join(root,f).replace('\\','/')
                 file_mod_time = os.stat(file_path).st_mtime
@@ -75,7 +77,15 @@ class VastStorage(object):
                 if possible_file and file_mod_time > timestamp_start and file_mod_time < timestamp_end:
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
+
+                    ptl.logging_info('file_web_fuck = {0}'.format(file_web))
+
+
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
+                else:
+                    ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
+                                     .format(f, file_path, possible_file, timestamp_start, file_mod_time, timestamp_end))
+
         ptl.logging_info('file_local = {0}'.format(file_local))
         ptl.logging_info('file_web = {0}'.format(file_web))
         ptl.logging_info('file_path_map = {0}'.format(file_path_map))
@@ -85,15 +95,17 @@ class VastStorage(object):
         if camera_log_tag == None:
             if len(sorted_file) != 0:
                 last_file_path = sorted_file[-1][0]
-                last_file_size_prev = os.stat(last_file_path).st_size
-                time.sleep(3)
-                last_file_size_curr = os.stat(last_file_path).st_size
-                if last_file_size_curr != last_file_size_prev:
-                    remove_file_path = file_path_map[last_file_path]
-                    del file_web[remove_file_path]
-                    ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+                # last_file_size_prev = os.stat(last_file_path).st_size
+                # time.sleep(10)
+                # last_file_size_curr = os.stat(last_file_path).st_size
+                # if last_file_size_curr != last_file_size_prev:
+                #     remove_file_path = file_path_map[last_file_path]
+                #     del file_web[remove_file_path]
+                #     ptl.logging_info('remove_file_path = {0}'.format(remove_file_path))
+                remove_file_path = file_path_map[last_file_path]
+                del file_web[remove_file_path]
         else:
-            ptl.logging_info('this is for camera_log check, without delete editing file')
+            ptl.logging_info('this is for camera_log check, without delete editing file, file_web = {0}'.format(file_web))
 
         ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
