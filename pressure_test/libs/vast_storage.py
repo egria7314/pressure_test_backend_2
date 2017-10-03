@@ -83,9 +83,9 @@ class VastStorage(object):
 
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
                 else:
-                    ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
-                                     .format(f, file_path, possible_file, timestamp_start, file_mod_time, timestamp_end))
-
+                    # ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
+                    #                  .format(f, file_path, possible_file, timestamp_start, file_mod_time, timestamp_end))
+                    pass
         # ptl.logging_info('file_local = {0}'.format(file_local))
         # ptl.logging_info('file_web = {0}'.format(file_web))
         # ptl.logging_info('file_path_map = {0}'.format(file_path_map))
