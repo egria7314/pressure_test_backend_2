@@ -103,4 +103,6 @@ sudo docker-compose -f docker-compose.yml -f docker-compose.test.yml up
 
 **Delete Docker**
 =============
+```
 https://stackoverflow.com/questions/31313497/how-to-remove-docker-installed-using-wget
+```
