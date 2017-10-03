@@ -93,11 +93,11 @@ class NasStorage(object):
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
-        ptl.logging_info('file_local = {0}'.format(file_local))
-        ptl.logging_info('file_web = {0}'.format(file_web))
-        ptl.logging_info('file_path_map = {0}'.format(file_path_map))
+        # ptl.logging_info('file_local = {0}'.format(file_local))
+        # ptl.logging_info('file_web = {0}'.format(file_web))
+        # ptl.logging_info('file_path_map = {0}'.format(file_path_map))
         sorted_file = sorted(file_local.items(), key=operator.itemgetter(1))
-        ptl.logging_info('sorted file_local = {0}'.format(sorted_file))
+        # ptl.logging_info('sorted file_local = {0}'.format(sorted_file))
 
         if camera_log_tag == None:
             if len(sorted_file) > 0:
