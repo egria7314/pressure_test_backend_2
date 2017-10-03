@@ -116,6 +116,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         between_result["between_result"] = '-'
         between_result["seconds"] = 'First video'
 
+
     if pressure_test_video_type == 'high':
         video_path_result = file_path.replace(remote_path+"/", "")
     else:
@@ -142,7 +143,44 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         between_result=between_result["between_result"],
         seconds=between_result["seconds"],
         )
+    """
+    if pressure_test_video_type== 'medium':
+        if file_path_before!='first video':
+            file_path_before=os.path.basename(file_path_before)
 
+        RecordingContinuty.objects.create(
+            project_id=project_id,
+            creat_at=str(file_modify_time),
+            video_path=video_path_result,
+            video_path_before=file_path_before,
+            size=file_size,
+            in_result=in_result["in_result"],
+            error_code=in_result["error_code"],
+            start_time=in_result["start_time"],
+            end_time=in_result["end_time"],
+            link=error_txt_link,
+            count=in_result["count"],
+            between_result=between_result["between_result"],
+            seconds=between_result["seconds"],
+
+        )
+    else:
+        RecordingContinuty.objects.create(
+            project_id=project_id,
+            creat_at=str(file_modify_time),
+            video_path=video_path_result,
+            video_path_before=file_path_before.replace(local_path+"/", ""),
+            size=file_size,
+            in_result=in_result["in_result"],
+            error_code=in_result["error_code"],
+            start_time=in_result["start_time"],
+            end_time=in_result["end_time"],
+            link=error_txt_link,
+            count=in_result["count"],
+            between_result=between_result["between_result"],
+            seconds=between_result["seconds"],
+            )
+    """
 def order_vast_file(remote_path, clips):
     clips_timelist = []
     sorted_filelist = []
