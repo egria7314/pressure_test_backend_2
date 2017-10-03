@@ -100,3 +100,7 @@ root@01739d768e32:/home/dqa/code# source env/bin/activate
 ```
 sudo docker-compose -f docker-compose.yml -f docker-compose.test.yml up
 ```
+
+**Delete Docker**
+=============
+https://stackoverflow.com/questions/31313497/how-to-remove-docker-installed-using-wget
