@@ -127,7 +127,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         error_txt_link = "ftp://{0}:{1}@{2}/continous_error".format(remote_username, remote_password, os.path.dirname(file_path).replace('//', ''))
     else:
         error_txt_link = ""
-
+    """
     RecordingContinuty.objects.create(
         project_id=project_id,
         creat_at=str(file_modify_time),
@@ -180,7 +180,7 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
             between_result=between_result["between_result"],
             seconds=between_result["seconds"],
             )
-    """
+
 def order_vast_file(remote_path, clips):
     clips_timelist = []
     sorted_filelist = []
