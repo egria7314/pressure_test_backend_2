@@ -38,7 +38,7 @@ def arrange_periodic_task(project_id, start_time, end_time):
         clips = ns.get_video_nas(remote_username, remote_password, sudo_password, remote_path, prefix, start_time, end_time)
         clips = sorted(clips)
 
-
+    ptl.logging_debug('[Video Continuous] [project {0}] file_path : {1}'.format(project_id, " || ".join(clips)))
     for file_path in clips:
         ptl.logging_debug('[Video Continuous] file_path : {0}'.format(file_path))
         if pressure_test_video_type == 'medium':
