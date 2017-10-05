@@ -105,8 +105,8 @@ class VastStorage(object):
                 remove_file_path = file_path_map[last_file_path]
                 del file_web[remove_file_path]
         else:
-            ptl.logging_info('this is for camera_log check, without delete editing file, file_web = {0}'.format(file_web))
-
+            # ptl.logging_info('this is for camera_log check, without delete editing file, file_web = {0}'.format(file_web))
+            pass
         ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
