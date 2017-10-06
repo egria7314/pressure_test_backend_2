@@ -54,7 +54,12 @@ def arrange_periodic_task(project_id, start_time, end_time):
             clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
 
         recording_file_obj = RecordingFile.objects.filter(project_id =project_id,path=clippath)
+
+        ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj : {1}'.format(project_id, recording_file_obj))
+        ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(type) : {1}'.format(project_id, type(recording_file_obj)))
+        ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(len) : {1}'.format(project_id, len(recording_file_obj)))
         if len(recording_file_obj) <= 0:
+            ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj<=0'.format(project_id))
             push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type, delay_time, local_path, clippath)
             time.sleep(5)
 
@@ -87,8 +92,13 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     #     clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
     #     ns = NasStorage()
     #     ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
+    ptl.logging_debug('start push_detect_broken_image_tasks_to_queue')
 
     query = RecordingFile.objects.filter(project_id=project_id)
+
+    ptl.logging_debug('[Video Continuous] [project {0}] query : {1}'.format(project_id, query))
+    ptl.logging_debug('[Video Continuous] [project {0}] query(type) : {1}'.format(project_id, type(query)))
+    ptl.logging_debug('[Video Continuous] [project {0}] query(len) : {1}'.format(project_id, len(query)))
 
     if len(query) > 0:
         query = RecordingFile.objects.filter(project_id=project_id).order_by('-id')[0]
