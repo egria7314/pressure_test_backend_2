@@ -51,7 +51,8 @@ def arrange_periodic_task(project_id, start_time, end_time):
 
         else:
             local_path = os.path.join("/mnt/", remote_path.replace('//', '').replace('/', '_'))
-            clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
+            #clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
+            clippath = os.path.join(local_path, file_path[len(os.path.join(remote_path, "")):])
 
         recording_file_obj = RecordingFile.objects.filter(project_id =project_id,path=clippath)
 
@@ -60,7 +61,10 @@ def arrange_periodic_task(project_id, start_time, end_time):
         ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(len) : {1}'.format(project_id, len(recording_file_obj)))
         if len(recording_file_obj) <= 0:
             ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj<=0'.format(project_id))
-            push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type, delay_time, local_path, clippath)
+            try:
+                push_detect_broken_image_tasks_to_queue(remote_username, remote_password, str(project_id), remote_path, file_path, pressure_test_video_type, delay_time, local_path, clippath)
+            except Exception as e:
+                ptl.logging_debug('[Video Continuous] file_path : {0} || ecception: {1}'.format(file_path, str(e)))
             time.sleep(5)
 
 
@@ -111,8 +115,8 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     ptl.logging_debug('[Video Continuous] [project {0}] start file_modify_time'.format(project_id))
 
     ptl.logging_debug('[Video Continuous] [project {0}] clippath : {1}'.format(project_id,clippath))
-
     file_modify_time =  datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
+
     ptl.logging_debug('[Video Continuous] [project {0}] file_modify_time:{1}}'.format(project_id,file_modify_time))
 
     ptl.logging_debug('[Video Continuous] [project {0}] end file_modify_time'.format(project_id))
