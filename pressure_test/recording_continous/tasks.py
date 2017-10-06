@@ -106,8 +106,23 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     else:
         file_path_before = 'first video'
 
+    ptl.logging_debug('[Video Continuous] [project {0}] start file_modify_time'.format(project_id)
+
+
     file_modify_time =  datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
+    ptl.logging_debug('[Video Continuous] [project {0}] file_modify_time:{1}}'.format(project_id,file_modify_time)
+
+    ptl.logging_debug('[Video Continuous] [project {0}] end file_modify_time'.format(project_id)
+
+
+    ptl.logging_debug('[Video Continuous] [project {0}] start file_size'.format(project_id)
     file_size = str(int(os.path.getsize(clippath)/1000000))+' MB'
+    ptl.logging_debug('[Video Continuous] [project {0}] file_size:{1}}'.format(project_id,file_size)
+    ptl.logging_debug('[Video Continuous] [project {0}] end file_size'.format(project_id)
+
+
+    ptl.logging_debug('[Video Continuous] [project {0}] clippath {1}'.format(project_id,clippath)
+    ptl.logging_debug('[Video Continuous] [project {0}] start write db'.format(project_id)
     RecordingFile.objects.create(
         project_id=project_id,
         modify_time=str(file_modify_time),
@@ -115,6 +130,9 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
         path = clippath,
 
     )
+    ptl.logging_debug('[Video Continuous] [project {0}] end write db'.format(project_id)
+
+        
     print("PUSH QUEUE:", clippath)
     vc = VideoContinous(file_path_before, clippath, delay_time)
     in_result = vc.continuity_in_recording_files(project_id)
