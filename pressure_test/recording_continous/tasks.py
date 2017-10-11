@@ -117,14 +117,14 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     ptl.logging_debug('[Video Continuous] [project {0}] clippath : {1}'.format(project_id,clippath))
     file_modify_time =  datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
 
-    ptl.logging_debug('[Video Continuous] [project {0}] file_modify_time:{1}}'.format(project_id,file_modify_time))
+    ptl.logging_debug('[Video Continuous] [project {0}] file_modify_time:{1}'.format(project_id,file_modify_time))
 
     ptl.logging_debug('[Video Continuous] [project {0}] end file_modify_time'.format(project_id))
 
 
     ptl.logging_debug('[Video Continuous] [project {0}] start file_size'.format(project_id))
     file_size = str(int(os.path.getsize(clippath)/1000000))+' MB'
-    ptl.logging_debug('[Video Continuous] [project {0}] file_size:{1}}'.format(project_id,file_size))
+    ptl.logging_debug('[Video Continuous] [project {0}] file_size:{1}'.format(project_id,file_size))
     ptl.logging_debug('[Video Continuous] [project {0}] end file_size'.format(project_id))
 
 
