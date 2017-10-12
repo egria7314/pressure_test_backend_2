@@ -39,8 +39,9 @@ def arrange_periodic_task(project_id, start_time, end_time):
         clips = sorted(clips)
 
     ptl.logging_debug('[Video Continuous] [project {0}] file_path : {1}'.format(project_id, " || ".join(clips)))
+
     for file_path in clips:
-        ptl.logging_debug('[Video Continuous] file_path : {0}'.format(file_path))
+        ptl.logging_debug('[Video Continuous] [project {0}] file_path : {1}'.format(project_id, file_path))
         if pressure_test_video_type == 'medium':
             remote_path_after = remote_path.replace('//', '').replace('/', '_')
             local_path = os.path.join("/mnt/", remote_path_after, os.path.dirname(file_path)[len(remote_path) + 1:])
@@ -56,9 +57,9 @@ def arrange_periodic_task(project_id, start_time, end_time):
 
         recording_file_obj = RecordingFile.objects.filter(project_id =project_id,path=clippath)
 
-        ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj : {1}'.format(project_id, recording_file_obj))
-        ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(type) : {1}'.format(project_id, type(recording_file_obj)))
-        ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(len) : {1}'.format(project_id, len(recording_file_obj)))
+        # ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj : {1}'.format(project_id, recording_file_obj))
+        # ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(type) : {1}'.format(project_id, type(recording_file_obj)))
+        # ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj(len) : {1}'.format(project_id, len(recording_file_obj)))
         if len(recording_file_obj) <= 0:
             ptl.logging_debug('[Video Continuous] [project {0}] recording_file_obj<=0'.format(project_id))
             try:
@@ -96,13 +97,13 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
     #     clippath = os.path.join(local_path, file_path.lower()[len(os.path.join(remote_path, "")):])
     #     ns = NasStorage()
     #     ns.mount_folder(remote_username, remote_password, remote_path, '', local_path)
-    ptl.logging_debug('start push_detect_broken_image_tasks_to_queue')
+    # ptl.logging_debug('start push_detect_broken_image_tasks_to_queue')
 
     query = RecordingFile.objects.filter(project_id=project_id)
 
-    ptl.logging_debug('[Video Continuous] [project {0}] query : {1}'.format(project_id, query))
-    ptl.logging_debug('[Video Continuous] [project {0}] query(type) : {1}'.format(project_id, type(query)))
-    ptl.logging_debug('[Video Continuous] [project {0}] query(len) : {1}'.format(project_id, len(query)))
+    # ptl.logging_debug('[Video Continuous] [project {0}] query : {1}'.format(project_id, query))
+    # ptl.logging_debug('[Video Continuous] [project {0}] query(type) : {1}'.format(project_id, type(query)))
+    # ptl.logging_debug('[Video Continuous] [project {0}] query(len) : {1}'.format(project_id, len(query)))
 
     if len(query) > 0:
         query = RecordingFile.objects.filter(project_id=project_id).order_by('-id')[0]
@@ -112,24 +113,24 @@ def push_detect_broken_image_tasks_to_queue(remote_username, remote_password, pr
 
     
 
-    ptl.logging_debug('[Video Continuous] [project {0}] start file_modify_time'.format(project_id))
+    # ptl.logging_debug('[Video Continuous] [project {0}] start file_modify_time'.format(project_id))
 
-    ptl.logging_debug('[Video Continuous] [project {0}] clippath : {1}'.format(project_id,clippath))
+    # ptl.logging_debug('[Video Continuous] [project {0}] clippath : {1}'.format(project_id,clippath))
     file_modify_time =  datetime.datetime.fromtimestamp(os.stat(clippath).st_mtime)
 
-    ptl.logging_debug('[Video Continuous] [project {0}] file_modify_time:{1}'.format(project_id,file_modify_time))
+    # ptl.logging_debug('[Video Continuous] [project {0}] file_modify_time:{1}'.format(project_id,file_modify_time))
 
-    ptl.logging_debug('[Video Continuous] [project {0}] end file_modify_time'.format(project_id))
+    # ptl.logging_debug('[Video Continuous] [project {0}] end file_modify_time'.format(project_id))
 
 
-    ptl.logging_debug('[Video Continuous] [project {0}] start file_size'.format(project_id))
+    # ptl.logging_debug('[Video Continuous] [project {0}] start file_size'.format(project_id))
     file_size = str(int(os.path.getsize(clippath)/1000000))+' MB'
-    ptl.logging_debug('[Video Continuous] [project {0}] file_size:{1}'.format(project_id,file_size))
-    ptl.logging_debug('[Video Continuous] [project {0}] end file_size'.format(project_id))
+    # ptl.logging_debug('[Video Continuous] [project {0}] file_size:{1}'.format(project_id,file_size))
+    # ptl.logging_debug('[Video Continuous] [project {0}] end file_size'.format(project_id))
 
 
-    ptl.logging_debug('[Video Continuous] [project {0}] clippath {1}'.format(project_id,clippath))
-    ptl.logging_debug('[Video Continuous] [project {0}] start write db'.format(project_id))
+    # ptl.logging_debug('[Video Continuous] [project {0}] clippath {1}'.format(project_id,clippath))
+    # ptl.logging_debug('[Video Continuous] [project {0}] start write db'.format(project_id))
     RecordingFile.objects.create(
         project_id=project_id,
         modify_time=str(file_modify_time),
