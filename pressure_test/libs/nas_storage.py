@@ -66,7 +66,7 @@ class NasStorage(object):
         # # unmount
 
         # self.unmount_folder(local_path, sudo_password)
-
+        ptl.logging_info('return videos = {0}'.format(videos))
         return videos
 
     def dump_nas_files(self, search_dir_web, prefix, timestamp_start, timestamp_end, camera_log_tag=None):
@@ -115,7 +115,7 @@ class NasStorage(object):
         else:
             # ptl.logging_info('this is for camera_log check, without delete editing file, file_web = {0}'.format(file_web))
             pass
-        ptl.logging_info('return file_web = {0}'.format(file_web))
+        # ptl.logging_info('return file_web = {0}'.format(file_web))
         return file_web
 
     def mount_folder(self, remote_username, remote_password, remote_path, sudo_password, local_path):
