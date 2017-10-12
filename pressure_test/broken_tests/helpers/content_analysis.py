@@ -52,6 +52,7 @@ class ContentAnalysis(object):
         """
         # Using python openCV
         pil_img = objImage.crop(box).convert('RGB')
+        print('line detect pic colors: ', pil_img.getcolors())
         # cv_img = np.array(pil_img)
         cv_img = np.asarray(pil_img)
         # Convert 8-bit signed to unsigned
@@ -134,8 +135,9 @@ class ContentAnalysis(object):
         """
         # Using pyhton openCV
         pil_img = objImage.crop(box).convert('RGB')
+        print('no broken pic colors: ', pil_img.getcolors())
         # cv_img = np.array(pil_img)
-        # Convert 8-bit signed to unsigned
+        # # Convert 8-bit signed to unsigned
         cv_img = np.asarray(pil_img)
         cv_img = img_as_ubyte(cv_img)
         # Convert RGB to BGR
