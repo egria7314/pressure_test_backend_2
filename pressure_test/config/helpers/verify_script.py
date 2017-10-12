@@ -43,49 +43,35 @@ def test_button(request):
     return Response(test_result)
 
 def get_result(ping_result, mount_result, error_string, input_field, test_broken_result=None):
-    if type(test_broken_result) == dict:
-        if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == [] and test_broken_result['result'] == "passed":
-            test_result = {
-                "testCheck": True, "info": {
-                    "action": "pretest", "status": "success", "comment": "{0}, {1}, Broken test: {2}".format(ping_result, mount_result, test_broken_result)
-                }
-            }
-        else:
-            test_result = {
-                "testCheck": False, "info": {
-                    "action": "pretest", "status": "failed", "comment": "{0}, {1}, Broken test: {2}, Field check: {3}".format(ping_result, mount_result, test_broken_result, input_field)
-                }
-            }
-    else:
-        # print(test_broken_result)
-        if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == []:
-            test_result = {
-                "testCheck": True, "info": {
-                    "action": "pretest", "status": "success", "comment": "{0}, {1}, Broken test: {2}".format(ping_result, mount_result, test_broken_result)
-                }
-            }
-        else:
-            test_result = {
-                "testCheck": False, "info": {
-                    "action": "pretest", "status": "failed", "comment": "{0}, {1}, Broken test: {2}, Field check: {3}".format(ping_result, mount_result, test_broken_result, input_field)
-                }
-            }
-    return test_result
 
-# def get_result(ping_result, mount_result, input_field, error_string):
-#     if ping_result == 'Camera connection successful' and (mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist") and error_string == []:
-#             test_result = {
-#                 "testCheck": True, "info": {
-#                     "action": "pretest", "status": "success", "comment": "{0}, {1}".format(ping_result, mount_result)
-#                 }
-#             }
-#     else:
-#         test_result = {
-#             "testCheck": False, "info": {
-#                 "action": "pretest", "status": "failed", "comment": "{0}, {1}, Field check: {2}".format(ping_result, mount_result, input_field)
-#             }
-#         }
-#     return test_result
+    ping_check = ping_result == 'Camera connection successful'
+    mount_check = mount_result == 'Mount storage successful' or mount_result == "Mount storage already exist"
+    field_check = error_string == []
+    if type(test_broken_result) == dict:
+        broken_check = test_broken_result['result'] == "passed"
+    elif test_broken_result == None:
+        test_broken_result = 'unselected'
+        broken_check = True
+    else:
+        broken_check = False
+
+    if ping_check and mount_check and field_check and broken_check:
+        test_result = {
+            "testCheck": True, "info": {
+                "action": "pretest", "status": "success",
+                "comment": "{0}, {1}, Broken test: {2}".format(ping_result, mount_result, test_broken_result)
+            }
+        }
+    else:
+        test_result = {
+            "testCheck": False, "info": {
+                "action": "pretest", "status": "failed",
+                "comment": "{0}, {1}, Broken test: {2}, Field check: {3}".format(ping_result, mount_result,
+                                                                                 test_broken_result, input_field)
+            }
+        }
+
+    return test_result
 
 def ping_camera(ip):
     ping_result = ''

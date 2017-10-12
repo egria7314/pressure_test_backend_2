@@ -58,3 +58,4 @@
         - schedule
         - humanize
         - pytest-django
+        - scikit-image

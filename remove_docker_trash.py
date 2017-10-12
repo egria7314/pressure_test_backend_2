@@ -22,7 +22,7 @@ while True:
             timestamp = os.path.getctime(p)
             date = datetime.datetime.fromtimestamp(timestamp)
             date_str = date.strftime('%Y-%m-%d %H:%M:%S')
-            if now-date> datetime.timedelta(days=20):
+            if now-date> datetime.timedelta(days=15):
                 cmd = 'sudo -S rm -rf {0}{1}/'.format(path, d)
                 os.system('{0}'.format(cmd))
                 print ("Delete:{0}   {1}".format(d,date_str))
