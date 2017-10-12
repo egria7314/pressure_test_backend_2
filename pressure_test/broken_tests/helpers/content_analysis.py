@@ -18,6 +18,7 @@ from broken_tests.helpers.http_module import URI
 from broken_tests.tasks import check_single_image_as_usual
 from celery import group
 from celery.result import allow_join_result
+from skimage import img_as_ubyte
 
 
 BoxBorder = namedtuple('BoxBorder', 'left, upper, right, lower')
@@ -51,7 +52,11 @@ class ContentAnalysis(object):
         """
         # Using python openCV
         pil_img = objImage.crop(box).convert('RGB')
-        cv_img = np.array(pil_img)
+        print('line detect pic colors: ', pil_img.getcolors())
+        # cv_img = np.array(pil_img)
+        cv_img = np.asarray(pil_img)
+        # Convert 8-bit signed to unsigned
+        cv_img = img_as_ubyte(cv_img)
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
 
         blur = cv2.GaussianBlur(cv_img, (5, 5), 0)
@@ -130,8 +135,11 @@ class ContentAnalysis(object):
         """
         # Using pyhton openCV
         pil_img = objImage.crop(box).convert('RGB')
-        cv_img = np.array(pil_img)
-
+        print('no broken pic colors: ', pil_img.getcolors())
+        # cv_img = np.array(pil_img)
+        # # Convert 8-bit signed to unsigned
+        cv_img = np.asarray(pil_img)
+        cv_img = img_as_ubyte(cv_img)
         # Convert RGB to BGR
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
         # cv2.imwrite("/home/dqa/data/pressure_test/broken_tests/helpers/crop{}.jpg".format(str(box)), cv_img)
