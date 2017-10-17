@@ -51,7 +51,13 @@ class VastStorage(object):
             videos.update(video)
             # # unmount
             # self.unmount_folder(local_path, sudo_password)
+
         ptl.logging_info('return videos = {0}'.format(videos))
+        if camera_log_tag != None:
+            for k in videos.keys():
+                if 'verify_storage.checked' in k:
+                    return videos, True
+            return videos, False
         return videos
 
     def dump_vast_files(self, search_dir_web, timestamp_start, timestamp_end, camera_log_tag=None):
@@ -73,15 +79,18 @@ class VastStorage(object):
                 file_path = os.path.join(root,f).replace('\\','/')
                 file_mod_time = os.stat(file_path).st_mtime
                 file_size = os.stat(file_path).st_size
-                possible_file = re.search(search_dir + '/(.*3gp)', file_path)
+                # possible_file = re.search(search_dir + '/(.*\.3gp|.*\.test)', file_path)
+                possible_file = re.search(search_dir + '/(.*\.3gp)', file_path)
+                checked_file = re.search(search_dir + '/(.*\.checked)', file_path)
                 if possible_file and file_mod_time > timestamp_start and file_mod_time < timestamp_end:
                     file_local[file_path] = file_mod_time
                     file_web[os.path.join(search_dir_web, possible_file.groups()[0])] = [file_mod_time, file_size]
 
                     # ptl.logging_info('file_web_fuck = {0}'.format(file_web))
 
-
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
+                elif checked_file:
+                    file_web[os.path.join(search_dir_web, checked_file.groups()[0])] = [file_mod_time, file_size]
                 else:
                     # ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
                     #                  .format(f, file_path, possible_file, timestamp_start, file_mod_time, timestamp_end))
