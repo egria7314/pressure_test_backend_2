@@ -186,7 +186,7 @@ def run_cameralog_schedule_by_id(project_id):
         now_time = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
 
         interval_time = datetime.timedelta(hours=1)
-        # interval_time = datetime.timedelta(minutes=2)
+        # interval_time = datetime.timedelta(minutes=2) # for quickly test camera log
 
         periodic_check_points = []
         periodic_time = start_time
