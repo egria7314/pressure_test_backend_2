@@ -186,7 +186,7 @@ def run_cameralog_schedule_by_id(project_id):
         now_time = datetime.datetime.now(pytz.timezone('Asia/Taipei'))
 
         interval_time = datetime.timedelta(hours=1)
-        # interval_time = datetime.timedelta(minutes=2)
+        # interval_time = datetime.timedelta(minutes=2) # for quickly test camera log
 
         periodic_check_points = []
         periodic_time = start_time
@@ -760,7 +760,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 timestamp_start = start_time
                 test_nas_obj = NasStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
-                storage_files_dict = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
+                storage_files_dict, storage_connected = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
                                                          NAS_PREFIX, timestamp_start, timestamp_end, camera_log_tag=True)
 
                 print("*****GET NAS FILE******")
@@ -785,12 +785,14 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                                            new_file_list=new_storage_file_list,
                                              project_id=project_id)
                 storage_cycle_result = nas_cycle_obj.get_result(NAS_PREFIX)
+                if not storage_connected:
+                    storage_cycle_result = "[Fail] Can't access storage:{0}".format(storage_path)
 
             elif storage_by == "VAST":
                 timestamp_start = start_time
                 test_vast_obj = VastStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
-                storage_files_dict = test_vast_obj.get_video_vast(storage_user, storage_password, '', storage_path, timestamp_start, timestamp_end, camera_log_tag=True)
+                storage_files_dict, storage_connected = test_vast_obj.get_video_vast(storage_user, storage_password, '', storage_path, timestamp_start, timestamp_end, camera_log_tag=True)
 
                 # print("****VAST FILE:****")
                 # print(storage_files_dict)
@@ -808,6 +810,9 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                                          project_id=project_id)
 
                 storage_cycle_result = cycle_obj.get_result()
+                if not storage_connected:
+                    storage_cycle_result = "[Fail] Can't access storage:{0}".format(storage_path)
+
 
         except Exception as e:
             ptl.logging_error('[Exception] NAS/VAST get files Fail! or Timeout, [Error msg]:{0}'.format(e))

@@ -120,6 +120,7 @@ def mount_status(destination, username, password):
                 if out:
                     if destination.replace('\\', '/') in str(out):
                         mount_result = 'Mount storage successful'
+                        file = open('{0}/verify_storage.checked'.format(source), 'w+')
                     else:
                         mount_result = 'Mount storage failed'
             else:
