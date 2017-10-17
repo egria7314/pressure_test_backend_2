@@ -815,7 +815,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
 
 
         except Exception as e:
-            ptl.logging_error('[Exception] NAS/VAST get files Fail! or Timeout, [Error msg]:{0}'.format(e))
+            ptl.logging_error('[Exception] {0} get files Fail! or Timeout, [Error msg]:{1}'.format(storage_by, e))
             print("NAS/VAST get files Fail! or Timeout")
             print(e)
 
