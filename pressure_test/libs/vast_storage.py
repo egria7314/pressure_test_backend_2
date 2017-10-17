@@ -89,7 +89,7 @@ class VastStorage(object):
                     # ptl.logging_info('file_web_fuck = {0}'.format(file_web))
 
                     file_path_map[file_path] = os.path.join(search_dir_web, possible_file.groups()[0])
-                elif checked_file:
+                elif checked_file and camera_log_tag != None:
                     file_web[os.path.join(search_dir_web, checked_file.groups()[0])] = [file_mod_time, file_size]
                 else:
                     # ptl.logging_info('Filtered f = {0}, file_path = {1}, possible_file = {2}, timestamp_start = {3}, file_mod_time = {4}, timestamp_end = {5}'
