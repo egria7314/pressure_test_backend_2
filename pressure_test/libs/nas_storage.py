@@ -69,12 +69,15 @@ class NasStorage(object):
 
         ptl.logging_info('return videos = {0}'.format(videos))
         if camera_log_tag != None:
+            videos_copy = videos.copy()
             for k in videos.keys():
                 if 'verify_storage.checked' in k:
-                    return videos, True
+                    videos_copy.pop(k, None)
+                    return videos_copy, True
             return videos, False
 
         return videos
+
 
     def dump_nas_files(self, search_dir_web, prefix, timestamp_start, timestamp_end, camera_log_tag=None):
         """
