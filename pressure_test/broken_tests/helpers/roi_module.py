@@ -34,7 +34,7 @@ class RoiModule(object):
         
         if 'SD' in modelname:
             mask_position_list = self.__get_mask_position_form_3D_mask()
-        elif 'MS' in modelname or 'MA' in modelname:
+        elif 'MA' in modelname:
             mask_position_list = self.__get_mask_position_from_rect()
         else:
             mask_position_list = self.__get_mask_position()
@@ -110,7 +110,7 @@ class RoiModule(object):
         resolution = url.read().decode('utf-8')
         width = re.search('=\'(.*)x(.*)\'',resolution).groups()[0]
         height = re.search('=\'(.*)x(.*)\'',resolution).groups()[1]
-        if 'MS' in modelname or 'MA' in modelname:
+        if 'MA' in modelname:
             w, h = 9999, 9999
         elif 'SD' in modelname:
             w = 320
