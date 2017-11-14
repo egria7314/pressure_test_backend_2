@@ -119,11 +119,12 @@ def mount_status(destination, username, password):
                 out, error = status.communicate()
                 if out:
                     if destination.replace('\\', '/') in str(out):
-                        mount_result = 'Mount storage successful'
                         file = open('{0}/verify_storage.checked'.format(source), 'w+')
+                        mount_result = 'Mount storage successful'
                     else:
                         mount_result = 'Mount storage failed'
             else:
+                file = open('{0}/verify_storage.checked'.format(source), 'w+')
                 mount_result = "Mount storage already exist"
     else:
         mount_result = 'Mount storage failed'
