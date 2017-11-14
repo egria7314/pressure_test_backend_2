@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from broken_tests.views import module_pretest_broken_image
+from libs.pressure_test_logging import PressureTestLogging as ptl
 import subprocess
 import time
 import os
@@ -121,11 +122,13 @@ def mount_status(destination, username, password):
                     if destination.replace('\\', '/') in str(out):
                         file = open('{0}/verify_storage.checked'.format(source), 'w+')
                         mount_result = 'Mount storage successful'
+                        ptl.logging_info('[Info] Create checked file successfully! ')
                     else:
                         mount_result = 'Mount storage failed'
             else:
                 file = open('{0}/verify_storage.checked'.format(source), 'w+')
                 mount_result = "Mount storage already exist"
+                ptl.logging_info('[Info] Create checked file successfully!(mount exist) ')
     else:
         mount_result = 'Mount storage failed'
     return mount_result
