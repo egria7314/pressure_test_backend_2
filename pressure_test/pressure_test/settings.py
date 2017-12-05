@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'recording_continous',
     'broken_tests',
     'version',
+    'stress_test_auto_set_app',
 ]
 
 MIDDLEWARE = [
