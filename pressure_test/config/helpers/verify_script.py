@@ -123,16 +123,21 @@ def mount_status(destination, username, password):
                         file = open('{0}/verify_storage.checked'.format(source), 'w+')
                         mount_result = 'Mount storage successful'
                         ptl.logging_info('[Info] Create checked file successfully! ')
-                        subprocess.Popen("sudo umount {0}".format(source), shell=True)
-                        time.sleep(2)
+                        process= subprocess.Popen("sudo umount -l {0}".format(source), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        while True:
+                            nextline = process.stdout.readline()
+                            if nextline == b'' and process.poll() is not None:
+                                break
+                            ptl.logging_info('[Info] umount output next line: {0} '.format(nextline))
+                        output = process.communicate()[0]
+                        ptl.logging_info('[Info] umount output: {0} '.format(output))
                     else:
                         mount_result = 'Mount storage failed'
             else:
                 file = open('{0}/verify_storage.checked'.format(source), 'w+')
                 mount_result = "Mount storage already exist"
                 ptl.logging_info('[Info] Create checked file successfully!(mount exist) ')
-                subprocess.Popen("sudo umount {0}".format(source), shell=True)
-                time.sleep(2)
+                subprocess.Popen("sudo umount -l {0}".format(source), shell=True)
     else:
         mount_result = 'Mount storage failed'
     return mount_result
