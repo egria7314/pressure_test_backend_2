@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from stress_test_auto_set_app.views import stress_test
 
 
 urlpatterns = [
@@ -24,4 +25,8 @@ urlpatterns = [
     url(r'^', include('recording_continous.urls')),
     url(r'^', include('broken_tests.urls')),
     url(r'^', include('version.urls')),
+    url(r'^stress_test/$',stress_test),
+    url(r'^stress_test/\
+        camera_ip=\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}&camera_account=\w{1,64}&camera_password=\w{1,64}&tester=\w{1,10}&test_type=\w{1,15}&camera_type=\w{1,10}&test_location=\w{1,6}&submit=yes/$',stress_test),
+
 ]
