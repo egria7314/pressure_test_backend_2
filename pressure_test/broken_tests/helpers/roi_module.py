@@ -44,7 +44,7 @@ class RoiModule(object):
                 mask_position_list[i][5] -= 1
                 mask_position_list[i][7] -= 1
                 mask_position_dict[str(i)] = mask_position_list[i]
-        
+    
         self.mask_position_dict = mask_position_dict
 
         # for i in range(len(mask_position_list)):
@@ -136,6 +136,9 @@ class RoiModule(object):
             mask_position[mask_num] = mask_position[mask_num].split(',')
             for mask_position_num in range(0,len(mask_position[mask_num])-1,2):
                 mask_position[mask_num][mask_position_num] = int(int(mask_position[mask_num][mask_position_num])*width_ratio)
+                # 校正大解析度的圖片換算的誤差(每3200pixels多增加10pixels作校正,因為ROI mask是縮小到寬320)
+                if mask_position[mask_num][mask_position_num] > 3200:
+                    mask_position[mask_num][mask_position_num] += 10
                 mask_position[mask_num][mask_position_num+1] = int(int(mask_position[mask_num][mask_position_num+1])*hight_ratio)
         return mask_position
 
