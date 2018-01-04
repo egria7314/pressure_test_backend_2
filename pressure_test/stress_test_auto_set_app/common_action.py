@@ -214,7 +214,7 @@ class Stress_auto_set:
         elif test_type =='Stability_Test':
             sensitivity = '85'
         parameter={
-                   'motion_c0_win_sensitivity': sensitivity ,
+                   'motion_c0_win_sensitivity': sensitivity ,'motion_c0_enable':'1',
                    'motion_c0_win_i0_enable':'1','motion_c0_win_i0_name':'Motion1','motion_c0_win_i0_polygonstd':'1000,2000,1000,4000,4000,4000,4000,2000','motion_c0_win_i0_objsize':'15',
 				   'motion_c0_win_i1_enable':'1','motion_c0_win_i1_name':'Motion2','motion_c0_win_i1_polygonstd':'1000,6000,1000,8000,4000,8000,4000,6000','motion_c0_win_i1_objsize':'15',
 				   'motion_c0_win_i2_enable':'1','motion_c0_win_i2_name':'Motion3','motion_c0_win_i2_polygonstd':'5000,2000,5000,8000,6000,8000,6000,2000','motion_c0_win_i2_objsize':'15',
