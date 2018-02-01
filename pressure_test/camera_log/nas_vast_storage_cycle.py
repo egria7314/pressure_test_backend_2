@@ -5,18 +5,20 @@ import re
 from datetime import datetime as dt
 from libs.pressure_test_logging import PressureTestLogging as ptl
 from config.models import ProjectSetting
+from camera_log.libs.cgi import CGI
+from camera_log.telnet_module import URI
 import time
 # from telnet_module import TelnetModule
-# from telnet_module import URI
 # import datetime
 # import time
 
 # VAST 1_2017-06-14_110030.3gp    2_2017-06-14_110251.3gp
 # NAS "20170608/09/" + PREFIX +  "05.mp4",
 class NasVastCycle():
-    def __init__(self, former_file_list, new_file_list, project_id):
+    def __init__(self, former_file_list, new_file_list,project_id, new_file_info_dict=None ):
         self.former_file_list = former_file_list
         self.new_file_list = new_file_list
+        self.new_file_info_dict = new_file_info_dict
         self.project_id = project_id
 
     def get_result(self, PREFIX=""):
@@ -30,7 +32,7 @@ class NasVastCycle():
                 test_type = (task_camera_obj.type).lower()
                 ptl.logging_error('[Debug] check surpass_one_hour project type:{0}'.format(test_type))
                 if test_type == "high":
-                    exist_surpass, comment = self.__surpass_exist(PREFIX)
+                    exist_surpass, comment = self.__surpass_exist()
                     if exist_surpass:
                         result += comment + '\n'
                         return result
@@ -39,12 +41,6 @@ class NasVastCycle():
                 ptl.logging_error('[Exception] __surpass_one_hour get result error, [Error msg]:{0}'.format(e))
                 comment = e
                 return comment
-
-
-            # exist_surpass, comment = self.__surpass_exist(PREFIX)
-            # if exist_surpass:
-            #     result += comment + '\n'
-            #     return result
 
 
             # check cycle
@@ -123,7 +119,7 @@ class NasVastCycle():
         return cycle_status, comment
 
 
-    def __surpass_exist(self, PREFIX=""):
+    def __surpass_exist(self,):
         exist = False
         result = ""
 
@@ -134,104 +130,112 @@ class NasVastCycle():
 
         # first: compare newest added file with former test last file
         added_file_list = list(set(self.new_file_list) - set(self.former_file_list))
+        former_last_file = sorted(set(self.former_file_list))[-1]
+        added_file_list.append(former_last_file)
         added_file_list = sorted(added_file_list)
 
         if len(added_file_list) > 0:
-            newest_added_date = min(added_file_list)
+
+            # newest_added_date = min(added_file_list)
             # if former list is empty then only compare new list
-            if len(self.former_file_list) != 0:
-                oldest_former_date = max(self.former_file_list)
-                surpass_hour, comment = self.__surpass_one_hour(oldest_former_date, newest_added_date, PREFIX)
-                if surpass_hour:
-                    result = comment + '\n'
-                    exist = True
 
-
-            # second: check if every added file is surpass one hour
             for added_file in added_file_list:
-                if added_file == newest_added_date:
-                    pass
-                # loop every added file except first file
-                else:
-                    index = added_file_list.index(added_file)
-                    if index >= 1:
-                        surpass_hour, comment = self.__surpass_one_hour(added_file_list[index - 1], added_file_list[index], PREFIX)
-                        if surpass_hour:
-                            result += comment + "\n"
-                            exist = True
+                surpass_hour, comment = self.__surpass_one_hour(added_file)
+                if surpass_hour:
+                    result += comment + "\n"
+                    exist = True
+                    print (result)
 
         return exist, result
 
+        # by MB unit
+    def __get_cgi_nas_max_recording_file_size(self, camera_ip, camera_user, camera_password):
+            print ("__get_cgi_nas_max_recording_file_size")
+            nas_recording_index = self.__get_NAS_recording_index(camera_ip, camera_user, camera_password)
+            print ("__get_NAS_recording_index_result")
+            print (nas_recording_index)
+
+            cgi_max_filesize = 'recording_i' + str(nas_recording_index) + '_maxsize'
+
+            cgi_nas_max_file_size = CGI().get_cgi(username=camera_user, password=camera_password, host=camera_ip,
+                                                 cgi_command=cgi_max_filesize, cgi_type='getparam.cgi')
+            print(cgi_nas_max_file_size)
+            cgi_nas_max_file_size_list = re.findall(r'\d+', cgi_nas_max_file_size.split('=')[1])
+            cgi_nas_max_file_size_int = int(cgi_nas_max_file_size_list[0])
+
+            return cgi_nas_max_file_size_int
+
+    def __get_NAS_recording_index(self, camera_ip, camera_user, camera_password):
+        """Get nas location from camera by cgi"""
+        event_index = self.__get_nas_event_index(camera_ip, camera_user, camera_password)
+
+        type_code = None
+        for index in range(2):
+            command = 'http://' + camera_ip + '/cgi-bin/admin/getparam.cgi?recording_i{0}_dest'.format(index)
+            try:
+                url = URI.set(command, camera_user, camera_password)
+                url = url.read().decode('utf-8').split("\r\n")
+                result = url[0].replace('recording_i{0}_dest'.format(index), '').replace("'", "").replace("=", "")
+                if result != str(event_index):
+                    continue
+                else:
+                    type_code = index
+                    break
+            except:
+                type_code = 'get nas recording index error'
+
+        return type_code
+
+    def __get_nas_event_index(self, camera_ip, camera_user, camera_password):
+        print ("__get_nas_event_index")
+        event_index = None
+        for index in range(3):
+            command = 'http://' + camera_ip + '/cgi-bin/admin/getparam.cgi?server_i{0}_type'.format(index)
+            try:
+                url = URI.set(command, camera_user, camera_password)
+                url = url.read().decode('utf-8').split("\r\n")
+                result = url[0].replace('server_i{0}_type'.format(index), '').replace("'", "").replace("=", "")
+                if result != 'ns':
+                    continue
+                else:
+                    event_index = index
+                    break
+            except:
+                event_index = 'get nas event index error'
+
+        return event_index
 
     # compare two date if surpass one hour
-    def __surpass_one_hour(self, former_date, newer_date, PREFIX=""):
+    def __surpass_one_hour(self, added_file):
         log = ""
-        # print("oldest former:" + former_date)
-        # print("newest added:" + newer_date)
-        result = False
-
-        # old
-        old_re = re.split("/", former_date)  # ['20170608', '09', 'TEST10.mp4']
-        new_re = re.split("/", newer_date)
-        # print(old_re)
-        old_year = old_re[0][:4]
-        old_mon = old_re[0][4:6]
-        old_day = old_re[0][6:]
-        old_folder_hour = old_re[1]
+        task_camera_obj = ProjectSetting.objects.get(id=self.project_id)
+        camera_ip = task_camera_obj.ip
+        camera_user = task_camera_obj.username
+        camera_password = task_camera_obj.password
+        max_size = self.__get_cgi_nas_max_recording_file_size(camera_ip, camera_user, camera_password)
 
 
-        if PREFIX != "":
-            old_file_min = old_re[2].split(PREFIX)[1].split(".")[0][:2]
-            new_file_min = new_re[2].split(PREFIX)[1].split(".")[0][:2]
-        else:
-            old_file_min = old_re[2].split(".")[0]
-            new_file_min = new_re[2].split(".")[0]
+        file_duration = self.new_file_info_dict[added_file]["Duration"]
+        file_size = self.new_file_info_dict[added_file]["Size"]
+        if file_duration: # Continue recording video has no duration.
+            # if differ is more than or less one hour , difference value +-1
+            seconds_of_one_hour = 3600
+            # seconds_of_one_hour = 60 # for quickly test camera log
+            if file_duration > seconds_of_one_hour + 1:
+                log = "[red][Error] {0}'s file is surpass one hour!!".format(added_file)
+                return True, log
 
-        old_datetime = old_year + '/' + old_mon + '/' + old_day + ' ' + old_folder_hour + ':' + old_file_min
-        old_date_obj = dt.strptime(old_datetime, "%Y/%m/%d %H:%M")
-
-        new_year = new_re[0][:4]
-        new_mon = new_re[0][4:6]
-        new_day = new_re[0][6:]
-        new_folder_hour = new_re[1]
-
-        # new_file_min = new_re[2].split(PREFIX)[1].split(".")[0]  # new_re[2] is like: 'TEST10.mp4'
-        new_datetime = new_year + '/' + new_mon + '/' + new_day + ' ' + new_folder_hour + ':' + new_file_min
-        new_date_obj = dt.strptime(new_datetime, "%Y/%m/%d %H:%M")
-
-        differ_seconds = (new_date_obj - old_date_obj).total_seconds()
-
-        # if differ is more than or less one hour , difference value +-1
-        seconds_of_one_hour = 3600
-        if differ_seconds > seconds_of_one_hour + 1:
-            log = "[red][Error] " + new_datetime + "'s file is " + "Surpass one hour!!"
-            return True, log
-
-        elif differ_seconds < seconds_of_one_hour - 1:
-            log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
-            return True, log
-
-            # try:
-            #     task_camera_obj = ProjectSetting.objects.get(id=self.project_id)
-            #     test_type = (task_camera_obj.type).lower()
-            #     ptl.logging_error('[Debug] __surpass_one_hour type:{0}'.format(test_type))
-            #     if test_type == "medium":
-            #         return False, log
-            #     else:
-            #         log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
-            #         return True, log
-            #
-            #
-            #     # log = "[red][Error] " + new_datetime + "'s file is " + "less than one hour!!"
-            #     # return True, log
-            # except Exception as e:
-            #     ptl.logging_error('[Exception] __surpass_one_hour error, [Error msg]:{0}'.format(e))
-            #     log = e
-            #     return True, log
+            elif file_duration < seconds_of_one_hour - 1:
+                # ex: if cgi is 2000M, then 1999~2001M pass
+                if (file_size <= max_size + 1 and file_size >= max_size - 1):
+                    return False, log
+                else:
+                    log = "[red][Error] {0}'s file is less than one hour!!".format(added_file)
+                    return True, log
 
 
-        else:
-            return False, log
+        return False, log
+
 
 def trans_vast_file_to_nas_style(vast_sty_file_list):
     nas_sty_file_list = []
@@ -248,11 +252,9 @@ def trans_vast_file_to_nas_style(vast_sty_file_list):
         min = m.group(6)
 
         nas_sty_vastfile_str = year + mon + day + '/' + hour + '/' + min + '.3gp'
-        # print(m)
 
         nas_sty_file_list.append(nas_sty_vastfile_str)
 
-    # print(nas_sty_file_list)
 
     return nas_sty_file_list
 

@@ -31,7 +31,7 @@
         name: django
         virtualenv: "{{ dockyard_home }}/env"
         virtualenv_python: python3.4
-        version: 1.10.7
+        version: 1.11.8
         state: present
 
     - name: pip install packages into env (virtualenv)
@@ -42,7 +42,7 @@
         state: present
       with_items:
         - psycopg2
-        - djangorestframework
+        - djangorestframework==3.6.4
         - markdown
         - django-filter
         - django-crispy-forms

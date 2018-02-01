@@ -721,6 +721,25 @@ def set_sd_cycle(project_id, new_sd_locked_file_list, new_sd_unlocked_file_list,
 
 
 
+
+def format_nas_path(storage_files_list, storage_path, storage_info_dict):
+    new_storage_file_list = []
+    new_storage_info_dict = {}
+    for nas_file in storage_files_list:
+        print("NAS FILE*")
+        print(nas_file)
+        print("storage PATH")
+        print(storage_path)
+
+        if storage_path.endswith('/'):
+            end_index = nas_file.find(storage_path) + len(storage_path)
+        else:
+            end_index = nas_file.find(storage_path) + len(storage_path) + 1
+        new_storage_file_list.append(nas_file[end_index:])
+        new_storage_info_dict[nas_file[end_index:]] = storage_info_dict[nas_file]
+    return new_storage_file_list, new_storage_info_dict
+
+
 # @timeout(GLOBAL_TIMEOUT)
 def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_time):
 ######################## NAS #################################
@@ -760,7 +779,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 timestamp_start = start_time
                 test_nas_obj = NasStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
-                storage_files_dict, storage_connected = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
+                storage_files_dict, storage_info_dict, storage_connected = test_nas_obj.get_video_nas(storage_user, storage_password, sudo_password, storage_path,
                                                          NAS_PREFIX, timestamp_start, timestamp_end, camera_log_tag=True)
 
                 print("*****GET NAS FILE******")
@@ -768,22 +787,13 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
 
 
                 storage_files_list = list(storage_files_dict.keys())
-                new_storage_file_list = []
-                for nas_file in storage_files_list:
-                    print("NAS FILE*")
-                    print(nas_file)
-                    print("storage PATH")
-                    print(storage_path)
-
-                    if storage_path.endswith('/'):
-                        end_index = nas_file.find(storage_path) + len(storage_path)
-                    else:
-                        end_index = nas_file.find(storage_path) + len(storage_path) + 1
-                    new_storage_file_list.append(nas_file[end_index:])
+                new_storage_file_list, storage_info_dict = format_nas_path(storage_files_list, storage_path, storage_info_dict)
 
                 nas_cycle_obj = NasVastCycle(former_file_list=former_storage_file_list,
                                            new_file_list=new_storage_file_list,
-                                             project_id=project_id)
+                                             project_id=project_id,
+                                             new_file_info_dict=storage_info_dict
+                                             )
                 storage_cycle_result = nas_cycle_obj.get_result(NAS_PREFIX)
                 if not storage_connected:
                     storage_cycle_result = "[Fail] Can't access storage:{0}".format(storage_path)
@@ -792,7 +802,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
                 timestamp_start = start_time
                 test_vast_obj = VastStorage(storage_user, storage_password)
                 storage_path = storage_path.replace('\\','/')
-                storage_files_dict, storage_connected = test_vast_obj.get_video_vast(storage_user, storage_password, '', storage_path, timestamp_start, timestamp_end, camera_log_tag=True)
+                storage_files_dict, storage_info_dict, storage_connected = test_vast_obj.get_video_vast(storage_user, storage_password, '', storage_path, timestamp_start, timestamp_end, camera_log_tag=True)
 
                 # print("****VAST FILE:****")
                 # print(storage_files_dict)
@@ -821,6 +831,7 @@ def get_storagefile_and_cycle(project_id, task_camera_obj, storage_by, start_tim
 
 
     return new_storage_file_list, storage_cycle_result
+
 
 
 
